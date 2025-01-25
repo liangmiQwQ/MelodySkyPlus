@@ -1,0 +1,10 @@
+{
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.yourname.modid.mixin",
+  "refmap": "refmap.change_to_your_modid.json",
+  "mixins": [],
+  "client": [
+    "MixinMinecraft"
+  ],
+  "server": []
+}
