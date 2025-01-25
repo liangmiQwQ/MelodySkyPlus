@@ -1,2 +1,2 @@
-# forge-mixin-example
-An example for using Mixin in Minecraft Forge
+# MelodySky Plus
+给MelodySky添加failsafe以及更多好用的功能 让Admin感到人间美好
