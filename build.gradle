@@ -48,6 +48,12 @@ dependencies {
         exclude module: 'gson'
     }
     annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+    
+    implementation (files('melody/melodysky_removemixins.jar'))/*{
+        exclude module: 'mixin'
+        exclude group: 'org.spongepowered'
+
+    }*/
 }
 
 processResources {
