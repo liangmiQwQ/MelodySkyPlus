@@ -9,6 +9,9 @@ buildscript {
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
+plugins {
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
+}
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
@@ -32,6 +35,7 @@ minecraft {
 }
 
 repositories {
+    mavenLocal() // 添加本地 maven 以加载melodySky
     mavenCentral()
     maven { url = 'https://repo.spongepowered.org/maven' }
 }
@@ -42,18 +46,17 @@ configurations {
 }
 
 dependencies {
-    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+    embed('org.spongepowered:mixin:0.6.5-SNAPSHOT') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
-    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
-    
-    implementation (files('melody/melodysky_removemixins.jar'))/*{
+    annotationProcessor 'org.spongepowered:mixin:0.6.5-SNAPSHOT'
+
+    implementation('xyz.melody:melodySky:1.0.0') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
-
-    }*/
+    }
 }
 
 processResources {
@@ -71,6 +74,8 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+
+
 }
 
 sourceSets {
@@ -79,7 +84,23 @@ sourceSets {
     }
 }
 
+shadowJar {
+    // 配置 Shadow 插件任务
+    relocate 'org.spongepowered', 'plus.spongepowered'
+
+    mergeServiceFiles() // 合并 META-INF/services 的配置文件
+
+    // 手动设置生成的 jar 文件名
+    archiveName = "${archivesBaseName}-${version}-relocated.jar"
+
+    dependencies {
+        exclude(dependency('xyz.melody:melodySky:1.0.0'))
+    }
+
+}
+
 jar {
+//    enabled = false;
     from(configurations.embed.collect {
         it.isDirectory() ? it : zipTree(it)
     }) {
@@ -89,8 +110,10 @@ jar {
     manifest.attributes(
             'ForceLoadAsMod': 'true',
             'FMLCorePluginContainsFMLMod': 'true',
-            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            'TweakClass': 'plus.spongepowered.asm.launch.MixinTweaker',
             'TweakOrder': '0',
             'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
     )
 }
+
+assemble.dependsOn jar, shadowJar
