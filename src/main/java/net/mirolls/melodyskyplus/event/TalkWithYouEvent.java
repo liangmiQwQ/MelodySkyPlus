@@ -5,9 +5,9 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.mirolls.melodyskyplus.libs.ChatLib;
 import net.mirolls.melodyskyplus.libs.LevenshteinDistance;
 import net.mirolls.melodyskyplus.react.TalkWithYouReact;
+import xyz.Melody.Utils.Helper;
 
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -40,7 +40,7 @@ public class TalkWithYouEvent {
     String senderName = null;
     if (messageSlices[0].contains(playerName)) {
       // 自己发的消息 直接忽略 避免浪费性能
-      ChatLib.sendModMessage("消息被第二层过滤");
+      Helper.sendMessage("消息被第二层过滤");
       return;
     } else {
       // 提取senderName
@@ -54,7 +54,7 @@ public class TalkWithYouEvent {
           throw new RuntimeException("Found two sender");
         }
       }
-      ChatLib.sendModMessage("提取到了SenderName: " + senderName + "     MatchThing:" + senderInformationSlices[senderInformationSlices.length - 1]);
+      Helper.sendMessage("提取到了SenderName: " + senderName + "     MatchThing:" + senderInformationSlices[senderInformationSlices.length - 1]);
     }
 
     StringBuilder rawMessageBuilder = new StringBuilder();
@@ -91,9 +91,9 @@ public class TalkWithYouEvent {
       talkingWithMeTicks = 0;
       triggerTick = 40 + new Random().nextInt(40);
       this.senderName = senderName;
-      ChatLib.sendModMessage("触发了");
+      Helper.sendMessage("触发了");
     } else {
-      ChatLib.sendModMessage("消息被第三层过滤");
+      Helper.sendMessage("消息被第三层过滤");
     }
   }
 

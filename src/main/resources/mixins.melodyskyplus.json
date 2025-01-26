@@ -3,11 +3,10 @@
   "package": "net.mirolls.melodyskyplus.mixin",
   "refmap": "refmap.melodyskyplus.json",
   "mixins": [
-
   ],
   "client": [
-    "MiningProtectMixin",
-    "TestMixin"
+    "MiningProtectMixin"
   ],
-  "server": []
+  "server": [],
+  "priority": 1500
 }
