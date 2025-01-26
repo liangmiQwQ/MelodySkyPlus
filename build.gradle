@@ -86,7 +86,10 @@ sourceSets {
 
 shadowJar {
     // 配置 Shadow 插件任务
-    relocate 'org.spongepowered', 'plus.spongepowered'
+//    relocate 'org.spongepowered', 'plus.spongepowered'
+
+    exclude 'xyz.melody.*'
+
 
     mergeServiceFiles() // 合并 META-INF/services 的配置文件
 
@@ -96,10 +99,11 @@ shadowJar {
     dependencies {
         exclude(dependency('xyz.melody:melodySky:1.0.0'))
     }
-
 }
 
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
 //    enabled = false;
     from(configurations.embed.collect {
         it.isDirectory() ? it : zipTree(it)
@@ -110,10 +114,12 @@ jar {
     manifest.attributes(
             'ForceLoadAsMod': 'true',
             'FMLCorePluginContainsFMLMod': 'true',
-            'TweakClass': 'plus.spongepowered.asm.launch.MixinTweaker',
+//            'TweakClass': 'plus.spongepowered.asm.launch.MixinTweaker',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
             'TweakOrder': '0',
             'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
     )
 }
 
 assemble.dependsOn jar, shadowJar
+
