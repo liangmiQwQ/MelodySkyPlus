@@ -13,6 +13,8 @@ public class RotationLib {
   private Rotation targetRotation = null;
   private boolean rotating = false;
 
+  private float speedCoefficient = 5f;
+
   public RotationLib() {
     MinecraftForge.EVENT_BUS.register(this);
   }
@@ -49,7 +51,7 @@ public class RotationLib {
       deltaAngle = -maxIncrement;
     }
 
-    return current + deltaAngle / 10.0F;
+    return current + deltaAngle / (2.0F * speedCoefficient);
   }
 
   public Rotation getTargetRotation() {
@@ -66,5 +68,13 @@ public class RotationLib {
 
   public void setRotating(boolean rotating) {
     this.rotating = rotating;
+  }
+
+  public float getSpeedCoefficient() {
+    return speedCoefficient;
+  }
+
+  public void setSpeedCoefficient(float speedCoefficient) {
+    this.speedCoefficient = speedCoefficient;
   }
 }
