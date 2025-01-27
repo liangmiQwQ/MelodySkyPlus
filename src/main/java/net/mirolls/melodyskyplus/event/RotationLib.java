@@ -33,10 +33,9 @@ public class RotationLib {
       this.mc.thePlayer.rotationPitch = this.smoothRotation(this.mc.thePlayer.rotationPitch, targetRotation.getPitch(), 120.0F);
 
       // 到位了就停止了
-      if (oldYaw == this.mc.thePlayer.rotationYaw && oldPitch == this.mc.thePlayer.rotationPitch) {
+      if (Math.abs(oldYaw - this.mc.thePlayer.rotationYaw) < 0.1f && Math.abs(oldPitch - this.mc.thePlayer.rotationPitch) < 0.1f) {
         rotating = false;
         targetRotation = null;
-        return;
       }
     }
   }
