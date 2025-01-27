@@ -79,8 +79,11 @@ processResources {
 }
 
 sourceSets {
-    main {
-        refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
+//    main {
+//        ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
+//    }
+    mixin {
+        add("main", "refmap.name.json")
     }
 }
 
