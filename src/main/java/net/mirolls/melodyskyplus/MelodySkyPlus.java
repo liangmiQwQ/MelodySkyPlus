@@ -4,6 +4,7 @@ package net.mirolls.melodyskyplus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
 import net.mirolls.melodyskyplus.event.RotationLib;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +16,7 @@ public class MelodySkyPlus {
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
 
   public static RotationLib rotationLib;
+  public static CheckPlayerFlying checkPlayerFlying;
 
 
   @EventHandler
@@ -22,6 +24,7 @@ public class MelodySkyPlus {
     LOGGER.info("MelodySky+ is running");
 
     rotationLib = new RotationLib();
+    checkPlayerFlying = new CheckPlayerFlying();
     // events
   }
 }
