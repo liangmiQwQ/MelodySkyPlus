@@ -1,5 +1,8 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.react.NgComeReact;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,6 +17,7 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.module.modules.macros.Mining.MiningProtect;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 
 @SuppressWarnings("rawtypes")
@@ -84,7 +88,42 @@ public class MiningProtectMixin {
       , locals = LocalCapture.CAPTURE_FAILSOFT
   )
   public void checkPause(CallbackInfo ci, Object[] info) {
-    NgComeReact.react(info, melodySkyPlus$lookAt.getValue(), melodySkyPlus$kickOut.getValue(), resumeTime.getValue(), range.getValue());
+    Minecraft mc = Minecraft.getMinecraft();
+
+    EntityPlayer targetPlayer = null;
+    if (melodySkyPlus$lookAt.getValue()) {
+      if (mc.theWorld == null) {
+        MelodySkyPlus.LOGGER.warn("World is null. Cannot get playerEntities.");
+        return;
+      }
+
+      for (EntityPlayer player : mc.theWorld.playerEntities) {
+        if (Objects.equals(player.getName(), info[1])) {
+          targetPlayer = player;
+          break;
+        }
+      }
+
+      if (info == null || info.length < 2 || !(info[1] instanceof String)) {
+        MelodySkyPlus.LOGGER.warn("Info array is invalid or missing the player name.");
+        return;
+      }
+    }
+
+    // 注册 检查器 确认玩家是否飞行
+    MelodySkyPlus.checkPlayerFlying.resetCheck();
+    MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
+    MelodySkyPlus.checkPlayerFlying.setChecking(true);
+
+    EntityPlayer finalTargetPlayer = targetPlayer;
+    MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
+      if (result || Objects.equals(finalTargetPlayer.getName(), mc.thePlayer.getName())) {
+        // alert! marco check!
+      } else {
+        NgComeReact.react(mc, info, finalTargetPlayer, melodySkyPlus$kickOut.getValue(), resumeTime.getValue(), range.getValue());
+      }
+    });
+
   }
 
 
