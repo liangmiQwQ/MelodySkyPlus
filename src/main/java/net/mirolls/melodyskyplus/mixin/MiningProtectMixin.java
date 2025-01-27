@@ -37,6 +37,9 @@ public class MiningProtectMixin {
 
   // 构造函数
 
+  @Shadow
+  public Numbers<Double> range;
+
   @ModifyArg(method = "<init>",
       at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningProtect;addValues([Lxyz/Melody/Event/value/Value;)V", remap = false),
       index = 0)
@@ -135,46 +138,57 @@ public class MiningProtectMixin {
               long sleepTime = (long) (resumeTime.getValue() * 500);
               Thread.sleep(sleepTime/*等待一半的时间*/);
 
+
               BlockPos newPlayerLocation = newPlayer.getPosition();
 
               if (newPlayerLocation != null) {
+                float distanceToMe = MathUtil.distanceToPos(mc.thePlayer.getPosition(), newPlayerLocation);
                 if (MathUtil.distanceToPos(newPlayerLocation, playerLocation)
                     < (float) (sleepTime * 5) / 1000 /*我这边算他1s走5m*/
-                    || MathUtil.distanceToPos(mc.thePlayer.getPosition(), newPlayerLocation) < 5) {
-                  // 乌龟速度 来打扰的
-                  String[] replyMessage = new String[]{
-                      "hi? im first here.",
-                      "I was here first, pls leave.",
-                      "Excuse me, im first here",
-                      "sry but im first here",
-                      "hi?",
-                      "?",
-                      "hello?",
-                      "hello? im' here first",
-                      "can you leave? im first here",
-                      "hey?",
-                      "hey, im frist here",
-                      "please leave bro im first here",
-                      "bro? im already here",
-                      "umm, this is my spot?",
-                      "hello? can u pls leave?",
-                      "this is mine, pls go away.",
-                      "excuse me? what r u doing?",
-                      "bruh, im mining here.",
-                      "u lost or smth? this is mine.",
-                      "hi? why r u here?",
-                      "could u pls leave? im first",
-                      "dude this is my area pls leave",
-                      "huh? i was here first bro",
-                      "sry but i was mining first",
-                      "pls leave bro this is mine",
-                      "w?",
-                      "a?",
-                      "emm"
-                  };
+                    || distanceToMe < 5) {
+                  if (distanceToMe < range.getValue()) {
+                    // 乌龟速度 或 来打扰的
+                    String[] replyMessage = new String[]{
+                        "hi?",
+                        "?",
+                        "hello?",
+                        "w?",
+                        "a?",
+                        "emm",
+                        "hey?",
+                        "hey, im frist here",
+                        "hello? im' here first",
+                        "hi? im first here.",
+                        "hi?",
+                        "?",
+                        "hello?",
+                        "w?",
+                        "a?",
+                        "emm",
+                        "hey?",
+                        "hey, im frist here",
+                        "hello? im' here first",
+                        "hi? im first here.",
+                        // 标准语句需要更大的概率
+                        "can you leave? im first here",
+                        "please leave bro im first here",
+                        "bro? im already here",
+                        "umm, this is my spot?",
+                        "I was here first, pls leave.",
+                        "Excuse me, im first here",
+                        "sry but im first here",
+                        "hello? can u pls leave?",
+                        "this is mine, pls go away.",
+                        "excuse me? what ru doing?",
+                        "bruh, im mining here.",
+                        "could u pls leave? im first",
+                        "huh? i was here first bro",
+                        "sry but i was mining first",
+                        "pls leave bro this is mine",
+                    };
 
-                  mc.thePlayer.sendChatMessage(replyMessage[new Random().nextInt(replyMessage.length)]);
-
+                    mc.thePlayer.sendChatMessage(replyMessage[new Random().nextInt(replyMessage.length)]);
+                  }
                 }
               } else {
                 MelodySkyPlus.LOGGER.warn("Player " + niggerName + "'s #getPosition() is null. Maybe he's leave");
