@@ -25,6 +25,7 @@ import xyz.Melody.module.modules.macros.Mining.MiningProtect;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Random;
 
 
 @SuppressWarnings("rawtypes")
@@ -33,15 +34,14 @@ public abstract class MiningProtectMixin {
 
   public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", false);
   public Option<Boolean> melodySkyPlus$lookAt = null;
-
   @Shadow
   public Numbers<Double> resumeTime;
-
   // 构造函数
   @Shadow
   public Numbers<Double> range;
   @Shadow
   public Option<Boolean> sysNotification;
+  private boolean melodySkyPlus$macroCheck = false;
   @Shadow
   private Option<Boolean> reqSee;
   @Shadow
@@ -141,21 +141,42 @@ public abstract class MiningProtectMixin {
       }
     } else if (!info[1].equals("NOT_THIS") && this.niggered && this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 正常算法 继续
-      this.reEnableMacros();
-      NotificationPublisher.queue("Mining Protect", "Macros resumed.", NotificationType.INFO, 5000);
-      if (this.sysNotification.getValue()) {
-        WindowsNotification.show("Mining Protect", "Macros resumed.");
-      }
+      new Thread(
+          () -> {
+            try {
+              Helper.sendMessage("Staff's Check Down, will resume marco in 5 mins");
+              if (melodySkyPlus$macroCheck) {
+                Thread.sleep(1000 * 60 * 5);
+              }
+              this.reEnableMacros();
+              NotificationPublisher.queue("Mining Protect", "Macros resumed.", NotificationType.INFO, 5000);
+              if (this.sysNotification.getValue()) {
+                WindowsNotification.show("Mining Protect", "Macros resumed.");
+              }
 
-      this.niggered = false;
-      this.resumeTimer.reset();
+              this.niggered = false;
+              this.resumeTimer.reset();
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
+      ).start();
+
     }
   }
 
   private void melodySkyPlus$warn(boolean isMacroChecked, EntityPlayer targetPlayer) {
+    melodySkyPlus$macroCheck = isMacroChecked;
     Minecraft mc = Minecraft.getMinecraft();
     this.niggered = true;
-    this.disableMacros();
+    new Thread(() -> {
+      try {
+        Thread.sleep(500 + new Random().nextInt(1000));
+        this.disableMacros();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }).start();
     Client.async(() -> {
       try {
         Thread.sleep(100L);
