@@ -26,23 +26,28 @@ public class CheckPlayerFlying {
   public void onTick(TickEvent.ClientTickEvent event) {
     if (callBack != null && checking && player != null) {
       if (player.capabilities.isFlying) {
-        callBack.callback(false);
+        callBack.callback(true);
         resetCheck();
       }
 
       // 在地面add true 否则add false
       boolean addingData = player.onGround || !player.isAirBorne;
-      if (addingData) {
+      /* if (addingData) {
         callBack.callback(false);
+      }*/
 
-      }
-      
       checkingData.add(addingData);
 
       if (checkingData.size() >= 20 * 2 /*for 2s*/) {
-        // 2秒多中下来 一直是false 说明 一直在飞
+        // 2s下来后开始检查数据
+        int onGroundNumber = 0;
+        for (Boolean checkedData : checkingData) {
+          if (checkedData) {
+            onGroundNumber++;
+          }
+        }
 
-        callBack.callback(true);
+        callBack.callback(onGroundNumber <= 1);
 
         resetCheck();
       }
