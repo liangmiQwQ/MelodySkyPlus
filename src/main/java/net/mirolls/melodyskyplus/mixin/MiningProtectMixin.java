@@ -31,7 +31,7 @@ import java.util.Objects;
 @Mixin(value = xyz.Melody.module.modules.macros.Mining.MiningProtect.class, remap = false)
 public abstract class MiningProtectMixin {
 
-  public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", true);
+  public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", false);
   public Option<Boolean> melodySkyPlus$lookAt = null;
 
   @Shadow
@@ -108,15 +108,18 @@ public abstract class MiningProtectMixin {
    */
   @Overwrite
   private void checkPause() {
-    Minecraft mc = Minecraft.getMinecraft();
     Object[] info = CustomPlayerInRange.redirectPlayerInRange(true, this.range.getValue(), this.reqSee.getValue());
-
     if ((Boolean) info[0]) {
       // 情况1 正常的人干扰
       if (!this.niggered) {
         EntityPlayer targetPlayer = melodySkyPlus$findPlayer((String) info[1]);
 
-        melodySkyPlus$warn(targetPlayer != null && Objects.equals(targetPlayer.getName(), mc.thePlayer.getName()), targetPlayer);
+//        melodySkyPlus$warn(
+//            targetPlayer != null && Objects.equals(targetPlayer.getName(),
+//                // ⬆️ 用名字是否等于我来判断
+//                mc.thePlayer.getName()), targetPlayer);
+        melodySkyPlus$warn(
+            true, targetPlayer);
       }
 
       this.resumeTimer.reset();
@@ -132,12 +135,11 @@ public abstract class MiningProtectMixin {
         MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
           if (result) {
             melodySkyPlus$warn(true, targetPlayer);
-          } /*else {
-            正常假人 直接忽略
-          }*/
+          } // else: 正常假人 直接忽略
+
         });
       }
-    } else if (!info[1].equals("NOT_THIS") && this.niggered && this.resumeTimer.hasReached((Double) this.resumeTime.getValue() * 1000.0)) {
+    } else if (!info[1].equals("NOT_THIS") && this.niggered && this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 正常算法 继续
       this.reEnableMacros();
       NotificationPublisher.queue("Mining Protect", "Macros resumed.", NotificationType.INFO, 5000);
@@ -152,23 +154,8 @@ public abstract class MiningProtectMixin {
 
   private void melodySkyPlus$warn(boolean isMacroChecked, EntityPlayer targetPlayer) {
     Minecraft mc = Minecraft.getMinecraft();
-    if (isMacroChecked) {
-      Helper.sendMessage("[Mining Protect] Alert! Macro Check! ");
-      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
-      if (this.sysNotification.getValue()) {
-        WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
-      }
-
-      FakePlayerCheckReact.react(mc, targetPlayer);
-    } else {
-      Helper.sendMessage("[Mining Protect] Nigger name: " + targetPlayer.getName());
-      NotificationPublisher.queue("Mining Protect", targetPlayer.getName() + " is approaching.", NotificationType.ERROR, 7000);
-      if (this.sysNotification.getValue()) {
-        WindowsNotification.show("Mining Protect", targetPlayer.getName() + " is approaching.");
-      }
-      NgComeReact.react(mc, targetPlayer, melodySkyPlus$kickOut.getValue(), melodySkyPlus$lookAt.getValue(), resumeTime.getValue(), range.getValue());
-    }
     this.niggered = true;
+    this.disableMacros();
     Client.async(() -> {
       try {
         Thread.sleep(100L);
@@ -177,8 +164,24 @@ public abstract class MiningProtectMixin {
         MelodySkyPlus.LOGGER.error(e.getMessage());
       }
     });
-    this.disableMacros();
     Client.warn();
+    if (isMacroChecked) {
+      Helper.sendMessage("[Mining Protect] Alert! Macro Check! ");
+      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
+      }
+
+      FakePlayerCheckReact.react(targetPlayer, resumeTime.getValue());
+    } else {
+      Helper.sendMessage("[Mining Protect] Nigger name: " + targetPlayer.getName());
+      NotificationPublisher.queue("Mining Protect", targetPlayer.getName() + " is approaching.", NotificationType.ERROR, 7000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Mining Protect", targetPlayer.getName() + " is approaching.");
+      }
+      NgComeReact.react(mc, targetPlayer, melodySkyPlus$kickOut.getValue(), melodySkyPlus$lookAt.getValue(), resumeTime.getValue(), range.getValue());
+    }
+
   }
 
   private EntityPlayer melodySkyPlus$findPlayer(String playerName) {

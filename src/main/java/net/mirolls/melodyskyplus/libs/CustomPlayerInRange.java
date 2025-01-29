@@ -12,7 +12,7 @@ public class CustomPlayerInRange {
     short scanTicks = PrivateFieldGetter.get("xyz.Melody.Utils.AFKUtils", "scanTicks", Short.class);
 
     if (scanTicks % 10 != 0) {
-      return new Object[]{false, "NOT_THIS"};
+      return new Object[]{false, "NOT_THIS", "NOT_THIS"};
     } else {
       boolean isTherePlayer = false;
       String fakePlayerName = "NOT_THIS";
