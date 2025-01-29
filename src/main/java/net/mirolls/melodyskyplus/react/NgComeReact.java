@@ -101,7 +101,7 @@ public class NgComeReact {
           }).start();
         }
       } else {
-        MelodySkyPlus.LOGGER.warn("Cannot found player " + targetPlayer.getName());
+        MelodySkyPlus.LOGGER.warn("Cannot found player (Null)");
       }
     }
   }
