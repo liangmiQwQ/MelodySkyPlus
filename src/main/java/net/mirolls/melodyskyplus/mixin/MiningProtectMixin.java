@@ -1,19 +1,26 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
+import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.react.NgComeReact;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import xyz.Melody.Client;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.GUI.Notification.NotificationPublisher;
+import xyz.Melody.GUI.Notification.NotificationType;
+import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.WindowsNotification;
+import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.MiningProtect;
 
 import java.util.Arrays;
@@ -22,7 +29,7 @@ import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 @Mixin(value = xyz.Melody.module.modules.macros.Mining.MiningProtect.class, remap = false)
-public class MiningProtectMixin {
+public abstract class MiningProtectMixin {
 
   public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", true);
   public Option<Boolean> melodySkyPlus$lookAt = null;
@@ -30,11 +37,23 @@ public class MiningProtectMixin {
   @Shadow
   public Numbers<Double> resumeTime;
 
-
   // 构造函数
-
   @Shadow
   public Numbers<Double> range;
+  @Shadow
+  public Option<Boolean> sysNotification;
+  @Shadow
+  private Option<Boolean> reqSee;
+  @Shadow
+  private boolean niggered;
+  @Shadow
+  private TimerUtil resumeTimer;
+
+  @Shadow
+  protected abstract void disableMacros();
+
+  @Shadow
+  protected abstract void reEnableMacros();
 
   @ModifyArg(method = "<init>",
       at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningProtect;addValues([Lxyz/Melody/Event/value/Value;)V", remap = false),
@@ -83,48 +102,100 @@ public class MiningProtectMixin {
     return returnValues;
   }
 
-  @Inject(method = "checkPause",
-      at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningProtect;disableMacros()V", remap = false)
-      , locals = LocalCapture.CAPTURE_FAILSOFT
-  )
-  public void checkPause(CallbackInfo ci, Object[] info) {
+  /**
+   * @author liangmimi
+   * @reason 修改IF条件语句 实现对fake players监控 实现failsafe
+   */
+  @Overwrite
+  private void checkPause() {
+    Minecraft mc = Minecraft.getMinecraft();
+    Object[] info = CustomPlayerInRange.redirectPlayerInRange(true, this.range.getValue(), this.reqSee.getValue());
+
+    if ((Boolean) info[0]) {
+      // 情况1 正常的人干扰
+      if (!this.niggered) {
+        EntityPlayer targetPlayer = melodySkyPlus$findPlayer((String) info[1]);
+
+        melodySkyPlus$warn(targetPlayer != null && Objects.equals(targetPlayer.getName(), mc.thePlayer.getName()), targetPlayer);
+      }
+
+      this.resumeTimer.reset();
+    } else if (info[2] != "NOT_THIS") {
+      if (!this.niggered) {
+        // 假人
+        // 注册检查器,确认玩家是否飞行
+        EntityPlayer targetPlayer = melodySkyPlus$findPlayer((String) info[2]);
+
+        MelodySkyPlus.checkPlayerFlying.resetCheck();
+        MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
+        MelodySkyPlus.checkPlayerFlying.setChecking(true);
+        MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
+          if (result) {
+            melodySkyPlus$warn(true, targetPlayer);
+          } /*else {
+            正常假人 直接忽略
+          }*/
+        });
+      }
+    } else if (!info[1].equals("NOT_THIS") && this.niggered && this.resumeTimer.hasReached((Double) this.resumeTime.getValue() * 1000.0)) {
+      // 正常算法 继续
+      this.reEnableMacros();
+      NotificationPublisher.queue("Mining Protect", "Macros resumed.", NotificationType.INFO, 5000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Mining Protect", "Macros resumed.");
+      }
+
+      this.niggered = false;
+      this.resumeTimer.reset();
+    }
+  }
+
+  private void melodySkyPlus$warn(boolean isMacroChecked, EntityPlayer targetPlayer) {
+    Minecraft mc = Minecraft.getMinecraft();
+    if (isMacroChecked) {
+      Helper.sendMessage("[Mining Protect] Alert! Macro Check! ");
+      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
+      }
+
+      FakePlayerCheckReact.react(mc, targetPlayer);
+    } else {
+      Helper.sendMessage("[Mining Protect] Nigger name: " + targetPlayer.getName());
+      NotificationPublisher.queue("Mining Protect", targetPlayer.getName() + " is approaching.", NotificationType.ERROR, 7000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Mining Protect", targetPlayer.getName() + " is approaching.");
+      }
+      NgComeReact.react(mc, targetPlayer, melodySkyPlus$kickOut.getValue(), melodySkyPlus$lookAt.getValue(), resumeTime.getValue(), range.getValue());
+    }
+    this.niggered = true;
+    Client.async(() -> {
+      try {
+        Thread.sleep(100L);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+      } catch (Exception e) {
+        MelodySkyPlus.LOGGER.error(e.getMessage());
+      }
+    });
+    this.disableMacros();
+    Client.warn();
+  }
+
+  private EntityPlayer melodySkyPlus$findPlayer(String playerName) {
     Minecraft mc = Minecraft.getMinecraft();
 
     EntityPlayer targetPlayer = null;
-    if (melodySkyPlus$lookAt.getValue()) {
-      if (mc.theWorld == null) {
-        MelodySkyPlus.LOGGER.warn("World is null. Cannot get playerEntities.");
-        return;
-      }
-
-      for (EntityPlayer player : mc.theWorld.playerEntities) {
-        if (Objects.equals(player.getName(), info[1])) {
-          targetPlayer = player;
-          break;
-        }
-      }
-
-      if (info == null || info.length < 2 || !(info[1] instanceof String)) {
-        MelodySkyPlus.LOGGER.warn("Info array is invalid or missing the player name.");
-        return;
-      }
+    if (mc.theWorld == null) {
+      MelodySkyPlus.LOGGER.warn("World is null. Cannot get playerEntities.");
+      return null;
     }
 
-    // 注册 检查器 确认玩家是否飞行
-    MelodySkyPlus.checkPlayerFlying.resetCheck();
-    MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
-    MelodySkyPlus.checkPlayerFlying.setChecking(true);
-
-    EntityPlayer finalTargetPlayer = targetPlayer;
-    MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-      if (result || Objects.equals(finalTargetPlayer.getName(), mc.thePlayer.getName())) {
-        // alert! marco check!
-      } else {
-        NgComeReact.react(mc, info, finalTargetPlayer, melodySkyPlus$kickOut.getValue(), resumeTime.getValue(), range.getValue());
+    for (EntityPlayer player : mc.theWorld.playerEntities) {
+      if (Objects.equals(player.getName(), playerName)) {
+        targetPlayer = player;
+        break;
       }
-    });
-
+    }
+    return targetPlayer;
   }
-
-
 }
