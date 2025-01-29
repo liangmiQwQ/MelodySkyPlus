@@ -3,7 +3,6 @@
   "package": "net.mirolls.melodyskyplus.mixin",
   "refmap": "refmap.melodyskyplus.json",
   "mixins": [
-    "AFKUtilsMixin",
     "MiningProtectMixin"
   ],
   "client": [
