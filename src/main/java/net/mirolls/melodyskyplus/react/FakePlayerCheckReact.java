@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.System.Managers.Skyblock.Area.Areas;
+import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 
@@ -217,7 +219,12 @@ public class FakePlayerCheckReact {
         "staff in lobby?"
     };
 
-
-    mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)]);
+    SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
+    mySkyblockArea.updateCurrentArea();
+    Areas currentArea = mySkyblockArea.getCurrentArea();
+    if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
+        && currentArea != Areas.In_Dungeon) {
+      mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)]);
+    }
   }
 }

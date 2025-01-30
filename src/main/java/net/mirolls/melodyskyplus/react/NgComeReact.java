@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.System.Managers.Skyblock.Area.Areas;
+import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -90,7 +92,14 @@ public class NgComeReact {
                       "pls leave bro this is mine",
                   };
 
-                  mc.thePlayer.sendChatMessage(replyMessage[new Random().nextInt(replyMessage.length)]);
+                  SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
+                  mySkyblockArea.updateCurrentArea();
+                  Areas currentArea = mySkyblockArea.getCurrentArea();
+
+                  if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
+                      && currentArea != Areas.In_Dungeon) {
+                    mc.thePlayer.sendChatMessage(replyMessage[new Random().nextInt(replyMessage.length)]);
+                  }
                 }
               } else {
                 MelodySkyPlus.LOGGER.warn("Player " + targetPlayer.getName() + "'s #getPosition() is null. Maybe he's leave");
