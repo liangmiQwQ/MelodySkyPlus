@@ -33,6 +33,7 @@ import java.util.Random;
 public abstract class MiningProtectMixin {
 
   public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", false);
+  public Option<Boolean> melodySkyPlus$failsafe = new Option<>("Failsafe", false);
   public Option<Boolean> melodySkyPlus$lookAt = null;
   @Shadow
   public Numbers<Double> resumeTime;
@@ -93,10 +94,11 @@ public abstract class MiningProtectMixin {
     );
 
 
-    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
+    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
 
-    returnValues[returnValues.length - 2] = melodySkyPlus$lookAt;
-    returnValues[returnValues.length - 1] = melodySkyPlus$kickOut;
+    returnValues[returnValues.length - 3] = melodySkyPlus$lookAt;
+    returnValues[returnValues.length - 2] = melodySkyPlus$kickOut;
+    returnValues[returnValues.length - 1] = melodySkyPlus$failsafe;
     returnValues[1] = lobby;
 
     return returnValues;
@@ -108,18 +110,21 @@ public abstract class MiningProtectMixin {
    */
   @Overwrite
   private void checkPause() {
+    Minecraft mc = Minecraft.getMinecraft();
+
     Object[] info = CustomPlayerInRange.redirectPlayerInRange(true, this.range.getValue(), this.reqSee.getValue());
     if ((Boolean) info[0]) {
       // 情况1 正常的人干扰
       if (!this.niggered) {
         EntityPlayer targetPlayer = melodySkyPlus$findPlayer((String) info[1]);
 
-//        melodySkyPlus$warn(
-//            targetPlayer != null && Objects.equals(targetPlayer.getName(),
-//                // ⬆️ 用名字是否等于我来判断
-//                mc.thePlayer.getName()), targetPlayer);
-        melodySkyPlus$warn(
-            true, targetPlayer);
+        if (melodySkyPlus$failsafe.getValue()) {
+          melodySkyPlus$warn(
+              targetPlayer != null && Objects.equals(targetPlayer.getName(), mc.thePlayer.getName()), targetPlayer);
+        } else {
+          melodySkyPlus$warn(
+              false, targetPlayer);
+        }
       }
 
       this.resumeTimer.reset();
@@ -134,7 +139,7 @@ public abstract class MiningProtectMixin {
         MelodySkyPlus.checkPlayerFlying.setChecking(true);
         MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
           if (result) {
-            melodySkyPlus$warn(true, targetPlayer);
+            melodySkyPlus$warn(melodySkyPlus$failsafe.getValue(), targetPlayer);
           } // else: 正常假人 直接忽略
 
         });
