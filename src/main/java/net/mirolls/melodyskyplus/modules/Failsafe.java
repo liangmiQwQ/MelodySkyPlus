@@ -157,7 +157,7 @@ public class Failsafe extends Module {
       WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
     }
 
-    FakePlayerCheckReact.react(targetPlayer, resumeTime.getValue());
+    FakePlayerCheckReact.react(targetPlayer, resumeTime.getValue(), fakePlayerCheckMessage.getValue());
   }
 
   private void disableMacros() {

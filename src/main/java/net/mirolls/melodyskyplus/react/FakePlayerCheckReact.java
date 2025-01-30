@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class FakePlayerCheckReact {
 
-  public static void react(EntityPlayer fakePlayer, double resumeTime) {
+  public static void react(EntityPlayer fakePlayer, double resumeTime, String fakePlayerCheckMessage) {
     Minecraft mc = Minecraft.getMinecraft();
 
     new Thread(() -> {
@@ -29,7 +29,7 @@ public class FakePlayerCheckReact {
         Thread.sleep((long) (sleepTime / 1.5));
 
         Random random = new Random();
-        sendQuestionMessage(random, mc);
+        sendQuestionMessage(random, mc, fakePlayerCheckMessage);
 
         Thread.sleep(sleepTime / 5);
 
@@ -186,45 +186,15 @@ public class FakePlayerCheckReact {
     }
   }
 
-  private static void sendQuestionMessage(Random random, Minecraft mc) {
-    String[] replyMessage = new String[]{
-        // 随便质疑型
-        "wtf?",
-        "???",
-        "????",
-        "wtf???",
-        "?",
-        "t??",
-        "w?",
-
-        // 核心质疑型
-        "mining trigger killaura??",
-        "why killaura check when mining hyp",
-        "is there macro check?",
-
-        // 假人位置特化
-        "why fake me flying??",
-        "dupe above me?",
-        "why clone mining??",
-
-        // 反向逻辑质问
-        "how killaura while mining?",
-        "i was macro checked lol",
-        "omg there is a staff",
-
-        // 管理测试猜测
-        "admin marco checking?",
-        "? staff checking",
-        "are admins in lobby?",
-        "staff in lobby?"
-    };
+  private static void sendQuestionMessage(Random random, Minecraft mc, String fakePlayerCheckMessage) {
+    String[] replyMessage = fakePlayerCheckMessage.split(",");
 
     SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
     mySkyblockArea.updateCurrentArea();
     Areas currentArea = mySkyblockArea.getCurrentArea();
     if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
         && currentArea != Areas.In_Dungeon) {
-      mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)]);
+      mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)].trim());
     }
   }
 }
