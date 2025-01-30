@@ -9,7 +9,6 @@ import xyz.Melody.Utils.math.Rotation;
 
 import java.util.Random;
 
-@SuppressWarnings("BusyWait")
 public class FakePlayerCheckReact {
 
   public static void react(EntityPlayer fakePlayer, double resumeTime) {
@@ -42,9 +41,10 @@ public class FakePlayerCheckReact {
   private static void rotate(Minecraft mc, EntityPlayer fakePlayer, long sleepTime, Random random) throws InterruptedException {
     // 跳起来 瞎转
     int needReactTimes = 5;
-    int reactTime = 0;
-    while (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
-      if (reactTime < 6) {
+
+    for (int reactTime = 0; reactTime < 6; reactTime++) {
+//    while (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
+      if (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
         int rotatingMode = random.nextInt(4);
 
         if (rotatingMode == 0) {
