@@ -2,9 +2,12 @@ package net.mirolls.melodyskyplus.libs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.System.Managers.Client.FriendManager;
 import xyz.Melody.Utils.game.PlayerListUtils;
 import xyz.Melody.Utils.math.MathUtil;
+
+import java.util.Objects;
 
 public class CustomPlayerInRange {
   public static Object[] redirectPlayerInRange(boolean checkRange, double range, boolean reqSee) {
@@ -38,5 +41,23 @@ public class CustomPlayerInRange {
 
       return new Object[]{isTherePlayer, name, fakePlayerName};
     }
+  }
+
+  public static EntityPlayer findPlayer(String playerName) {
+    Minecraft mc = Minecraft.getMinecraft();
+
+    EntityPlayer targetPlayer = null;
+    if (mc.theWorld == null) {
+      MelodySkyPlus.LOGGER.warn("World is null. Cannot get playerEntities.");
+      return null;
+    }
+
+    for (EntityPlayer player : mc.theWorld.playerEntities) {
+      if (Objects.equals(player.getName(), playerName)) {
+        targetPlayer = player;
+        break;
+      }
+    }
+    return targetPlayer;
   }
 }
