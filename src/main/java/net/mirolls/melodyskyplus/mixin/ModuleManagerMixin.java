@@ -11,7 +11,7 @@ import xyz.Melody.module.Module;
 
 import java.util.List;
 
-@Mixin(ModuleManager.class)
+@Mixin(value = ModuleManager.class, remap = false)
 public class ModuleManagerMixin {
   @Shadow
   public static List<Module> modules;
