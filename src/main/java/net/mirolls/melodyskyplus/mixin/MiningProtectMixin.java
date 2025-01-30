@@ -3,15 +3,20 @@ package net.mirolls.melodyskyplus.mixin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.BlockPos;
+import net.minecraftforge.event.world.WorldEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.react.NgComeReact;
+import net.mirolls.melodyskyplus.react.TPCheckReact;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.Melody.Client;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
@@ -19,7 +24,9 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.GUI.Notification.NotificationPublisher;
 import xyz.Melody.GUI.Notification.NotificationType;
 import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.WindowsNotification;
+import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.MiningProtect;
 
@@ -35,6 +42,9 @@ public abstract class MiningProtectMixin {
   public Option<Boolean> melodySkyPlus$kickOut = new Option<>("Kick him out", false);
   public Option<Boolean> melodySkyPlus$failsafe = new Option<>("Failsafe", false);
   public Option<Boolean> melodySkyPlus$lookAt = null;
+
+  public BlockPos melodySkyPlus$lastLocation = null;
+  public boolean melodySkyPlus$legitTeleported = false;
   @Shadow
   public Numbers<Double> resumeTime;
   // 构造函数
@@ -166,8 +176,33 @@ public abstract class MiningProtectMixin {
             }
           }
       ).start();
-
     }
+
+    // 记录lastLocation (failsafe的一部分)
+    if (melodySkyPlus$failsafe.getValue()) {
+      boolean legitTeleporting =
+          Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
+              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
+              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
+              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
+
+      if (!legitTeleporting && !melodySkyPlus$legitTeleported) {
+        if (melodySkyPlus$lastLocation != null && MathUtil.distanceToPos(melodySkyPlus$lastLocation, mc.thePlayer.playerLocation) > 5) {
+          // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m你都是超人了
+          // 判定为macro checked
+          TPCheckReact.react();
+        }
+      }
+
+      melodySkyPlus$legitTeleported = legitTeleporting;
+      melodySkyPlus$lastLocation = mc.thePlayer.playerLocation;
+    }
+  }
+
+  @Inject(method = "clear", at = @At("HEAD"))
+  private void clear(WorldEvent.Load event, CallbackInfo ci) {
+    melodySkyPlus$legitTeleported = false;
+    melodySkyPlus$lastLocation = null;
   }
 
   private void melodySkyPlus$warn(boolean isMacroChecked, EntityPlayer targetPlayer) {
