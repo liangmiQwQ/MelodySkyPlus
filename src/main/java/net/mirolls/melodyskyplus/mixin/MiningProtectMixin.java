@@ -79,7 +79,7 @@ public abstract class MiningProtectMixin {
     return returnValues;
   }
 
-  @Inject(method = "checkPause", at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningProtect;disableMacros()V"), remap = false, locals = LocalCapture.CAPTURE_FAILSOFT)
+  @Inject(method = "checkPause", at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningProtect;disableMacros()V", remap = false), remap = false, locals = LocalCapture.CAPTURE_FAILSOFT)
   private void checkPause(CallbackInfo ci, Object[] info) {
     Minecraft mc = Minecraft.getMinecraft();
     EntityPlayer targetPlayer = CustomPlayerInRange.findPlayer((String) info[1]);

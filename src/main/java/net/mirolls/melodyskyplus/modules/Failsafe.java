@@ -38,15 +38,14 @@ public class Failsafe extends Module {
   private final TimerUtil resumeTimer = (new TimerUtil()).reset();
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
-  public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 10.0, 60.0, 600.0, 5.0);
+  public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
   private boolean legitTeleported = false;
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
   public Failsafe() {
     super("Failsafe", ModuleType.QOL);
-//    this.addValues(new Value[]{this.range, this.lobby, this.escapeRange, this.escapeTime, this.resumeTime, this.sysNotification, this.disable, this.reqSee, this.blacklist});
-    this.addValues(this.fakePlayerCheckMessage);
+    this.addValues(this.fakePlayerCheckMessage, sysNotification, resumeTime);
     this.setModInfo("Anti staffs.");
     this.except();
   }
