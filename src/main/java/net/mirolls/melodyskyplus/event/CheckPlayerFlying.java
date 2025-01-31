@@ -38,7 +38,7 @@ public class CheckPlayerFlying {
 
       checkingData.add(addingData);
 
-      if (checkingData.size() >= 20 * 2 /*for 2s*/) {
+      if (checkingData.size() >= 20 /*for 1s*/) {
         // 2s下来后开始检查数据
         int onGroundNumber = 0;
         for (Boolean checkedData : checkingData) {

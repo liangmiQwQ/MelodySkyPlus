@@ -39,9 +39,8 @@ public class Failsafe extends Module {
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
   public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
-
-
-  private boolean legitTeleported = false;
+  private long lastLegitTeleport = 0;
+  private long nowTick = -1;
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
@@ -75,12 +74,10 @@ public class Failsafe extends Module {
 
     if (!reacting) {
       if ((Boolean) info[0]) {
-
         if (info[1] == mc.thePlayer.getName()) {
-          react(CustomPlayerInRange.findPlayer((String) info[1]));
+          react(true);
+          FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
         }
-
-
       } else if (info[2] != "NOT_THIS") {
         // 假人
         // 注册检查器,确认玩家是否飞行
@@ -90,11 +87,13 @@ public class Failsafe extends Module {
         MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
         MelodySkyPlus.checkPlayerFlying.setChecking(true);
         MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-          if (result) {
-            react(targetPlayer);
+          if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 3) {
+            react(false);
+            FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
           } // else: 正常假人 直接忽略
         });
       }
+
       // 记录lastLocation (failsafe的一部分)
       boolean legitTeleporting =
           Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
@@ -102,7 +101,7 @@ public class Failsafe extends Module {
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-      if (!legitTeleporting && !legitTeleported) {
+      if (nowTick - lastLegitTeleport > 15) {
         if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.playerLocation) > 5) {
           // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
           // 判定为macro checked
@@ -110,8 +109,8 @@ public class Failsafe extends Module {
         }
       }
 
-      legitTeleported = legitTeleporting;
       lastLocation = mc.thePlayer.playerLocation;
+      lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
       this.reEnableMacros();
@@ -123,6 +122,8 @@ public class Failsafe extends Module {
       this.reacting = false;
       this.resumeTimer.reset();
     }
+
+    nowTick++;
   }
 
   @EventHandler
@@ -130,14 +131,15 @@ public class Failsafe extends Module {
     this.checkMarcoChecked();
   }
 
-
-  private void react(EntityPlayer targetPlayer) {
+  private void react(boolean delay) {
     resumeTimer.reset();
     Minecraft mc = Minecraft.getMinecraft();
     this.reacting = true;
     new Thread(() -> {
       try {
-        Thread.sleep(500 + new Random().nextInt(1000));
+        if (delay) {
+          Thread.sleep(500 + new Random().nextInt(1000));
+        }
         this.disableMacros();
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
@@ -157,8 +159,6 @@ public class Failsafe extends Module {
     if (this.sysNotification.getValue()) {
       WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
     }
-
-    FakePlayerCheckReact.react(targetPlayer, resumeTime.getValue(), fakePlayerCheckMessage.getValue());
   }
 
   private void disableMacros() {
@@ -202,7 +202,6 @@ public class Failsafe extends Module {
   @SubscribeEvent
   public void clear(WorldEvent.Load event) {
     lastLocation = null;
-    legitTeleported = false;
   }
 }
 
