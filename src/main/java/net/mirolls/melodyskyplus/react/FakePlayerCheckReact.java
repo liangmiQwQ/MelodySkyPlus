@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class FakePlayerCheckReact {
 
-  public static void react(EntityPlayer fakePlayer, double resumeTime, String fakePlayerCheckMessage) {
+  public static void react(EntityPlayer fakePlayer, String fakePlayerCheckMessage) {
     Minecraft mc = Minecraft.getMinecraft();
 
     new Thread(() -> {
