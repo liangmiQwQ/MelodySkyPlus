@@ -8,8 +8,8 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
+import net.mirolls.melodyskyplus.react.BedrockBoatCheck;
 import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
-import net.mirolls.melodyskyplus.react.TPCheckReact;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
@@ -36,16 +36,18 @@ public class Failsafe extends Module {
   private static Failsafe INSTANCE;
   private final ArrayList<Module> mods = new ArrayList<>();
   private final TimerUtil resumeTimer = (new TimerUtil()).reset();
-  public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
   public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
+  public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
+
+
   private boolean legitTeleported = false;
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
   public Failsafe() {
     super("Failsafe", ModuleType.QOL);
-    this.addValues(this.fakePlayerCheckMessage, sysNotification, resumeTime);
+    this.addValues(sysNotification, resumeTime, fakePlayerCheckMessage);
     this.setModInfo("Anti staffs.");
     this.except();
   }
@@ -104,7 +106,7 @@ public class Failsafe extends Module {
         if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.playerLocation) > 5) {
           // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
           // 判定为macro checked
-          TPCheckReact.react();
+          BedrockBoatCheck.react();
         }
       }
 

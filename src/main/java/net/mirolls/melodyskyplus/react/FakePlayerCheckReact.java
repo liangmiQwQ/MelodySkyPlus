@@ -10,6 +10,7 @@ import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 
 import java.util.Random;
+import java.util.regex.Pattern;
 
 public class FakePlayerCheckReact {
 
@@ -17,7 +18,7 @@ public class FakePlayerCheckReact {
     Minecraft mc = Minecraft.getMinecraft();
 
     new Thread(() -> {
-      long sleepTime = (long) (resumeTime * 500);
+      long sleepTime = 5000;
 
       try {
         Thread.sleep(sleepTime / 2);
@@ -44,7 +45,7 @@ public class FakePlayerCheckReact {
     // 跳起来 瞎转
     int needReactTimes = 5;
 
-    for (int reactTime = 0; reactTime < 6; reactTime++) {
+    for (int reactTime = 0; reactTime < 10; reactTime++) {
 //    while (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
       if (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
         int rotatingMode = random.nextInt(4);
@@ -187,7 +188,8 @@ public class FakePlayerCheckReact {
   }
 
   private static void sendQuestionMessage(Random random, Minecraft mc, String fakePlayerCheckMessage) {
-    String[] replyMessage = fakePlayerCheckMessage.split(",");
+    String[] replyMessage = fakePlayerCheckMessage.split(Pattern.quote(","));
+
 
     SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
     mySkyblockArea.updateCurrentArea();
