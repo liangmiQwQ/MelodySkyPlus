@@ -1,15 +1,18 @@
 package net.mirolls.melodyskyplus.modules;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
-import net.mirolls.melodyskyplus.react.BedrockBoatCheck;
+import net.mirolls.melodyskyplus.react.BedrockCheck;
 import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
+import net.mirolls.melodyskyplus.react.TPCheckReact;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
@@ -39,8 +42,8 @@ public class Failsafe extends Module {
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
   public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
-  private long lastLegitTeleport = 0;
-  private long nowTick = -1;
+  private long lastLegitTeleport = -16;
+  private long nowTick = 0;
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
@@ -101,15 +104,47 @@ public class Failsafe extends Module {
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-      if (nowTick - lastLegitTeleport > 15) {
-        if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.playerLocation) > 5) {
+      if (nowTick > 20 && nowTick - lastLegitTeleport > 15) {
+        if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 3) {
           // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
           // 判定为macro checked
-          BedrockBoatCheck.react();
+          BlockPos blockPosDown = mc.thePlayer.getPosition().down();
+          Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
+          if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
+            if (blockPosDown.getY() == 30) {
+              // 检测周围的方块, 避免tp到最底下了了
+              BlockPos blockPosTesting = mc.thePlayer.getPosition();
+              boolean bedrockTest = false;
+              for (int i = 0; i < 9; i++) {
+                if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+                    Blocks.bedrock.getRegistryName())) {
+                  bedrockTest = true;
+                }
+                blockPosTesting = blockPosTesting.east();
+              }
+
+              if (bedrockTest) {
+                react(true);
+                // 是基岩船或者基岩房子
+                BedrockCheck.react();
+              } else {
+                react(true);
+                TPCheckReact.react(); // 正常的TP Check 但是TP到基岩层了
+              }
+            } else {
+              react(true);
+              BedrockCheck.react();
+            }
+          } else {
+            react(true);
+            TPCheckReact.react();
+          }
+
+          BedrockCheck.react();
         }
       }
 
-      lastLocation = mc.thePlayer.playerLocation;
+      lastLocation = mc.thePlayer.getPosition();
       lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
@@ -202,6 +237,10 @@ public class Failsafe extends Module {
   @SubscribeEvent
   public void clear(WorldEvent.Load event) {
     lastLocation = null;
+    this.reacting = false;
+    this.resumeTimer.reset();
+    nowTick = 0;
+    lastLegitTeleport = -16;
   }
 }
 
