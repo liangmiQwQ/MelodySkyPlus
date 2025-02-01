@@ -10,7 +10,8 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
-import net.mirolls.melodyskyplus.react.BedrockCheck;
+import net.mirolls.melodyskyplus.react.BedrockBoatReact;
+import net.mirolls.melodyskyplus.react.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.react.TPCheckReact;
 import xyz.Melody.Client;
@@ -41,7 +42,12 @@ public class Failsafe extends Module {
   private final TimerUtil resumeTimer = (new TimerUtil()).reset();
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
   public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
+  public Option<Boolean> antiFakePlayerCheck;
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public Option<Boolean> antiBedrockBoatCheck;
+  public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
+
+
   private long lastLegitTeleport = -16;
   private long nowTick = 0;
   private BlockPos lastLocation = null;
@@ -49,7 +55,17 @@ public class Failsafe extends Module {
 
   public Failsafe() {
     super("Failsafe", ModuleType.QOL);
-    this.addValues(sysNotification, resumeTime, fakePlayerCheckMessage);
+    antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
+      if (getINSTANCE() != null) {
+        INSTANCE.fakePlayerCheckMessage.setEnabled(true);
+      }
+    });
+    antiBedrockBoatCheck = new Option<>("AntiBedrockBoatCheck", true, (val) -> {
+      if (getINSTANCE() != null) {
+        INSTANCE.bedrockCheckMessage.setEnabled(true);
+      }
+    });
+    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage);
     this.setModInfo("Anti staffs.");
     this.except();
   }
@@ -72,29 +88,55 @@ public class Failsafe extends Module {
     return INSTANCE;
   }
 
+  private void reactBedrock() {
+    Minecraft mc = Minecraft.getMinecraft();
+
+    BlockPos blockPosTesting = mc.thePlayer.getPosition();
+
+    boolean bedrockHouse = false;
+    // 先分清楚到底是基岩房子还是基岩船
+    for (int i = 0; i < 5; i++) {
+      blockPosTesting = blockPosTesting.up();
+
+      if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+          Blocks.bedrock.getRegistryName())) {
+        bedrockHouse = true;
+        break;
+      }
+    }
+
+    if (bedrockHouse) {
+      BedrockHouseReact.react();
+    } else {
+      BedrockBoatReact.react();
+    }
+  }
+
   private void checkMarcoChecked() {
-    Object[] info = CustomPlayerInRange.redirectPlayerInRange(true, 20, true);
+    Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
     if (!reacting) {
-      if ((Boolean) info[0]) {
-        if (info[1] == mc.thePlayer.getName()) {
-          react(true);
-          FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
-        }
-      } else if (info[2] != "NOT_THIS") {
-        // 假人
-        // 注册检查器,确认玩家是否飞行
-        EntityPlayer targetPlayer = CustomPlayerInRange.findPlayer((String) info[2]);
-
-        MelodySkyPlus.checkPlayerFlying.resetCheck();
-        MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
-        MelodySkyPlus.checkPlayerFlying.setChecking(true);
-        MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-          if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 3) {
-            react(false);
+      if (antiFakePlayerCheck.getValue() && info != null) {
+        if ((Boolean) info[0]) {
+          if (info[1] == mc.thePlayer.getName()) {
+            react(true);
             FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
-          } // else: 正常假人 直接忽略
-        });
+          }
+        } else if (info[2] != "NOT_THIS") {
+          // 假人
+          // 注册检查器,确认玩家是否飞行
+          EntityPlayer targetPlayer = CustomPlayerInRange.findPlayer((String) info[2]);
+
+          MelodySkyPlus.checkPlayerFlying.resetCheck();
+          MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
+          MelodySkyPlus.checkPlayerFlying.setChecking(true);
+          MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
+            if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 3) {
+              react(false);
+              FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+            } // else: 正常假人 直接忽略
+          });
+        }
       }
 
       // 记录lastLocation (failsafe的一部分)
@@ -119,6 +161,7 @@ public class Failsafe extends Module {
                 if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
                     Blocks.bedrock.getRegistryName())) {
                   bedrockTest = true;
+                  break;
                 }
                 blockPosTesting = blockPosTesting.east();
               }
@@ -126,21 +169,21 @@ public class Failsafe extends Module {
               if (bedrockTest) {
                 react(true);
                 // 是基岩船或者基岩房子
-                BedrockCheck.react();
+                reactBedrock();
               } else {
                 react(true);
                 TPCheckReact.react(); // 正常的TP Check 但是TP到基岩层了
               }
             } else {
               react(true);
-              BedrockCheck.react();
+              reactBedrock();
             }
           } else {
             react(true);
             TPCheckReact.react();
           }
 
-          BedrockCheck.react();
+          reactBedrock();
         }
       }
 
