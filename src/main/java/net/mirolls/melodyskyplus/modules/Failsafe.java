@@ -121,6 +121,7 @@ public class Failsafe extends Module {
           if (info[1] == mc.thePlayer.getName()) {
             react(true);
             FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+            return;
           }
         } else if (info[2] != "NOT_THIS") {
           // 假人
@@ -131,13 +132,47 @@ public class Failsafe extends Module {
           MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
           MelodySkyPlus.checkPlayerFlying.setChecking(true);
           MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-            if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 3) {
+            if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
               react(false);
               FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
             } // else: 正常假人 直接忽略
           });
         }
       }
+
+      // 先进行基岩部分的检查
+      // 如果基岩部分检查出来有问题就不进行下一部分的检查了
+      BlockPos blockPosDown = mc.thePlayer.getPosition().down();
+      Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
+      if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
+        // 如果脚底下的方块是基岩
+        if (blockPosDown.getY() == 30) {
+          // 检测周围的方块, 避免tp到最底下了了
+          BlockPos blockPosTesting = mc.thePlayer.getPosition();
+          boolean bedrockTest = false;
+          for (int i = 0; i < 9; i++) {
+            if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+                Blocks.bedrock.getRegistryName())) {
+              bedrockTest = true;
+              break;
+            }
+            blockPosTesting = blockPosTesting.east();
+          }
+
+          if (bedrockTest) {
+            react(true);
+            // 是基岩船或者基岩房子
+            reactBedrock();
+            return;
+          } // else: 正常走到基岩上了 忽略
+        } else {
+          // 绝对是了 洗不了
+          react(true);
+          reactBedrock();
+          return;
+        }
+      }
+
 
       // 记录lastLocation (failsafe的一部分)
       boolean legitTeleporting =
@@ -150,40 +185,9 @@ public class Failsafe extends Module {
         if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 3) {
           // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
           // 判定为macro checked
-          BlockPos blockPosDown = mc.thePlayer.getPosition().down();
-          Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
-          if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
-            if (blockPosDown.getY() == 30) {
-              // 检测周围的方块, 避免tp到最底下了了
-              BlockPos blockPosTesting = mc.thePlayer.getPosition();
-              boolean bedrockTest = false;
-              for (int i = 0; i < 9; i++) {
-                if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
-                    Blocks.bedrock.getRegistryName())) {
-                  bedrockTest = true;
-                  break;
-                }
-                blockPosTesting = blockPosTesting.east();
-              }
-
-              if (bedrockTest) {
-                react(true);
-                // 是基岩船或者基岩房子
-                reactBedrock();
-              } else {
-                react(true);
-                TPCheckReact.react(); // 正常的TP Check 但是TP到基岩层了
-              }
-            } else {
-              react(true);
-              reactBedrock();
-            }
-          } else {
-            react(true);
-            TPCheckReact.react();
-          }
-
-          reactBedrock();
+          // 直接上TPReact了 因为基岩已经另外处理过了
+          react(true);
+          TPCheckReact.react();
         }
       }
 
@@ -210,32 +214,34 @@ public class Failsafe extends Module {
   }
 
   private void react(boolean delay) {
-    resumeTimer.reset();
-    Minecraft mc = Minecraft.getMinecraft();
-    this.reacting = true;
-    new Thread(() -> {
-      try {
-        if (delay) {
-          Thread.sleep(500 + new Random().nextInt(1000));
+    if (!reacting) { // 这个前提是为了防止部分react同时触发(考虑到假人飞行的问题)
+      resumeTimer.reset();
+      Minecraft mc = Minecraft.getMinecraft();
+      this.reacting = true;
+      new Thread(() -> {
+        try {
+          if (delay) {
+            Thread.sleep(500 + new Random().nextInt(1000));
+          }
+          this.disableMacros();
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
         }
-        this.disableMacros();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+      }).start();
+      Client.async(() -> {
+        try {
+          Thread.sleep(100L);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+        } catch (Exception e) {
+          MelodySkyPlus.LOGGER.error(e.getMessage());
+        }
+      });
+      Client.warn();
+      Helper.sendMessage("[Melody+ Failsafe] Alert! Macro Check! ");
+      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
+      if (this.sysNotification.getValue()) {
+        WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
       }
-    }).start();
-    Client.async(() -> {
-      try {
-        Thread.sleep(100L);
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-      } catch (Exception e) {
-        MelodySkyPlus.LOGGER.error(e.getMessage());
-      }
-    });
-    Client.warn();
-    Helper.sendMessage("[Melody+ Failsafe] Alert! Macro Check! ");
-    NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
-    if (this.sysNotification.getValue()) {
-      WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
     }
   }
 
