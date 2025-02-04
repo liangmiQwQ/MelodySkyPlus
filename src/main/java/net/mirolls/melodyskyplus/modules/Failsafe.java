@@ -46,10 +46,8 @@ public class Failsafe extends Module {
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiBedrockBoatCheck;
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
-
-
-  private long lastLegitTeleport = -16;
-  private long nowTick = 0;
+  public long nowTick = 0;
+  public long lastLegitTeleport = -16;
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
@@ -182,7 +180,8 @@ public class Failsafe extends Module {
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-      if (nowTick > 20 && nowTick - lastLegitTeleport > 15) {
+      lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
+      if (nowTick > 20 && nowTick - lastLegitTeleport > 20) {
         if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 3) {
           // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
           // 判定为macro checked
@@ -193,7 +192,6 @@ public class Failsafe extends Module {
       }
 
       lastLocation = mc.thePlayer.getPosition();
-      lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
       this.reEnableMacros();
