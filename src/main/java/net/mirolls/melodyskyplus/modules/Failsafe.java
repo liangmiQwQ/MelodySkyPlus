@@ -105,10 +105,13 @@ public class Failsafe extends Module {
       }
     }
 
+    react(true);
     if (bedrockHouse) {
       BedrockHouseReact.react();
     } else {
-      BedrockBoatReact.react();
+      if (antiBedrockBoatCheck.getValue()) {
+        BedrockBoatReact.react(bedrockCheckMessage.getValue());
+      }
     }
   }
 
@@ -160,14 +163,12 @@ public class Failsafe extends Module {
           }
 
           if (bedrockTest) {
-            react(true);
             // 是基岩船或者基岩房子
             reactBedrock();
             return;
           } // else: 正常走到基岩上了 忽略
         } else {
           // 绝对是了 洗不了
-          react(true);
           reactBedrock();
           return;
         }
