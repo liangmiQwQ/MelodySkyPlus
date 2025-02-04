@@ -4,8 +4,10 @@ package net.mirolls.melodyskyplus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.mirolls.melodyskyplus.event.CheckAir;
 import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
-import net.mirolls.melodyskyplus.event.RotationLib;
+import net.mirolls.melodyskyplus.libs.RotationLib;
+import net.mirolls.melodyskyplus.libs.WalkLib;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +19,8 @@ public class MelodySkyPlus {
 
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
+  public static WalkLib walkLib;
+  public static CheckAir checkAir;
 
 
   @EventHandler
@@ -25,6 +29,8 @@ public class MelodySkyPlus {
 
     rotationLib = new RotationLib();
     checkPlayerFlying = new CheckPlayerFlying();
+    walkLib = new WalkLib();
+    checkAir = new CheckAir();
     // events
   }
 }

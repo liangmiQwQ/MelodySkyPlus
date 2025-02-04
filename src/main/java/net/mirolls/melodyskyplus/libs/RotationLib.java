@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.event;
+package net.mirolls.melodyskyplus.libs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
@@ -7,12 +7,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import xyz.Melody.Utils.math.Rotation;
 
+
 public class RotationLib {
 
   Minecraft mc = Minecraft.getMinecraft();
   private Rotation targetRotation = null;
   private boolean rotating = false;
   private float speedCoefficient = 5f;
+  private CallBack callBack;
+
 
   public RotationLib() {
     MinecraftForge.EVENT_BUS.register(this);
@@ -31,6 +34,9 @@ public class RotationLib {
         if (Math.abs(oldYaw - this.mc.thePlayer.rotationYaw) < 1f && Math.abs(oldPitch - this.mc.thePlayer.rotationPitch) < 1f) {
           rotating = false;
           targetRotation = null;
+          if (callBack != null) {
+            callBack.callback();
+          }
         }
       }
     }
@@ -71,5 +77,13 @@ public class RotationLib {
 
   public void setSpeedCoefficient(float speedCoefficient) {
     this.speedCoefficient = speedCoefficient;
+  }
+
+  public CallBack getCallBack() {
+    return callBack;
+  }
+
+  public void setCallBack(CallBack callBack) {
+    this.callBack = callBack;
   }
 }
