@@ -266,6 +266,9 @@ public class Failsafe extends Module {
   public void onEnable() {
     this.resumeTimer.reset();
     this.reacting = false;
+    this.lastLegitTeleport = -16;
+    this.nowTick = 0;
+    this.lastLocation = null;
     super.onEnable();
   }
 
