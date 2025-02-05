@@ -31,6 +31,7 @@ import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
+import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -90,16 +91,37 @@ public class Failsafe extends Module {
   }
 
   private boolean isDoingMarco() {
+    boolean returnValue = false;
     for (Module module : ModuleManager.modules) {
+
       if (module.getName().toLowerCase().contains("nuker") && module.isEnabled()) {
-        return true;
+        if (module.getName().toLowerCase().contains("gemstonenuker") ||
+            module.getName().toLowerCase().contains("mithrilnuker")) { // 是宝石努克
+          if (AutoRuby.getINSTANCE().isEnabled()) {// 在开启了坳头宝石的情况下的
+            if (AutoRuby.getINSTANCE().started) { // 并且运行了.ar start
+              returnValue = true;
+            }
+          } else { // 开启了秘银努克 但是没开坳头宝石
+            returnValue = true;
+          }
+        } else { // 其他努克
+          returnValue = true;
+        }
       }
 
       if (module.getName().toLowerCase().contains("autofish") && module.isEnabled()) {
-        return true;
+        Helper.sendMessage("1" + module.getName().toLowerCase());
+        returnValue = true;
       }
     }
-    return false;
+
+    if (returnValue) {
+      this.onEnable();
+      return true;
+    } else {
+      this.onDisable();
+      return false;
+    }
   }
 
   private void reactBedrock() {
@@ -131,93 +153,94 @@ public class Failsafe extends Module {
 
   private void checkMarcoChecked() {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
-    
-    if (!reacting && isDoingMarco()) {
-      if (antiFakePlayerCheck.getValue() && info != null) {
-        if ((Boolean) info[0]) {
-          if (info[1] == mc.thePlayer.getName()) {
-            react(true);
-            FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
-            return;
-          }
-        } else if (info[2] != "NOT_THIS") {
-          // 假人
-          // 注册检查器,确认玩家是否飞行
-          EntityPlayer targetPlayer = CustomPlayerInRange.findPlayer((String) info[2]);
 
-          MelodySkyPlus.checkPlayerFlying.resetCheck();
-          MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
-          MelodySkyPlus.checkPlayerFlying.setChecking(true);
-          MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-            if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
-              react(false);
+    if (!reacting) {
+      if (isDoingMarco()) {
+        if (antiFakePlayerCheck.getValue() && info != null) {
+          if ((Boolean) info[0]) {
+            if (info[1] == mc.thePlayer.getName()) {
+              react(true);
               FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
-            } // else: 正常假人 直接忽略
-          });
-        }
-      }
-
-      // 先进行基岩部分的检查
-      // 如果基岩部分检查出来有问题就不进行下一部分的检查了
-      BlockPos blockPosDown = mc.thePlayer.getPosition().down();
-      Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
-      if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
-        // 如果脚底下的方块是基岩
-        if (blockPosDown.getY() == 30) {
-          // 检测周围的方块, 避免tp到最底下了了
-          BlockPos blockPosTesting = mc.thePlayer.getPosition();
-          boolean bedrockTest = false;
-          for (int i = 0; i < 9; i++) {
-            if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
-                Blocks.bedrock.getRegistryName())) {
-              bedrockTest = true;
-              break;
+              return;
             }
-            blockPosTesting = blockPosTesting.east();
-          }
+          } else if (info[2] != "NOT_THIS") {
+            // 假人
+            // 注册检查器,确认玩家是否飞行
+            EntityPlayer targetPlayer = CustomPlayerInRange.findPlayer((String) info[2]);
 
-          if (bedrockTest) {
-            // 是基岩船或者基岩房子
+            MelodySkyPlus.checkPlayerFlying.resetCheck();
+            MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
+            MelodySkyPlus.checkPlayerFlying.setChecking(true);
+            MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
+              if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
+                react(false);
+                FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+              } // else: 正常假人 直接忽略
+            });
+          }
+        }
+
+        // 先进行基岩部分的检查
+        // 如果基岩部分检查出来有问题就不进行下一部分的检查了
+        BlockPos blockPosDown = mc.thePlayer.getPosition().down();
+        Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
+        if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
+          // 如果脚底下的方块是基岩
+          if (blockPosDown.getY() == 30) {
+            // 检测周围的方块, 避免tp到最底下了了
+            BlockPos blockPosTesting = mc.thePlayer.getPosition();
+            boolean bedrockTest = false;
+            for (int i = 0; i < 9; i++) {
+              if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+                  Blocks.bedrock.getRegistryName())) {
+                bedrockTest = true;
+                break;
+              }
+              blockPosTesting = blockPosTesting.east();
+            }
+
+            if (bedrockTest) {
+              // 是基岩船或者基岩房子
+              reactBedrock();
+              return;
+            } // else: 正常走到基岩上了 忽略
+          } else {
+            // 绝对是了 洗不了
             reactBedrock();
             return;
-          } // else: 正常走到基岩上了 忽略
-        } else {
-          // 绝对是了 洗不了
-          reactBedrock();
-          return;
+          }
         }
-      }
 
 
-      // 记录lastLocation (failsafe的一部分)
-      boolean legitTeleporting =
-          Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
-              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
-              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
-              || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
+        // 记录lastLocation (failsafe的一部分)
+        boolean legitTeleporting =
+            Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
+                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
+                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
+                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-      GameSettings gameSettings = this.mc.gameSettings;
-      lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
+        GameSettings gameSettings = this.mc.gameSettings;
+        lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
 
-      lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
-      if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
-        if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-          if (mc.thePlayer.fallDistance < 0.8) {
-            if (!mc.thePlayer.capabilities.isFlying) {
-              if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
-                // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
-                // 判定为macro checked
-                // 直接上TPReact了 因为基岩已经另外处理过了
-                react(true);
-                TPCheckReact.react();
+        lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
+        if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
+          if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
+            if (mc.thePlayer.fallDistance < 0.8) {
+              if (!mc.thePlayer.capabilities.isFlying) {
+                if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
+                  // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
+                  // 判定为macro checked
+                  // 直接上TPReact了 因为基岩已经另外处理过了
+                  react(true);
+                  TPCheckReact.react();
+                }
               }
             }
           }
         }
+
+        lastLocation = mc.thePlayer.getPosition();
       }
-
-      lastLocation = mc.thePlayer.getPosition();
-
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
       this.reEnableMacros();
