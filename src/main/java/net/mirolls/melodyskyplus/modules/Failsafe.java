@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -194,12 +195,16 @@ public class Failsafe extends Module {
 
       lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
       if (nowTick > 20 && nowTick - lastLegitTeleport > 20) {
-        if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 3) {
-          // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
-          // 判定为macro checked
-          // 直接上TPReact了 因为基岩已经另外处理过了
-          react(true);
-          TPCheckReact.react();
+        GameSettings gameSettings = this.mc.gameSettings;
+
+        if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
+          if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
+            // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
+            // 判定为macro checked
+            // 直接上TPReact了 因为基岩已经另外处理过了
+            react(true);
+            TPCheckReact.react();
+          }
         }
       }
 
