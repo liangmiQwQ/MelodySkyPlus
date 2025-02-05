@@ -49,6 +49,8 @@ public class Failsafe extends Module {
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public long nowTick = 0;
   public long lastLegitTeleport = -16;
+  public long lastJump = -16;
+
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
@@ -92,7 +94,8 @@ public class Failsafe extends Module {
       if (module.getName().toLowerCase().contains("nuker") && module.isEnabled()) {
         return true;
       }
-      if (module.getName().toLowerCase().contains("auto") || !module.getName().equalsIgnoreCase("autogemstone") && module.isEnabled()) {
+
+      if (module.getName().toLowerCase().contains("autofish") && module.isEnabled()) {
         return true;
       }
     }
@@ -128,7 +131,7 @@ public class Failsafe extends Module {
 
   private void checkMarcoChecked() {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
-
+    
     if (!reacting && isDoingMarco()) {
       if (antiFakePlayerCheck.getValue() && info != null) {
         if ((Boolean) info[0]) {
@@ -193,21 +196,28 @@ public class Failsafe extends Module {
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
               || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
+      GameSettings gameSettings = this.mc.gameSettings;
       lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
-      if (nowTick > 20 && nowTick - lastLegitTeleport > 20) {
-        GameSettings gameSettings = this.mc.gameSettings;
+
+      lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
+      if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
         if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-          if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
-            // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
-            // 判定为macro checked
-            // 直接上TPReact了 因为基岩已经另外处理过了
-            react(true);
-            TPCheckReact.react();
+          if (mc.thePlayer.fallDistance < 0.8) {
+            if (!mc.thePlayer.capabilities.isFlying) {
+              if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
+                // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
+                // 判定为macro checked
+                // 直接上TPReact了 因为基岩已经另外处理过了
+                react(true);
+                TPCheckReact.react();
+              }
+            }
           }
         }
       }
 
       lastLocation = mc.thePlayer.getPosition();
+
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
       this.reEnableMacros();
