@@ -86,6 +86,18 @@ public class Failsafe extends Module {
     return INSTANCE;
   }
 
+  private boolean isDoingMarco() {
+    for (Module module : ModuleManager.modules) {
+      if (module.getName().toLowerCase().contains("nuker") && module.isEnabled()) {
+        return true;
+      }
+      if (module.getName().toLowerCase().contains("auto") || !module.getName().equalsIgnoreCase("autogemstone") && module.isEnabled()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void reactBedrock() {
     Minecraft mc = Minecraft.getMinecraft();
 
@@ -116,7 +128,7 @@ public class Failsafe extends Module {
   private void checkMarcoChecked() {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
-    if (!reacting) {
+    if (!reacting && isDoingMarco()) {
       if (antiFakePlayerCheck.getValue() && info != null) {
         if ((Boolean) info[0]) {
           if (info[1] == mc.thePlayer.getName()) {
