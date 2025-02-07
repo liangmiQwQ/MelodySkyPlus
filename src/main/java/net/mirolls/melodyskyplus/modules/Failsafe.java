@@ -94,7 +94,7 @@ public class Failsafe extends Module {
     boolean returnValue = false;
     for (Module module : ModuleManager.modules) {
 
-      if (module.getName().toLowerCase().contains("nuker") && module.isEnabled()) {
+      if (module.getName().toLowerCase().contains("nuker") && module.isEnabled() && !module.excepted) {
         if (module.getName().toLowerCase().contains("gemstonenuker") ||
             module.getName().toLowerCase().contains("mithrilnuker")) { // 是宝石努克
           if (AutoRuby.getINSTANCE().isEnabled()) {// 在开启了坳头宝石的情况下的
