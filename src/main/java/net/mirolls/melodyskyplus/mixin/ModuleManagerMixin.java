@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,6 +19,8 @@ public class ModuleManagerMixin {
 
   @Inject(method = "init", remap = false, at = @At("HEAD"))
   public void init(CallbackInfo ci) {
-    modules.add(new Failsafe());
+    if (AntiBug.isBugRemoved()) {
+      modules.add(new Failsafe());
+    }
   }
 }
