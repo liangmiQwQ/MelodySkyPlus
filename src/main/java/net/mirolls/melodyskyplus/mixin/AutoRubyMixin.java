@@ -15,16 +15,6 @@ import java.util.Objects;
 @Mixin(value = AutoRuby.class, remap = false)
 public class AutoRubyMixin {
   @Shadow
-  private boolean etherWarped;
-
-  /* @Inject(method = "etherWarp", at = @At(value = "HEAD"), remap = false)
-  private void etherWarp(BlockPos pos, CallbackInfo ci) {
-    if (!this.etherWarped) {
-      Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
-    }
-  } */
-
-  @Shadow
   private TimerUtil timer;
 
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
