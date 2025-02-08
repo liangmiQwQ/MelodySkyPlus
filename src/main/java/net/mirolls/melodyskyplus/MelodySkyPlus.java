@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.mirolls.melodyskyplus.client.Bug;
 import net.mirolls.melodyskyplus.event.CheckAir;
 import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
+import net.mirolls.melodyskyplus.libs.NukerTicks;
 import net.mirolls.melodyskyplus.libs.RotationLib;
 import net.mirolls.melodyskyplus.libs.WalkLib;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +24,7 @@ public class MelodySkyPlus {
   public static WalkLib walkLib;
   public static CheckAir checkAir;
   public static Bug antiBug;
+  public static NukerTicks nukerTicks;
 
   @EventHandler
   public void init(FMLInitializationEvent event) {
@@ -33,6 +35,8 @@ public class MelodySkyPlus {
     walkLib = new WalkLib();
     checkAir = new CheckAir();
     antiBug = new Bug();
+    nukerTicks = new NukerTicks();
+
     // events
   }
 
