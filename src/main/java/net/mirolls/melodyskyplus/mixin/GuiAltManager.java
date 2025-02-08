@@ -21,7 +21,7 @@ public class GuiAltManager {
       if (Objects.equals(MelodySkyPlus.antiBug.getBugID(), Minecraft.getMinecraft().getSession().getProfile().getId().toString())) {
         return "Melody+ Verified: " + (AntiBug.isBugRemoved() ? EnumChatFormatting.GREEN + "true" : EnumChatFormatting.GRAY + "false");
       } else {
-        return "Melody+暂不支持切换账号";
+        return "Do not swap your account!";
       }
     } else {
       return text;
