@@ -3,11 +3,13 @@
   "package": "net.mirolls.melodyskyplus.mixin",
   "refmap": "refmap.melodyskyplus.json",
   "mixins": [
+    "AuthManagerMixin",
     "AutoRubyMixin",
     "MiningProtectMixin",
     "ModuleManagerMixin"
   ],
   "client": [
+    "GuiAltManager",
     "MiningProtectMixin"
   ],
   "server": [],
