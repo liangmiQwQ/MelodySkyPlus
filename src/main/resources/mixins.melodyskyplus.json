@@ -5,6 +5,7 @@
   "mixins": [
     "AuthManagerMixin",
     "AutoRubyMixin",
+    "ChatMonitorMixin",
     "GemstoneNukerMixin",
     "MiningProtectMixin",
     "ModuleManagerMixin"
