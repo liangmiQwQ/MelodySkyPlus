@@ -258,6 +258,11 @@ public abstract class GemstoneNukerMixin {
           melodySkyPlus$miningType = "O_a_c_p";
         }
       }
+
+      if (tick < 4) {
+        tick = 4;
+      }
+
       cir.setReturnValue(tick);
       cir.cancel();
     }
