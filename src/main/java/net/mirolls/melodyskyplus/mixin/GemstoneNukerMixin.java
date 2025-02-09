@@ -154,7 +154,7 @@ public abstract class GemstoneNukerMixin {
       });
 
       // 自适应模式: 从理论最高6tick往上加 找到实际挖掘tick
-      Value[] returnValues = new Value[originalValues.length + 2];
+      Value[] returnValues = new Value[originalValues.length + 3];
 
       for (int i = 0; i < returnValues.length; i++) {
         if (i == 8) {
@@ -163,8 +163,10 @@ public abstract class GemstoneNukerMixin {
           returnValues[i] = melodySkyPlus$adaptive;
         } else if (i == 10) {
           returnValues[i] = melodySkyPlus$tryFaster;
-        } else if (i > 10) {
-          returnValues[i] = originalValues[i - 2];
+        } else if (i == 11) {
+          returnValues[i] = melodySkyPlus$trySlowerChange;
+        } else if (i > 11) {
+          returnValues[i] = originalValues[i - 3];
         } else {
           returnValues[i] = originalValues[i];
         }
