@@ -8,6 +8,7 @@ import net.mirolls.melodyskyplus.client.Bug;
 import net.mirolls.melodyskyplus.event.CheckAir;
 import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
 import net.mirolls.melodyskyplus.libs.NukerTicks;
+import net.mirolls.melodyskyplus.libs.PickaxeAbility;
 import net.mirolls.melodyskyplus.libs.RotationLib;
 import net.mirolls.melodyskyplus.libs.WalkLib;
 import org.apache.logging.log4j.LogManager;
@@ -18,13 +19,13 @@ public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
   public static final String VERSION = "1.0";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
-
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
   public static WalkLib walkLib;
   public static CheckAir checkAir;
   public static Bug antiBug;
   public static NukerTicks nukerTicks;
+  public static PickaxeAbility pickaxeAbility;
 
   @EventHandler
   public void init(FMLInitializationEvent event) {
@@ -36,7 +37,7 @@ public class MelodySkyPlus {
     checkAir = new CheckAir();
     antiBug = new Bug();
     nukerTicks = new NukerTicks();
-
+    pickaxeAbility = new PickaxeAbility();
     // events
   }
 
