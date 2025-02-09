@@ -22,12 +22,16 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
+import java.util.Random;
+
 @SuppressWarnings("rawtypes")
 @Mixin(value = GemstoneNuker.class, remap = false)
 public abstract class GemstoneNukerMixin {
   public Option<Boolean> melodySkyPlus$advanced = null;
   public Option<Boolean> melodySkyPlus$adaptive = null;
   public Numbers<Double> melodySkyPlus$tryFaster = new Numbers<>("TryFaster(s)", 60.0, 10.0, 300.0, 5.0);
+  public Numbers<Double> melodySkyPlus$trySlowerChange = new Numbers<>("TrySlower(%)", 50.0, 10.0, 100.0, 0.5);
+
   public TimerUtil tryFasterTimer = new TimerUtil();
   @Shadow
   private Option<Boolean> pane;
@@ -115,6 +119,7 @@ public abstract class GemstoneNukerMixin {
       melodySkyPlus$adaptive = new Option<>("Adaptive Mode", false, (val) -> {
         if (GemstoneNuker.getINSTANCE() != null) {
           this.melodySkyPlus$tryFaster.setEnabled(val);
+          this.melodySkyPlus$trySlowerChange.setEnabled(val);
           this.miningSpeed.setEnabled(!val);
           this.skillMiningSpeed.setEnabled(!val);
           this.shiftTick.setEnabled(!val);
@@ -129,10 +134,16 @@ public abstract class GemstoneNukerMixin {
           this.melodySkyPlus$adaptive.setEnabled(val);
           if (val) {
             if (this.melodySkyPlus$adaptive.getValue()) {
+              this.melodySkyPlus$tryFaster.setEnabled(true);
+              this.melodySkyPlus$trySlowerChange.setEnabled(true);
+
               this.miningSpeed.setEnabled(false);
               this.skillMiningSpeed.setEnabled(false);
               this.shiftTick.setEnabled(false);
             } else {
+              this.melodySkyPlus$tryFaster.setEnabled(false);
+              this.melodySkyPlus$trySlowerChange.setEnabled(false);
+
               this.miningSpeed.setEnabled(true);
               this.skillMiningSpeed.setEnabled(true);
               this.shiftTick.setEnabled(true);
@@ -284,37 +295,39 @@ public abstract class GemstoneNukerMixin {
           int metadata = blockState.getBlock().getMetaFromState(blockState);
 
           if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-            // 至少保证这个是稳定的
-            if (melodySkyPlus$prevPickaxeAbility) {
-              // 开技能了
-              if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
-                MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() + 1);
-              } else if (metadata == 2) {
-                // jasper
-                MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() + 1);
-              } else if (metadata == 14) {
-                // ruby
-                MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() + 1);
-              } else if (metadata == 4) {
-                // topaz
-                MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() + 1);
+            if (melodySkyPlus$trySlowerChange.getValue() > new Random().nextDouble()) { // 随机算法
+              // 至少保证这个是稳定的
+              if (melodySkyPlus$prevPickaxeAbility) {
+                // 开技能了
+                if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
+                  MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() + 1);
+                } else if (metadata == 2) {
+                  // jasper
+                  MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() + 1);
+                } else if (metadata == 14) {
+                  // ruby
+                  MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() + 1);
+                } else if (metadata == 4) {
+                  // topaz
+                  MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() + 1);
+                } else {
+                  MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() + 1);
+                }
               } else {
-                MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() + 1);
-              }
-            } else {
-              if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
-                MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() + 1);
-              } else if (metadata == 2) {
-                // jasper
-                MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() + 1);
-              } else if (metadata == 14) {
-                // ruby
-                MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() + 1);
-              } else if (metadata == 4) {
-                // topaz
-                MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() + 1);
-              } else {
-                MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() + 1);
+                if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
+                  MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() + 1);
+                } else if (metadata == 2) {
+                  // jasper
+                  MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() + 1);
+                } else if (metadata == 14) {
+                  // ruby
+                  MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() + 1);
+                } else if (metadata == 4) {
+                  // topaz
+                  MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() + 1);
+                } else {
+                  MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() + 1);
+                }
               }
             }
           }

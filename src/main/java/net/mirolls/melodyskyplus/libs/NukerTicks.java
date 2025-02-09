@@ -20,6 +20,27 @@ public class NukerTicks {
   private int abilityJasper = 5;
   private int abilityO_a_c_p = 5;
 
+  public void reset() {
+    grayMithril = 4;
+    greenMithril = 4;
+    blueMithril = 4;
+    titanium = 6;
+    ruby = 6;
+    j_a_a_s_o = 8;
+    topaz = 11;
+    jasper = 14;
+    o_a_c_p = 15;
+    abilityGrayMithril = 1;
+    abilityGreenMithril = 4;
+    abilityBlueMithril = 4;
+    abilityTitanium = 4;
+    abilityRuby = 4;
+    abilityJ_a_a_s_o = 4;
+    abilityTopaz = 4;
+    abilityJasper = 5;
+    abilityO_a_c_p = 5;
+  }
+
   public int getGrayMithril() {
     return grayMithril;
   }
