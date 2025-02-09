@@ -17,6 +17,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
@@ -50,18 +51,18 @@ public abstract class GemstoneNukerMixin {
       melodySkyPlus$adaptive = new Option<>("Adaptive Mode", false, (val) -> {
         if (GemstoneNuker.getINSTANCE() != null) {
           this.melodySkyPlus$tryFaster.setEnabled(val);
-          this.miningSpeed.setEnabled(!val);
-          this.skillMiningSpeed.setEnabled(!val);
-          this.shiftTick.setEnabled(!val);
+//          this.miningSpeed.setEnabled(!val);
+//          this.skillMiningSpeed.setEnabled(!val);
+//          this.shiftTick.setEnabled(!val);
         }
       });
 
       melodySkyPlus$advanced = new Option<>("Advanced Mode", false, (val) -> {
         if (GemstoneNuker.getINSTANCE() != null) {
-          this.miningSpeed.setEnabled(val);
-          this.skillMiningSpeed.setEnabled(val);
-          this.shiftTick.setEnabled(val);
-          this.removeTime.setEnabled(val);
+//          this.miningSpeed.setEnabled(val);
+//          this.skillMiningSpeed.setEnabled(val);
+//          this.shiftTick.setEnabled(val);
+//          this.removeTime.setEnabled(val);
           this.melodySkyPlus$adaptive.setEnabled(val);
         }
       });
@@ -103,22 +104,11 @@ public abstract class GemstoneNukerMixin {
       // 开技能了
       melodySkyPlus$pickaxeAbility = melodySkyPlus$abilitiedGetTick(blockStr) == cir.getReturnValue();
 
+      Helper.sendMessage("OldReturnValue" + cir.getReturnValue());
       // 尝试加快速度
       if (tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue())) {
         tryFasterTimer.reset();
         if (melodySkyPlus$pickaxeAbility) {
-          if (blockStr == 2300) {
-            MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby());
-          } else if (blockStr == 3000) {
-            MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o());
-          } else if (blockStr == 3800) {
-            MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz());
-          } else if (blockStr == 4800) {
-            MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper());
-          } else if (blockStr == 5200) {
-            MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p());
-          }
-        } else {
           if (blockStr == 2300) {
             MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby());
           } else if (blockStr == 3000) {
@@ -130,22 +120,22 @@ public abstract class GemstoneNukerMixin {
           } else if (blockStr == 5200) {
             MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p());
           }
+        } else {
+          if (blockStr == 2300) {
+            MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby());
+          } else if (blockStr == 3000) {
+            MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o());
+          } else if (blockStr == 3800) {
+            MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz());
+          } else if (blockStr == 4800) {
+            MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper());
+          } else if (blockStr == 5200) {
+            MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p());
+          }
         }
       }
 
       if (melodySkyPlus$pickaxeAbility) {
-        if (blockStr == 2300) {
-          cir.setReturnValue(MelodySkyPlus.nukerTicks.getRuby());
-        } else if (blockStr == 3000) {
-          cir.setReturnValue(MelodySkyPlus.nukerTicks.getJ_a_a_s_o());
-        } else if (blockStr == 3800) {
-          cir.setReturnValue(MelodySkyPlus.nukerTicks.getTopaz());
-        } else if (blockStr == 4800) {
-          cir.setReturnValue(MelodySkyPlus.nukerTicks.getJasper());
-        } else if (blockStr == 5200) {
-          cir.setReturnValue(MelodySkyPlus.nukerTicks.getO_a_c_p());
-        }
-      } else {
         if (blockStr == 2300) {
           cir.setReturnValue(MelodySkyPlus.nukerTicks.getAbilityRuby());
         } else if (blockStr == 3000) {
@@ -157,7 +147,20 @@ public abstract class GemstoneNukerMixin {
         } else if (blockStr == 5200) {
           cir.setReturnValue(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p());
         }
+      } else {
+        if (blockStr == 2300) {
+          cir.setReturnValue(MelodySkyPlus.nukerTicks.getRuby());
+        } else if (blockStr == 3000) {
+          cir.setReturnValue(MelodySkyPlus.nukerTicks.getJ_a_a_s_o());
+        } else if (blockStr == 3800) {
+          cir.setReturnValue(MelodySkyPlus.nukerTicks.getTopaz());
+        } else if (blockStr == 4800) {
+          cir.setReturnValue(MelodySkyPlus.nukerTicks.getJasper());
+        } else if (blockStr == 5200) {
+          cir.setReturnValue(MelodySkyPlus.nukerTicks.getO_a_c_p());
+        }
       }
+      Helper.sendMessage("NewReturnValue" + cir.getReturnValue());
 
       cir.cancel();
     }
