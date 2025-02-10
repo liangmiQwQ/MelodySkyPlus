@@ -1,16 +1,14 @@
 package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
-import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 
 import java.util.Random;
 
 public class GeneralReact extends React {
 
-  public static void react(EntityPlayer fakePlayer, String fakePlayerCheckMessage) {
+  public static void react(Run run, String message) {
     Minecraft mc = Minecraft.getMinecraft();
 
     new Thread(() -> {
@@ -26,11 +24,11 @@ public class GeneralReact extends React {
         Thread.sleep((long) (sleepTime / 1.5));
 
         Random random = new Random();
-        sendQuestionMessage(random, mc, fakePlayerCheckMessage);
+        sendQuestionMessage(random, mc, message);
 
         Thread.sleep(sleepTime / 5);
 
-        rotate(mc, () -> MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50, sleepTime, random);
+        rotate(mc, run, sleepTime, random);
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
