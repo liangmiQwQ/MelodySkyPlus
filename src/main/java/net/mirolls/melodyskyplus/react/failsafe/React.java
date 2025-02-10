@@ -207,4 +207,8 @@ public class React {
       }
     }
   }
+
+  public static void drawBigTitle(String text) {
+
+  }
 }

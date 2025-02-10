@@ -322,7 +322,7 @@ public class Failsafe extends Module {
       });
       Client.warn();
       Helper.sendMessage("[Melody+ Failsafe] Alert! Macro Check! ");
-      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, 7000);
+      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, (int) (resumeTime.getValue() - 1) * 1000);
       if (this.sysNotification.getValue()) {
         WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
       }
