@@ -89,16 +89,7 @@ public class BedrockBoatReact extends React {
         MelodySkyPlus.LOGGER.error("Cannot get wood BlockPos " + e);
         // 触发通用failsafe
 
-        try {
-          rotate(mc,
-              () -> Objects.equals(mc.theWorld.getBlockState(mc.thePlayer.getPosition().down()).getBlock().getRegistryName(), Blocks.bedrock.getRegistryName()),
-              5000, random
-          );
-          sendQuestionMessage(random, mc, message);
-        } catch (InterruptedException ex) {
-          MelodySkyPlus.LOGGER.error("Cannot sleep " + e);
-          throw new RuntimeException(ex);
-        }
+        GeneralReact.react(() -> true, message);
       }
     }).start();
   }

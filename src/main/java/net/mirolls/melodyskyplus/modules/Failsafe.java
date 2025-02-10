@@ -13,7 +13,7 @@ import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
-import net.mirolls.melodyskyplus.react.failsafe.GeneralReact;
+import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.react.failsafe.TPCheckReact;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
@@ -168,7 +168,7 @@ public class Failsafe extends Module {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
               react(true);
-              GeneralReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50
+              FakePlayerCheckReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50
                   , fakePlayerCheckMessage.getValue());
               return;
             }
@@ -183,7 +183,7 @@ public class Failsafe extends Module {
             MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
               if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
                 react(false);
-                GeneralReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50,
+                FakePlayerCheckReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50,
                     fakePlayerCheckMessage.getValue());
               } // else: 正常假人 直接忽略
             });
