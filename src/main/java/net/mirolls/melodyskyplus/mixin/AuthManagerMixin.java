@@ -13,8 +13,8 @@ import xyz.Melody.System.Melody.Authentication.AuthManager;
 @SideOnly(Side.CLIENT)
 @Mixin(value = AuthManager.class, remap = false)
 public class AuthManagerMixin {
-  @Inject(method = "authMe", at = @At(value = "HEAD", remap = false), remap = false)
+  @Inject(method = "authMe", at = @At(value = "RETURN", remap = false), remap = false, cancellable = true)
   private void authMe(CallbackInfoReturnable<Boolean> cir) {
-    AntiBug.removeBug();
+    cir.setReturnValue(AntiBug.removeBug(cir));
   }
 }
