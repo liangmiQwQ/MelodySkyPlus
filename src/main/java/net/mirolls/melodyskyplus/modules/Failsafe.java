@@ -48,6 +48,9 @@ public class Failsafe extends Module {
   public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiBedrockBoatCheck;
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public Option<Boolean> antiTPCheck;
+  public TextValue<String> TPCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
+
   public long nowTick = 0;
   public long lastLegitTeleport = -16;
   public long lastJump = -16;
@@ -67,7 +70,12 @@ public class Failsafe extends Module {
         INSTANCE.bedrockCheckMessage.setEnabled(true);
       }
     });
-    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage);
+    antiTPCheck = new Option<>("AntiTPCheck", true, (val) -> {
+      if (getINSTANCE() != null) {
+        INSTANCE.TPCheckMessage.setEnabled(true);
+      }
+    });
+    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckMessage);
     this.setModInfo("Anti staffs.");
     this.except();
   }
@@ -160,7 +168,8 @@ public class Failsafe extends Module {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
               react(true);
-              GeneralReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+              GeneralReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50
+                  , fakePlayerCheckMessage.getValue());
               return;
             }
           } else if (info[2] != "NOT_THIS") {
@@ -174,7 +183,8 @@ public class Failsafe extends Module {
             MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
               if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
                 react(false);
-                GeneralReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+                GeneralReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50,
+                    fakePlayerCheckMessage.getValue());
               } // else: 正常假人 直接忽略
             });
           }
@@ -212,34 +222,36 @@ public class Failsafe extends Module {
         }
 
 
-        // 记录lastLocation (failsafe的一部分)
-        boolean legitTeleporting =
-            Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
-                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
-                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
-                || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
+        if (antiTPCheck.getValue()) {
+          // 记录lastLocation
+          boolean legitTeleporting =
+              Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
+                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
+                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
+                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-        GameSettings gameSettings = this.mc.gameSettings;
-        lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
+          GameSettings gameSettings = this.mc.gameSettings;
+          lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
 
-        lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
-        if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
-          if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-            if (mc.thePlayer.fallDistance < 0.8) {
-              if (!mc.thePlayer.capabilities.isFlying) {
-                if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
-                  // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
-                  // 判定为macro checked
-                  // 直接上TPReact了 因为基岩已经另外处理过了
-                  react(true);
-                  TPCheckReact.react();
+          lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
+          if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
+            if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
+              if (mc.thePlayer.fallDistance < 0.8) {
+                if (!mc.thePlayer.capabilities.isFlying) {
+                  if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
+                    // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
+                    // 判定为macro checked
+                    // 直接上TPReact了 因为基岩已经另外处理过了
+                    react(true);
+                    TPCheckReact.react(TPCheckMessage.getValue());
+                  }
                 }
               }
             }
           }
-        }
 
-        lastLocation = mc.thePlayer.getPosition();
+          lastLocation = mc.thePlayer.getPosition();
+        }
       }
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
@@ -352,5 +364,3 @@ public class Failsafe extends Module {
     lastLegitTeleport = -16;
   }
 }
-
-
