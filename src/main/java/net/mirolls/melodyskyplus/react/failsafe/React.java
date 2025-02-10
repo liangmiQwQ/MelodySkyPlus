@@ -1,8 +1,9 @@
-package net.mirolls.melodyskyplus.react;
+package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.math.Rotation;
@@ -166,7 +167,9 @@ public class React {
     Areas currentArea = mySkyblockArea.getCurrentArea();
     if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
         && currentArea != Areas.In_Dungeon) {
-      mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)].trim());
+      if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
+        mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)].trim());
+      }
     }
   }
 }

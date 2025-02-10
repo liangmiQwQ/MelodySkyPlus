@@ -50,6 +50,14 @@ public class WalkLib {
     }
   }
 
+  public void stop() {
+    KeyBinding.setKeyBindState(Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode(), false);
+    isForwardKeyPressed = false;
+    walking = false;
+    targetBlockPos = null;
+    callBack = null;
+  }
+
   public boolean isWalking() {
     return walking;
   }

@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.react;
+package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,7 +8,7 @@ import xyz.Melody.Utils.math.Rotation;
 
 import java.util.Random;
 
-public class FakePlayerCheckReact extends React {
+public class GeneralReact extends React {
 
   public static void react(EntityPlayer fakePlayer, String fakePlayerCheckMessage) {
     Minecraft mc = Minecraft.getMinecraft();
@@ -29,7 +29,7 @@ public class FakePlayerCheckReact extends React {
         sendQuestionMessage(random, mc, fakePlayerCheckMessage);
 
         Thread.sleep(sleepTime / 5);
-        
+
         rotate(mc, () -> MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50, sleepTime, random);
       } catch (InterruptedException e) {
         throw new RuntimeException(e);

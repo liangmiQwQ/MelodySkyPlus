@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.react;
+package net.mirolls.melodyskyplus.react.failsafe;
 
 import xyz.Melody.Utils.Helper;
 
