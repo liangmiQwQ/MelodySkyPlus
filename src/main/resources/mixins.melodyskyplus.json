@@ -8,6 +8,7 @@
     "AutoRubyMixin",
     "ChatMonitorMixin",
     "GemstoneNukerMixin",
+    "HUDManagerMixin",
     "MiningProtectMixin",
     "ModuleManagerMixin",
     "PinglessMiningMixin"
