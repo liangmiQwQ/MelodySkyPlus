@@ -309,6 +309,10 @@ public class Failsafe extends Module {
     // 同时这里打断所有正在运行的React
     MelodySkyPlus.rotationLib.stop();
     MelodySkyPlus.walkLib.stop();
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
     KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
 
     this.mods.clear();
