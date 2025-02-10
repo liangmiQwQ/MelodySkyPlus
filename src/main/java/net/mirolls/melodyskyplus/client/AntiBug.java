@@ -25,11 +25,13 @@ public class AntiBug {
     mld-plus.lmfans.cn/bug/check -> 传入token 返回有效性和创建日期以及该账户 UUID
     -> 检查获取日期、UID是否相同
   */
+  private static Bug newBug = null;
+
   public static boolean removeBug(CallbackInfoReturnable<Boolean> cir) {
     // 进行基础的获取
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
-      BufferedReader in = getBufferedReader(bugID);
+      BufferedReader in = getBufferedReader("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID);
       StringBuilder response = new StringBuilder();
       String line;
       while ((line = in.readLine()) != null) {
@@ -40,7 +42,12 @@ public class AntiBug {
       String passWord = new String(Base64.getDecoder().decode("TWVsb2R5K0xpYW5nTWlNaQ=="), StandardCharsets.UTF_8);
       String decryptedData = decrypt(response.toString(), passWord);
 
-      MelodySkyPlus.antiBug = new Gson().fromJson(decryptedData, Bug.class);
+      if (!decryptedData.contains("error")) {
+        MelodySkyPlus.antiBug = new Gson().fromJson(decryptedData, Bug.class);
+      }
+
+      newBug = null;
+
       return cir.getReturnValue();
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -48,16 +55,36 @@ public class AntiBug {
   }
 
   public static boolean isBugRemoved() {
-    if (Objects.equals(MelodySkyPlus.antiBug.getBugID(), Minecraft.getMinecraft().getSession().getProfile().getId().toString())) {
-//      return Objects.equals(MelodySkyPlus.antiBug.getBugType(), "true");
-      return true;
+    if (newBug == null) {
+      // 获取new Bug
+      try {
+        BufferedReader in = getBufferedReader("https://mld-plus.lmfans.cn:443/bug/new/?bug=" + MelodySkyPlus.antiBug.getBug());
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+          response.append(line);
+        }
+        in.close();
+
+        String passWord = new String(Base64.getDecoder().decode("TWVsb2R5K0xpYW5nTWlNaQ=="), StandardCharsets.UTF_8);
+        String decryptedData = decrypt(response.toString(), passWord);
+
+        if (!decryptedData.contains("error")) {
+          newBug = new Gson().fromJson(decryptedData, Bug.class);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
-    return false;
+
+    return Objects.equals(newBug.getBug(), MelodySkyPlus.antiBug.getBug()) &&
+        Objects.equals(newBug.getBugID(), MelodySkyPlus.antiBug.getBugID()) &&
+        newBug.getReason() == MelodySkyPlus.antiBug.getReason();
   }
 
-  private static BufferedReader getBufferedReader(String bugID) throws IOException {
-    URL url = new URL("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+  private static BufferedReader getBufferedReader(String url) throws IOException {
+    URL link = new URL(url);
+    HttpURLConnection connection = (HttpURLConnection) link.openConnection();
     connection.setRequestMethod("GET");
 
     // 设置请求头
