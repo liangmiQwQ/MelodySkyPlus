@@ -27,8 +27,8 @@ public class RotationLib {
       if (mc.thePlayer != null) {
         float oldYaw = this.mc.thePlayer.rotationYaw;
         float oldPitch = this.mc.thePlayer.rotationPitch;
-        this.mc.thePlayer.rotationYaw = this.smoothRotation(this.mc.thePlayer.rotationYaw, targetRotation.getYaw(), 120.0F);
-        this.mc.thePlayer.rotationPitch = this.smoothRotation(this.mc.thePlayer.rotationPitch, targetRotation.getPitch(), 120.0F);
+        this.mc.thePlayer.rotationYaw = this.smoothRotation(this.mc.thePlayer.rotationYaw, targetRotation.getYaw(), 90.0F);
+        this.mc.thePlayer.rotationPitch = this.smoothRotation(this.mc.thePlayer.rotationPitch, targetRotation.getPitch(), 80.0F);
 
         // 到位了就停止了
         if (Math.abs(oldYaw - this.mc.thePlayer.rotationYaw) < 1f && Math.abs(oldPitch - this.mc.thePlayer.rotationPitch) < 1f) {
@@ -36,10 +36,17 @@ public class RotationLib {
           targetRotation = null;
           if (callBack != null) {
             callBack.callback();
+            callBack = null;
           }
         }
       }
     }
+  }
+
+  public void stop() {
+    rotating = false;
+    targetRotation = null;
+    callBack = null;
   }
 
   private float smoothRotation(float current, float target, float maxIncrement) {

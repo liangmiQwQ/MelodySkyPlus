@@ -11,10 +11,10 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
-import net.mirolls.melodyskyplus.react.BedrockBoatReact;
-import net.mirolls.melodyskyplus.react.BedrockHouseReact;
-import net.mirolls.melodyskyplus.react.FakePlayerCheckReact;
-import net.mirolls.melodyskyplus.react.TPCheckReact;
+import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
+import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
+import net.mirolls.melodyskyplus.react.failsafe.GeneralReact;
+import net.mirolls.melodyskyplus.react.failsafe.TPCheckReact;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
@@ -160,7 +160,7 @@ public class Failsafe extends Module {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
               react(true);
-              FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+              GeneralReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
               return;
             }
           } else if (info[2] != "NOT_THIS") {
@@ -174,7 +174,7 @@ public class Failsafe extends Module {
             MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
               if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
                 react(false);
-                FakePlayerCheckReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
+                GeneralReact.react(CustomPlayerInRange.findPlayer((String) info[1]), fakePlayerCheckMessage.getValue());
               } // else: 正常假人 直接忽略
             });
           }
@@ -306,6 +306,11 @@ public class Failsafe extends Module {
   }
 
   public void onDisable() {
+    // 同时这里打断所有正在运行的React
+    MelodySkyPlus.rotationLib.stop();
+    MelodySkyPlus.walkLib.stop();
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+
     this.mods.clear();
     super.onDisable();
   }

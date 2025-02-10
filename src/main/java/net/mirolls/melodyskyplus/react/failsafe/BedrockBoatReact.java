@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.react;
+package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -6,6 +6,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
@@ -29,6 +30,10 @@ public class BedrockBoatReact extends React {
 
       try {
         Thread.sleep((long) (sleepTime / 1.5));
+        // 强力转头
+        rotate(mc, () -> true, sleepTime, random);
+
+        Thread.sleep((long) (sleepTime / 1.5));
 
         String[] messages = message.split(Pattern.quote(","));
 
@@ -37,7 +42,9 @@ public class BedrockBoatReact extends React {
         Areas currentArea = mySkyblockArea.getCurrentArea();
         if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
             && currentArea != Areas.In_Dungeon) {
-          mc.thePlayer.sendChatMessage(messages[random.nextInt(messages.length)].trim());
+          if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
+            mc.thePlayer.sendChatMessage(messages[random.nextInt(messages.length)].trim());
+          }
         }
 
         Thread.sleep(sleepTime / 5);
