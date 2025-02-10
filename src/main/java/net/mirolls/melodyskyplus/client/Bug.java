@@ -1,15 +1,24 @@
 package net.mirolls.melodyskyplus.client;
 
 public class Bug {
-  private String bugType;
-  private String bugID;
+  private String bug; // token
+  private long reason; // timestamp
+  private String bugID; // playerUUID
 
-  public String getBugType() {
-    return bugType;
+  public String getBug() {
+    return bug;
   }
 
-  public void setBugType(String bugType) {
-    this.bugType = bugType;
+  public void setBug(String bug) {
+    this.bug = bug;
+  }
+
+  public long getReason() {
+    return reason;
+  }
+
+  public void setReason(long reason) {
+    this.reason = reason;
   }
 
   public String getBugID() {

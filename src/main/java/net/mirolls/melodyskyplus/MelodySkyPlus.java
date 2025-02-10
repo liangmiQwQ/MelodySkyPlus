@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus;
 
 
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -13,6 +14,8 @@ import net.mirolls.melodyskyplus.libs.RotationLib;
 import net.mirolls.melodyskyplus.libs.WalkLib;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 
 @Mod(modid = MelodySkyPlus.MODID, version = MelodySkyPlus.VERSION)
 public class MelodySkyPlus {
@@ -27,6 +30,14 @@ public class MelodySkyPlus {
   public static NukerTicks nukerTicks;
   public static PickaxeAbility pickaxeAbility;
 
+  public static String verify(String text) {
+    if (text.startsWith("UUID: ")) {
+      return "Melody+ Verified: " + (Verify.isVerified() ? EnumChatFormatting.GREEN + "true" : EnumChatFormatting.GRAY + "false");
+    } else {
+      return text;
+    }
+  }
+
   @EventHandler
   public void init(FMLInitializationEvent event) {
     LOGGER.info("MelodySky+ is running");
@@ -39,6 +50,11 @@ public class MelodySkyPlus {
     nukerTicks = new NukerTicks();
     pickaxeAbility = new PickaxeAbility();
     // events
-  }
 
+    try {
+      Verify.verify();
+    } catch (IOException e) {
+      LOGGER.error("Cannot Verify Your Account!" + e);
+    }
+  }
 }
