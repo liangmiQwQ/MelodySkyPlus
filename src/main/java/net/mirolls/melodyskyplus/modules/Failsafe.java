@@ -2,11 +2,13 @@ package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -29,6 +31,7 @@ import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.WindowsNotification;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
+import xyz.Melody.module.FMLModules.PlayerSoundHandler;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
@@ -277,6 +280,27 @@ public class Failsafe extends Module {
     if (!reacting) { // 这个前提是为了防止部分react同时触发(考虑到假人飞行的问题)
       resumeTimer.reset();
       Minecraft mc = Minecraft.getMinecraft();
+
+      try {
+        PlayerSoundHandler.addSound("entity.ghast.ambient", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("entity.ghast.death", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("entity.ghast.hurt", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("entity.ghast.scream", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("entity.ghast.shoot", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("entity.ghast.warn", 5.0F, 1.5F, 5);
+
+
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.ambient")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.death")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.hurt")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.scream")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.shoot")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.warn")));
+      } catch (RuntimeException e) {
+        MelodySkyPlus.LOGGER.error("Cannot play sounds while macro check!");
+      }
+
+
       this.reacting = true;
       new Thread(() -> {
         try {
