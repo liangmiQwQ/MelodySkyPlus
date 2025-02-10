@@ -19,6 +19,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.GUI.CustomUI.HUDManager;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
@@ -263,6 +264,7 @@ public abstract class GemstoneNukerMixin {
         tick = 4;
       }
 
+      MelodySkyPlus.nukerTicks.setCurrentTicks(tick);
       cir.setReturnValue(tick);
       cir.cancel();
     }
@@ -347,6 +349,19 @@ public abstract class GemstoneNukerMixin {
 
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
+    if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
+      if (!HUDManager.getApiByName("GemstoneTick").isEnabled()) {
+        HUDManager.getApiByName("GemstoneTick").setEnabled(true);
+      }
+    }
     tryFasterTimer.reset();
+  }
+
+  @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
+  public void onDisable(CallbackInfo ci) {
+    if (HUDManager.getApiByName("GemstoneTick").isEnabled()) {
+      HUDManager.getApiByName("GemstoneTick").setEnabled(false);
+    }
+    MelodySkyPlus.nukerTicks.reset();
   }
 }

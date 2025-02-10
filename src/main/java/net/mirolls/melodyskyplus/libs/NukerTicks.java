@@ -1,6 +1,8 @@
 package net.mirolls.melodyskyplus.libs;
 
 public class NukerTicks {
+  private int currentTicks = 0;
+
   private int grayMithril = 4;
   private int greenMithril = 4;
   private int blueMithril = 4;
@@ -21,6 +23,7 @@ public class NukerTicks {
   private int abilityO_a_c_p = 5;
 
   public void reset() {
+    currentTicks = 0;
     grayMithril = 4;
     greenMithril = 4;
     blueMithril = 4;
@@ -185,4 +188,11 @@ public class NukerTicks {
     this.abilityO_a_c_p = abilityO_a_c_p;
   }
 
+  public int getCurrentTicks() {
+    return currentTicks;
+  }
+
+  public void setCurrentTicks(int currentTicks) {
+    this.currentTicks = currentTicks;
+  }
 }
