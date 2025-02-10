@@ -1,8 +1,6 @@
 package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.client.Minecraft;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
-import xyz.Melody.Utils.math.Rotation;
 
 import java.util.Random;
 
@@ -11,29 +9,19 @@ public class GeneralReact extends React {
   public static void react(Run run, String message) {
     Minecraft mc = Minecraft.getMinecraft();
 
-    new Thread(() -> {
-      long sleepTime = 5000;
+    long sleepTime = 5000;
 
-      try {
-        Thread.sleep(sleepTime / 2);
+    try {
+      Thread.sleep((long) (sleepTime / 1.5));
 
-        MelodySkyPlus.rotationLib.setSpeedCoefficient(1F);
-        MelodySkyPlus.rotationLib.startRotating();
-        MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
+      Random random = new Random();
+      sendQuestionMessage(random, mc, message);
 
-        Thread.sleep((long) (sleepTime / 1.5));
+      Thread.sleep(sleepTime / 5);
 
-        Random random = new Random();
-        sendQuestionMessage(random, mc, message);
-
-        Thread.sleep(sleepTime / 5);
-
-        rotate(mc, run, sleepTime, random);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }).start();
+      rotate(mc, run, sleepTime, random);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
-
-
 }
