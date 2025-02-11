@@ -13,5 +13,6 @@ public class GuiAltManager {
       remap = false, index = 0)
   public String func_73863_a(String text) {
     return MelodySkyPlus.verify(text);
+//    return text;
   }
 }

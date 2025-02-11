@@ -19,7 +19,10 @@ public class ModuleManagerMixin {
   @Inject(method = "init", remap = false, at = @At("HEAD"))
   public void init(CallbackInfo ci) {
     List<Module> newModules = MelodyPlusModules.newModules();
-    
+
     modules.addAll(newModules);
+//    if (AntiBug.isBugRemoved()) {
+//      modules.add(new Failsafe());
+//    }
   }
 }

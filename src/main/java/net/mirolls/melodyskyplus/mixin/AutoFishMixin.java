@@ -27,7 +27,7 @@ public class AutoFishMixin {
     Vec3d eVec = Vec3d.of(e.getPositionVector());
     if (e != mc.thePlayer && !(player.distanceTo(eVec) > dist)) {
       if (e instanceof EntityLivingBase && e.isEntityAlive()) {
-        if (!(e instanceof EntityArmorStand) /*&& !e.isInvisible()*/ && !FriendManager.isFriend(e.getName())) {
+        if (!(e instanceof EntityArmorStand) && !FriendManager.isFriend(e.getName())) {
 
           SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
           mySkyblockArea.updateCurrentArea();
@@ -35,7 +35,7 @@ public class AutoFishMixin {
           if (e.isInvisible() && mySkyblockArea.getCurrentArea() != Areas.Crimson_Island && !(e instanceof EntityZombie)) {
             return false;
           }
-          
+
           return e.getName() != null && PlayerListUtils.tabContains(StringUtils.stripControlCodes(e.getName()));
         } else {
           return true;

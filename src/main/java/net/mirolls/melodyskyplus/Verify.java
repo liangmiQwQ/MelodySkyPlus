@@ -50,19 +50,20 @@ public class Verify {
     // 设置请求头
     llIllIll.setRequestProperty("Content-Type", "application/json");
 
-    BufferedReader IllIIllI = new BufferedReader(new java.io.Reader() {
-      @Override
-      public int read(char[] llIIll, int IllIll, int IllllI) throws IOException {
-        return 0;
-      }
-
-      @Override
-      public void close() throws IOException {
-
-      }
-    }, 1);
-
+    StringBuilder IllIlllI = new StringBuilder("操你妈的破解我是吧");
     if (IllIlIIl) {
+      BufferedReader IllIIllI = new BufferedReader(new java.io.Reader() {
+        @Override
+        public int read(char[] llIIll, int IllIll, int IllllI) throws IOException {
+          return 0;
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+      }, 1);
+
       // 读取响应
       int IlllllIll = llIllIll.getResponseCode();
       IllIIllI = new BufferedReader(new InputStreamReader(
@@ -70,15 +71,14 @@ public class Verify {
               ? llIllIll.getInputStream()
               : llIllIll.getErrorStream()));
 
-    }
 
-    StringBuilder IllIlllI = new StringBuilder();
-    String IllIIIl;
-    while ((IllIIIl = IllIIllI.readLine()) != null) {
-      IllIlllI.append(IllIIIl);
+      IllIlllI = new StringBuilder();
+      String IllIIIl;
+      while ((IllIIIl = IllIIllI.readLine()) != null) {
+        IllIlllI.append(IllIIIl);
+      }
+      IllIIllI.close();
     }
-    IllIIllI.close();
-
     if (IllIlllI.toString().equals("true")) {
       IlllIIIlI = IlllIlIlIIlI[1];
     }
