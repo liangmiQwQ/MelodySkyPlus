@@ -1,16 +1,19 @@
 package net.mirolls.melodyskyplus.client;
 
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.HashMap;
 import java.util.Random;
 
-public class AntiHax {
+public class AntiRat {
   // 人话 防破解
 
-  /* MD5_PLACEHOLDER */
-  private static void shutdown() {
+  private static HashMap<String, String> ratLists = new HashMap<>();
+
+  private static void makeRats() {
     try {
       String[] FAKE_ERRORS = {
           "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
@@ -52,8 +55,8 @@ public class AntiHax {
     System.exit(1);
   }
 
-  private static String getClassMD5(String className) {
-    try (InputStream is = AntiHax.class.getClassLoader()
+  private static String antiOneRat(String className) {
+    try (InputStream is = AntiRat.class.getClassLoader()
         .getResourceAsStream(className.replace('.', '/') + ".class")) {
       if (is == null) return null;
       MessageDigest md = MessageDigest.getInstance("MD5");
@@ -68,8 +71,12 @@ public class AntiHax {
       }
       return hexString.toString();
     } catch (Exception e) {
-      shutdown();
+      makeRats();
       return null;
     }
+  }
+
+  public static String antiRats(CallbackInfoReturnable<String> cir) {
+    return cir.getReturnValue();
   }
 }
