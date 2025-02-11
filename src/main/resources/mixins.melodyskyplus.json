@@ -4,6 +4,7 @@
   "refmap": "refmap.melodyskyplus.json",
   "mixins": [
     "AuthManagerMixin",
+    "AuthSessionMixin",
     "AutoRubyCMDMixin",
     "AutoRubyMixin",
     "ChatMonitorMixin",
