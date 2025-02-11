@@ -47,12 +47,19 @@ dependencies {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
+        exclude module: 'log4j-api'
+        exclude module: 'log4j-core'
+        exclude module: 'log4j-slf4j-impl'
     }
     annotationProcessor 'org.spongepowered:mixin:0.6.5-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:1.0.0') {
+    implementation('xyz.melody:melodySky:2.14.6') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
+        exclude module: 'mixin'
+        exclude group: 'org.spongepowered'
+        exclude module: 'log4j-api'
+        exclude module: 'log4j-core'
     }
 }
 
@@ -92,6 +99,8 @@ jar {
         it.isDirectory() ? it : zipTree(it)
     }) {
         exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
+        exclude 'org/apache/logging/**'
+
     }
 
     manifest.attributes(
