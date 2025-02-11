@@ -100,7 +100,7 @@ shadowJar {
     archiveName = "${archivesBaseName}-${version}-relocated.jar"
 
     dependencies {
-        exclude(dependency('xyz.melody:melodySky:1.0.0'))
+        exclude(dependency('xyz.melody:melodySky:2.14.6'))
     }
 }
 
@@ -117,7 +117,6 @@ jar {
     manifest.attributes(
             'ForceLoadAsMod': 'true',
             'FMLCorePluginContainsFMLMod': 'true',
-//            'TweakClass': 'plus.spongepowered.asm.launch.MixinTweaker',
             'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
             'TweakOrder': '0',
             'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
