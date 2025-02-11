@@ -5,6 +5,7 @@
   "mixins": [
     "AuthManagerMixin",
     "AuthSessionMixin",
+    "AutoFishMixin",
     "AutoRubyCMDMixin",
     "AutoRubyMixin",
     "ChatMonitorMixin",
