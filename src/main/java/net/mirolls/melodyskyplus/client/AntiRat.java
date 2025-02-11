@@ -3,15 +3,29 @@ package net.mirolls.melodyskyplus.client;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 
 public class AntiRat {
   // 人话 防破解
 
-  private static HashMap<String, String> ratLists = new HashMap<>();
+  private static final HashMap<String, String> ratLists = new HashMap<>();
+  private static String ultimateRat = "";
+
+  static {
+    ratLists.put("net.mirolls.melodyskyplus.Verify", "_%net.mirolls.melodyskyplus.Verify%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.client.AntiBug", "_%net.mirolls.melodyskyplus.client.AntiBug%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.client.Bug", "_%net.mirolls.melodyskyplus.client.Bug%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.modules.MelodyPlusModules", "_%net.mirolls.melodyskyplus.modules.MelodyPlusModules%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
+  }
 
   private static void makeRats() {
     try {
@@ -76,7 +90,89 @@ public class AntiRat {
     }
   }
 
+  private static String antiUltimateRat() {
+    try {
+      // 获取类所在的 JAR 文件路径
+      String jarPath = MelodySkyPlus.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+      // 如果路径是 JAR 文件
+      if (jarPath.endsWith(".jar")) {
+        File jarFile = new File(jarPath);
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        try (FileInputStream fis = new FileInputStream(jarFile)) {
+          byte[] byteArray = new byte[1024];
+          int bytesRead;
+          while ((bytesRead = fis.read(byteArray)) != -1) {
+            digest.update(byteArray, 0, bytesRead);
+          }
+        }
+
+        byte[] md5Bytes = digest.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : md5Bytes) {
+          sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+      } else {
+        makeRats();
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | IOException e) {
+      makeRats();
+      return "";
+    }
+  }
+
   public static String antiRats(CallbackInfoReturnable<String> cir) {
+    Set<String> keySets = ratLists.keySet();
+
+    for (String keySet : keySets) {
+      if (!Objects.equals(ratLists.get(keySet), antiOneRat(keySet))) {
+        makeRats();
+      }
+    }
+
+    if (ultimateRat == null || ultimateRat.isEmpty()) {
+      BufferedReader in;
+      StringBuilder response;
+      try {
+        in = getBufferedReader("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
+
+        response = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+          response.append(line);
+        }
+
+        in.close();
+      } catch (IOException e) {
+        makeRats();
+        throw new RuntimeException(e);
+      }
+      ultimateRat = response.toString();
+    }
+
+    if (!ultimateRat.equals(antiUltimateRat())) {
+      makeRats();
+    }
+
     return cir.getReturnValue();
   }
+
+  private static BufferedReader getBufferedReader(String url) throws IOException {
+    URL link = new URL(url);
+    HttpURLConnection connection = (HttpURLConnection) link.openConnection();
+    connection.setRequestMethod("GET");
+
+    // 设置请求头
+    connection.setRequestProperty("Content-Type", "application/json");
+
+    // 读取响应
+    int responseCode = connection.getResponseCode();
+    return new BufferedReader(new InputStreamReader(
+        responseCode >= 200 && responseCode < 300
+            ? connection.getInputStream()
+            : connection.getErrorStream()));
+  }
+
 }
