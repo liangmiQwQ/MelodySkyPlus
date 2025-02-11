@@ -44,12 +44,19 @@ public class AntiBug {
 
       if (!decryptedData.contains("error")) {
         MelodySkyPlus.antiBug = new Gson().fromJson(decryptedData, Bug.class);
+      } else {
+        MelodySkyPlus.antiBug.setBugID("bugID");
+        MelodySkyPlus.antiBug.setBug("bug");
+        MelodySkyPlus.antiBug.setReason(19120212);
       }
 
       newBug = null;
 
       return cir.getReturnValue();
     } catch (Exception e) {
+      MelodySkyPlus.antiBug.setBugID("bugID");
+      MelodySkyPlus.antiBug.setBug("bug");
+      MelodySkyPlus.antiBug.setReason(19120212);
       throw new RuntimeException(e);
     }
   }
@@ -71,15 +78,25 @@ public class AntiBug {
 
         if (!decryptedData.contains("error")) {
           newBug = new Gson().fromJson(decryptedData, Bug.class);
+        } else {
+          MelodySkyPlus.antiBug.setBugID("bugID");
+          MelodySkyPlus.antiBug.setBug("bug");
+          MelodySkyPlus.antiBug.setReason(19120212);
         }
       } catch (Exception e) {
+        MelodySkyPlus.antiBug.setBugID("bugID");
+        MelodySkyPlus.antiBug.setBug("bug");
+        MelodySkyPlus.antiBug.setReason(19120212);
         throw new RuntimeException(e);
       }
     }
 
-    return Objects.equals(newBug.getBug(), MelodySkyPlus.antiBug.getBug()) &&
-        Objects.equals(newBug.getBugID(), MelodySkyPlus.antiBug.getBugID()) &&
-        newBug.getReason() == MelodySkyPlus.antiBug.getReason();
+    if (newBug != null && MelodySkyPlus.antiBug != null) {
+      return Objects.equals(newBug.getBug(), MelodySkyPlus.antiBug.getBug()) &&
+          Objects.equals(newBug.getBugID(), MelodySkyPlus.antiBug.getBugID()) &&
+          newBug.getReason() == MelodySkyPlus.antiBug.getReason();
+    }
+    return false;
   }
 
   private static BufferedReader getBufferedReader(String url) throws IOException {
