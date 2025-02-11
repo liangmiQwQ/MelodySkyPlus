@@ -136,7 +136,7 @@ public class AntiRat {
       BufferedReader in;
       StringBuilder response;
       try {
-        in = getBufferedReader("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
+        in = getBufferedReader();
 
         response = new StringBuilder();
         String line;
@@ -159,8 +159,8 @@ public class AntiRat {
     return cir.getReturnValue();
   }
 
-  private static BufferedReader getBufferedReader(String url) throws IOException {
-    URL link = new URL(url);
+  private static BufferedReader getBufferedReader() throws IOException {
+    URL link = new URL("https://mld-plus.lmfans.cn:443/rat/1.0.2");
     HttpURLConnection connection = (HttpURLConnection) link.openConnection();
     connection.setRequestMethod("GET");
 
