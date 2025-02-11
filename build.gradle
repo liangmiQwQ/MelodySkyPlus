@@ -47,19 +47,12 @@ dependencies {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
-        exclude module: 'log4j-api'
-        exclude module: 'log4j-core'
-        exclude module: 'log4j-slf4j-impl'
     }
     annotationProcessor 'org.spongepowered:mixin:0.6.5-SNAPSHOT'
 
     implementation('xyz.melody:melodySky:2.14.6') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
-        exclude module: 'mixin'
-        exclude group: 'org.spongepowered'
-        exclude module: 'log4j-api'
-        exclude module: 'log4j-core'
     }
 }
 
@@ -94,12 +87,10 @@ sourceSets {
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-//    enabled = false;
     from(configurations.embed.collect {
         it.isDirectory() ? it : zipTree(it)
     }) {
         exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
-        exclude 'org/apache/logging/**'
 
     }
 
@@ -112,5 +103,15 @@ jar {
     )
 }
 
-assemble.dependsOn jar
+tasks.register('obfuscate', Exec) {
+    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
+            "-jar", "melody/obfuscator-1.9.4.jar",
+            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf.jar",
+            "--scriptFile", "melody/script.js"
+
+}
+
+
+assemble.dependsOn jar, obfuscate
 
