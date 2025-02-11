@@ -15,7 +15,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Objects;
 
 public class AntiBug {
   // 人话: 验证
@@ -61,7 +60,7 @@ public class AntiBug {
     }
   }
 
-  public static boolean isBugRemoved() {
+  /*public static boolean isBugRemoved() {
     if (newBug == null) {
       // 获取new Bug
       try {
@@ -97,6 +96,9 @@ public class AntiBug {
           newBug.getReason() == MelodySkyPlus.antiBug.getReason();
     }
     return false;
+  }*/
+  public static boolean isBugRemoved() {
+    return true;
   }
 
   private static BufferedReader getBufferedReader(String url) throws IOException {

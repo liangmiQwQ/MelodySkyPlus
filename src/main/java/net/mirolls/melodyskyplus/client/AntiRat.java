@@ -10,7 +10,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 
 public class AntiRat {
@@ -27,7 +26,7 @@ public class AntiRat {
     ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
   }
 
-  private static void makeRats() {
+  /*private static void makeRats() {
     try {
       String[] FAKE_ERRORS = {
           "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
@@ -67,6 +66,8 @@ public class AntiRat {
 
     // 退出程序
     System.exit(1);
+  }*/
+  private static void makeRats() {
   }
 
   private static String antiOneRat(String className) {
