@@ -9,9 +9,6 @@ buildscript {
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
-plugins {
-    id 'com.github.johnrengelman.shadow' version '4.0.4'
-}
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
@@ -87,23 +84,6 @@ sourceSets {
     }
 }
 
-shadowJar {
-    // 配置 Shadow 插件任务
-//    relocate 'org.spongepowered', 'plus.spongepowered'
-
-    exclude 'xyz.melody.*'
-
-
-    mergeServiceFiles() // 合并 META-INF/services 的配置文件
-
-    // 手动设置生成的 jar 文件名
-    archiveName = "${archivesBaseName}-${version}-relocated.jar"
-
-    dependencies {
-        exclude(dependency('xyz.melody:melodySky:2.14.6'))
-    }
-}
-
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -123,5 +103,5 @@ jar {
     )
 }
 
-assemble.dependsOn jar, shadowJar
+assemble.dependsOn jar
 
