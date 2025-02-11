@@ -1,9 +1,6 @@
 package net.mirolls.melodyskyplus.client;
 // 混淆前代码
 
-import com.google.gson.Gson;
-import net.minecraft.client.Minecraft;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.crypto.Cipher;
@@ -13,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class AntiBug {
@@ -26,7 +22,7 @@ public class AntiBug {
   */
   private static Bug newBug = null;
 
-  public static boolean removeBug(CallbackInfoReturnable<Boolean> cir) {
+ /* public static boolean removeBug(CallbackInfoReturnable<Boolean> cir) {
     // 进行基础的获取
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
@@ -58,6 +54,10 @@ public class AntiBug {
       MelodySkyPlus.antiBug.setReason(19120212);
       throw new RuntimeException(e);
     }
+  }*/
+
+  public static boolean removeBug(CallbackInfoReturnable<Boolean> cir) {
+    return cir.getReturnValue();
   }
 
   /*public static boolean isBugRemoved() {

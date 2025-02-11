@@ -9,8 +9,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Objects;
-import java.util.Set;
 
 public class AntiRat {
   // 人话 防破解
@@ -125,7 +123,7 @@ public class AntiRat {
   }
 
   public static String antiRats(CallbackInfoReturnable<String> cir) {
-    Set<String> keySets = ratLists.keySet();
+    /*Set<String> keySets = ratLists.keySet();
 
     for (String keySet : keySets) {
       if (!Objects.equals(ratLists.get(keySet), antiOneRat(keySet))) {
@@ -155,7 +153,7 @@ public class AntiRat {
 
     if (!ultimateRat.equals(antiUltimateRat())) {
       makeRats();
-    }
+    }*/
 
     return cir.getReturnValue();
   }

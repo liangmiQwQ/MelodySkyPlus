@@ -43,14 +43,14 @@ configurations {
 }
 
 dependencies {
-    embed('org.spongepowered:mixin:0.6.5-SNAPSHOT') {
+    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
-    annotationProcessor 'org.spongepowered:mixin:0.6.5-SNAPSHOT'
+    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:2.14.6') {
+    implementation('xyz.melody:melodySky:2.14.7') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
     }
@@ -105,13 +105,23 @@ jar {
 
 tasks.register('obfuscate', Exec) {
     commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
-            "-jar", "melody/obfuscator-1.9.4.jar",
-            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
-            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf.jar",
-            "--scriptFile", "melody/script.js"
+            "-jar", "melody/obfuscator-1.9.3.jar"
+//            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
+//            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf.jar",
+//            "--scriptFile", "melody/script.js"
 
 }
 
+tasks.register('exportDependencies', Copy) {
+    configurations.compileClasspath.setCanBeResolved(true)
+    into "$buildDir/libs/dependencies"
+    from configurations.runtimeClasspath
+}
 
-assemble.dependsOn jar, obfuscate
+tasks.named("build").configure {
+    finalizedBy("obfuscate")
+}
+
+assemble.dependsOn jar
+
 
