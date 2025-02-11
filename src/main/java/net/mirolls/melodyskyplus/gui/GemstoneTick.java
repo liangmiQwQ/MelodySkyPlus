@@ -33,12 +33,12 @@ public class GemstoneTick extends HUDApi {
   private void gemstoneTickRender() {
     int c2 = (new Color(30, 30, 30, 100)).getRGB();
 
-    CFontRenderer font = FontLoaders.NMSL20;
+    CFontRenderer font = FontLoaders.huhLight(20);
     RenderUtil.drawFastRoundedRect(this.x, this.y,
         (this.x + font.getStringWidth("GemstoneTick: " + MelodySkyPlus.nukerTicks.getCurrentTicks()) + 8),
         (this.y + font.getStringHeight("GemstoneTick: " + MelodySkyPlus.nukerTicks.getCurrentTicks()) + 6),
         1.0F, c2);
-    FontLoaders.NMSL20.drawString(
+    FontLoaders.huhLight(20).drawString(
         "GemstoneTick: " + MelodySkyPlus.nukerTicks.getCurrentTicks(),
         (this.x + 4), (this.y + 4), -1
     );
