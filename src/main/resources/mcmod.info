@@ -1,16 +1,18 @@
 [
-{
-  "modid": "${mod_id}",
-  "name": "${mod_name}",
-  "description": "${mod_description}",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["liangmimi"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://melodysky.plus/",
+    "updateUrl": "",
+    "authorList": [
+      "liangmimi"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
 ]
