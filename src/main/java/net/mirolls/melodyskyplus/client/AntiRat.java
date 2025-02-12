@@ -4,12 +4,14 @@ import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
 public class AntiRat {
@@ -26,7 +28,7 @@ public class AntiRat {
     ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
   }
 
-  private static void makeRats() {
+  private static void llIIIl() {
     try {
       String[] FAKE_ERRORS = {
           "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
@@ -68,7 +70,7 @@ public class AntiRat {
     System.exit(1);
   }
 
-  private static String antiOneRat(String className) {
+  private static String IllIIl(String className) {
     try (InputStream is = AntiRat.class.getClassLoader()
         .getResourceAsStream(className.replace('.', '/') + ".class")) {
       if (is == null) return null;
@@ -84,12 +86,12 @@ public class AntiRat {
       }
       return hexString.toString();
     } catch (Exception e) {
-      makeRats();
+      llIIIl();
       return null;
     }
   }
 
-  private static String antiUltimateRat() {
+  private static String llIlll() {
     try {
       // 获取类所在的 JAR 文件路径
       String jarPath = MelodySkyPlus.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -113,11 +115,11 @@ public class AntiRat {
         }
         return sb.toString();
       } else {
-        makeRats();
+        llIIIl();
         return "";
       }
     } catch (NoSuchAlgorithmException | IOException e) {
-      makeRats();
+      llIIIl();
       return "";
     }
   }
@@ -126,8 +128,8 @@ public class AntiRat {
     Set<String> keySets = ratLists.keySet();
 
     for (String keySet : keySets) {
-      if (!Objects.equals(ratLists.get(keySet), antiOneRat(keySet))) {
-        makeRats();
+      if (!Objects.equals(ratLists.get(keySet), IllIIl(keySet))) {
+        llIIIl();
       }
     }
 
@@ -135,7 +137,7 @@ public class AntiRat {
       BufferedReader in;
       StringBuilder response;
       try {
-        in = getBufferedReader();
+        in = IllllI();
 
         response = new StringBuilder();
         String line;
@@ -145,21 +147,21 @@ public class AntiRat {
 
         in.close();
       } catch (IOException e) {
-        makeRats();
+        llIIIl();
         throw new RuntimeException(e);
       }
       ultimateRat = response.toString();
     }
 
-    if (!ultimateRat.equals(antiUltimateRat())) {
-      makeRats();
+    if (!ultimateRat.equals(llIlll())) {
+      llIIIl();
     }
 
     return cir.getReturnValue();
   }
 
-  private static BufferedReader getBufferedReader() throws IOException {
-    URL link = new URL("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
+  private static BufferedReader IllllI() throws IOException {
+    /*URL link = new URL("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
     HttpURLConnection connection = (HttpURLConnection) link.openConnection();
     connection.setRequestMethod("GET");
 
@@ -172,5 +174,57 @@ public class AntiRat {
         responseCode >= 200 && responseCode < 300
             ? connection.getInputStream()
             : connection.getErrorStream()));
+  }*/
+
+    try {
+      Class<?> urlClass = Class.forName("java.net.URL");
+      Constructor<?> urlConstructor = urlClass.getConstructor(String.class);
+      Object urlObj = urlConstructor.newInstance("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
+
+      // 通过反射获取 openConnection 方法并调用
+      Method openConnectionMethod = urlClass.getMethod("openConnection");
+      Object connection = openConnectionMethod.invoke(urlObj);
+
+      // 通过反射强转为 HttpURLConnection
+      Class<?> httpURLConnectionClass = Class.forName("java.net.HttpURLConnection");
+      if (!httpURLConnectionClass.isInstance(connection)) {
+        throw new IllegalStateException("Not an HttpURLConnection");
+      }
+
+      // 设置请求方法
+      Method setRequestMethod = httpURLConnectionClass.getMethod("setRequestMethod", String.class);
+      setRequestMethod.invoke(connection, "GET");
+
+      // 设置请求头
+      Method setRequestProperty = httpURLConnectionClass.getMethod("setRequestProperty", String.class, String.class);
+      setRequestProperty.invoke(connection, "Content-Type", "application/json");
+
+      // 获取响应码
+      Method getResponseCode = httpURLConnectionClass.getMethod("getResponseCode");
+      int responseCode = (int) getResponseCode.invoke(connection);
+
+      // 选择输入流
+      Method getInputStream = httpURLConnectionClass.getMethod("getInputStream");
+      Method getErrorStream = httpURLConnectionClass.getMethod("getErrorStream");
+      InputStream stream = null;
+      stream = (InputStream) (responseCode >= 200 && responseCode < 300
+          ? getInputStream.invoke(connection)
+          : getErrorStream.invoke(connection));
+
+
+      // 通过反射创建 InputStreamReader
+      Class<?> inputStreamReaderClass = Class.forName("java.io.InputStreamReader");
+      Constructor<?> inputStreamReaderConstructor = inputStreamReaderClass.getConstructor(InputStream.class);
+//      Object inputStreamReaderObj = inputStreamReaderConstructor.newInstance(stream);
+      Reader inputStreamReaderObj = (Reader) inputStreamReaderConstructor.newInstance(stream);
+
+      // 通过反射创建 BufferedReader
+      Class<?> bufferedReaderClass = Class.forName("java.io.BufferedReader");
+      Constructor<?> bufferedReaderConstructor = bufferedReaderClass.getConstructor(Reader.class);
+      return (BufferedReader) bufferedReaderConstructor.newInstance(inputStreamReaderObj);
+    } catch (IllegalAccessException | InvocationTargetException | ClassNotFoundException | NoSuchMethodException |
+             InstantiationException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

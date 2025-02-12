@@ -224,9 +224,29 @@ tasks.register('obfuscateRat', Exec) {
     commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
             "-jar", "melody/obfuscator-1.9.3.jar",
             "--jarIn", "build/libs/${mod_id}-${mod_version}-obf-antirat.jar",
-            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf-antirat-obf.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-SUPER.jar",
             "--config", "melody/rat-obf-config.json"
 
+}
+
+tasks.register("pushMD5") {
+    doLast {
+        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-SUPER.jar"))
+        def url = "https://mld-plus.lmfans.cn:443/update-rat/${version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
+
+        def returnText = "no_try"
+        try {
+            returnText = url.toURL().text
+        } catch (Exception e) {
+            throw new Exception("######## Server die down! ######## " + e)
+        }
+
+        if (returnText.contains("success")) {
+            println "Success Put the file md5 (${md5}) into server"
+        } else {
+            throw new Exception("Cannot put the file md5 into server " + returnText)
+        }
+    }
 }
 
 
@@ -238,6 +258,9 @@ tasks.named("obfuscate").configure {
 }
 tasks.named("rat").configure {
     finalizedBy("obfuscateRat")
+}
+tasks.named("obfuscateRat").configure {
+    finalizedBy("pushMD5")
 }
 
 
