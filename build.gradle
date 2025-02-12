@@ -56,7 +56,7 @@ dependencies {
         exclude module: 'gson'
     }
     annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
-    
+
     implementation('xyz.melody:melodySky:2.14.7') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
@@ -231,7 +231,9 @@ tasks.register('obfuscateRat', Exec) {
 
 tasks.register("pushMD5") {
     doLast {
-        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-SUPER.jar"))
+//        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-SUPER.jar"))
+        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-obf-antirat.jar"))
+
         def urlStr = "https://mld-plus.lmfans.cn:443/update-rat/${version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
 
         try {
