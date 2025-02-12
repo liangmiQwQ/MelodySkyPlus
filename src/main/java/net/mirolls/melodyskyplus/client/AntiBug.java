@@ -1,13 +1,10 @@
 package net.mirolls.melodyskyplus.client;
 // 混淆前代码
 
-import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +12,6 @@ import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Objects;
 
 public class AntiBug {
@@ -40,11 +35,15 @@ public class AntiBug {
       }
       in.close();
 
-      String passWord = new String(Base64.getDecoder().decode("TWVsb2R5K0xpYW5nTWlNaQ=="), StandardCharsets.UTF_8);
-      String decryptedData = llIIIl(response.toString(), passWord);
+      String decryptedData = response.toString();
 
       if (!decryptedData.contains("error")) {
-        MelodySkyPlus.antiBug = new Gson().fromJson(decryptedData, Bug.class);
+        MelodySkyPlus.antiBug = lllIIl(decryptedData);
+        MelodySkyPlus.LOGGER.info("注意!" + decryptedData);
+        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getBugID());
+        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getBug());
+        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getReason());
+
       } else {
         MelodySkyPlus.antiBug.setBugID("bugID");
         MelodySkyPlus.antiBug.setBug("bug");
@@ -67,6 +66,7 @@ public class AntiBug {
 //  }
 
   public static boolean isBugRemoved() {
+
     if (newBug == null) {
       // 获取new Bug
       try {
@@ -78,11 +78,10 @@ public class AntiBug {
         }
         in.close();
 
-        String passWord = new String(Base64.getDecoder().decode("TWVsb2R5K0xpYW5nTWlNaQ=="), StandardCharsets.UTF_8);
-        String decryptedData = llIIIl(response.toString(), passWord);
+        String decryptedData = response.toString();
 
         if (!decryptedData.contains("error")) {
-          newBug = new Gson().fromJson(decryptedData, Bug.class);
+          newBug = lllIIl(decryptedData);
         } else {
           MelodySkyPlus.antiBug.setBugID("bugID");
           MelodySkyPlus.antiBug.setBug("bug");
@@ -95,8 +94,11 @@ public class AntiBug {
         throw new RuntimeException(e);
       }
     }
+    if (newBug == null) {
+      newBug = new Bug();
+    }
 
-    if (newBug != null && MelodySkyPlus.antiBug != null) {
+    if (MelodySkyPlus.antiBug != null) {
       return Objects.equals(newBug.getBug(), MelodySkyPlus.antiBug.getBug()) &&
           Objects.equals(newBug.getBugID(), MelodySkyPlus.antiBug.getBugID()) &&
           newBug.getReason() == MelodySkyPlus.antiBug.getReason();
@@ -144,6 +146,11 @@ public class AntiBug {
       // 设置请求头
       Method setRequestProperty = httpURLConnectionClass.getMethod("setRequestProperty", String.class, String.class);
       setRequestProperty.invoke(connection, "Content-Type", "application/json");
+      setRequestProperty.invoke(connection, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+      setRequestProperty.invoke(connection, "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+      setRequestProperty.invoke(connection, "Accept-Language", "en-US,en;q=0.5");
+      setRequestProperty.invoke(connection, "Connection", "keep-alive");
+
 
       // 获取响应码
       Method getResponseCode = httpURLConnectionClass.getMethod("getResponseCode");
@@ -170,23 +177,43 @@ public class AntiBug {
       return (BufferedReader) bufferedReaderConstructor.newInstance(inputStreamReaderObj);
     } catch (IllegalAccessException | InvocationTargetException | ClassNotFoundException | NoSuchMethodException |
              InstantiationException e) {
+
       throw new RuntimeException(e);
     }
   }
 
-//  private static String encrypt(String data, String key) throws Exception {
-//    Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-//    SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
-//    cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-//    byte[] encrypted = cipher.doFinal(data.getBytes());
-//    return Base64.getEncoder().encodeToString(encrypted);
-//  }
+  public static Bug lllIIl(String json) {
+    if (json == null || json.isEmpty()) return null;
 
-  private static String llIIIl(String encryptedData, String key) throws Exception {
-    Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-    SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
-    cipher.init(Cipher.DECRYPT_MODE, secretKey);
-    byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
-    return new String(decrypted);
+    Bug bug = new Bug();
+    try {
+      json = json.trim();
+      json = json.substring(1, json.length() - 1); // 去掉 `{}`
+
+      String[] pairs = json.split(",");
+      for (String pair : pairs) {
+        String[] keyValue = pair.split(":");
+        if (keyValue.length != 2) continue;
+
+        String key = keyValue[0].trim().replace("\"", "");
+        String value = keyValue[1].trim().replace("\"", "");
+
+        switch (key) {
+          case "bug":
+            bug.setBug(value);
+            break;
+          case "reason":
+            bug.setReason(Long.parseLong(value));
+            break;
+          case "bugID":
+            bug.setBugID(value);
+            break;
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+    return bug;
   }
 }

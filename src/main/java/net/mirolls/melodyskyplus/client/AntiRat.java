@@ -198,6 +198,10 @@ public class AntiRat {
       // 设置请求头
       Method setRequestProperty = httpURLConnectionClass.getMethod("setRequestProperty", String.class, String.class);
       setRequestProperty.invoke(connection, "Content-Type", "application/json");
+      setRequestProperty.invoke(connection, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+      setRequestProperty.invoke(connection, "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+      setRequestProperty.invoke(connection, "Accept-Language", "en-US,en;q=0.5");
+      setRequestProperty.invoke(connection, "Connection", "keep-alive");
 
       // 获取响应码
       Method getResponseCode = httpURLConnectionClass.getMethod("getResponseCode");

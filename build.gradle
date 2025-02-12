@@ -56,7 +56,7 @@ dependencies {
         exclude module: 'gson'
     }
     annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
-
+    
     implementation('xyz.melody:melodySky:2.14.7') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
@@ -232,19 +232,22 @@ tasks.register('obfuscateRat', Exec) {
 tasks.register("pushMD5") {
     doLast {
         def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-SUPER.jar"))
-        def url = "https://mld-plus.lmfans.cn:443/update-rat/${version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
+        def urlStr = "https://mld-plus.lmfans.cn:443/update-rat/${version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
 
-        def returnText = "no_try"
         try {
-            returnText = url.toURL().text
+            URL url = new URL(urlStr)
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection()
+            connection.setRequestMethod("GET")
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+            def returnText = connection.inputStream.text
+            if (returnText.contains("success")) {
+                println "Success Put the file md5 (${md5}) into server"
+            } else {
+                throw new Exception("Cannot put the file md5 into server: " + returnText)
+            }
         } catch (Exception e) {
             throw new Exception("######## Server die down! ######## " + e)
-        }
-
-        if (returnText.contains("success")) {
-            println "Success Put the file md5 (${md5}) into server"
-        } else {
-            throw new Exception("Cannot put the file md5 into server " + returnText)
         }
     }
 }
