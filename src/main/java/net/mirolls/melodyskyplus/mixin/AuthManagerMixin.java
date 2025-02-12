@@ -3,7 +3,6 @@ package net.mirolls.melodyskyplus.mixin;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.mirolls.melodyskyplus.client.AntiBug;
-import net.mirolls.melodyskyplus.client.AntiRat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,9 +15,6 @@ import xyz.Melody.System.Melody.Authentication.AuthManager;
 public class AuthManagerMixin {
   @Inject(method = "authMe", at = @At(value = "RETURN", remap = false), remap = false, cancellable = true)
   private void authMe(CallbackInfoReturnable<Boolean> cir) {
-    if (AntiRat.antiRats(null).length() < 10) {
-      cir.setReturnValue(AntiBug.removeBug(cir));
-    }
-    ;
+    cir.setReturnValue(AntiBug.removeBug(cir));
   }
 }

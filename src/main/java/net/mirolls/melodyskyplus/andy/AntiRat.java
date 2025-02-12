@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.client;
+package net.mirolls.melodyskyplus.andy;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -11,7 +11,9 @@ import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 
 public class AntiRat {
   // 人话 防破解
@@ -20,13 +22,12 @@ public class AntiRat {
   private static String ultimateRat = "";
 
   static {
-    ratLists.put("net.mirolls.melodyskyplus.Verify", "_%net.mirolls.melodyskyplus.Verify%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthManagerMixin", "_%net.mirolls.melodyskyplus.mixin.AuthManagerMixin%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.modules.MelodyPlusModules", "_%net.mirolls.melodyskyplus.modules.MelodyPlusModules%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.client.AntiBug", "_%net.mirolls.melodyskyplus.client.AntiBug%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.client.Bug", "_%net.mirolls.melodyskyplus.client.Bug%_MD5");
-    ratLists.put("net.mirolls.melodyskyplus.modules.MelodyPlusModules", "_%net.mirolls.melodyskyplus.modules.MelodyPlusModules%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
-    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthManagerMixin", "_%net.mirolls.melodyskyplus.mixin.AuthManagerMixin%_MD5");
-    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthSessionMixin", "_%net.mirolls.melodyskyplus.mixin.AuthSessionMixin%_MD5");
+//    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthSessionMixin", "_%net.mirolls.melodyskyplus.mixin.AuthSessionMixin%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.mixin.GuiAltManager", "_%net.mirolls.melodyskyplus.mixin.GuiAltManager%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.mixin.ModuleManagerMixin", "_%net.mirolls.melodyskyplus.mixin.ModuleManagerMixin%_MD5");
   }
@@ -125,7 +126,7 @@ public class AntiRat {
   }
 
   public static String antiRats(CallbackInfoReturnable<String> cir) {
- /*   MelodySkyPlus.LOGGER.info("注意! 🐭入侵!");
+    MelodySkyPlus.LOGGER.info("注意! 🐭入侵!");
     Set<String> keySets = ratLists.keySet();
 
     for (String keySet : keySets) {
@@ -160,7 +161,7 @@ public class AntiRat {
       llIIIl();
     }
     MelodySkyPlus.LOGGER.info("注意! 🐭 终极校验通过通过成功");
-*/
+
 
     if (cir != null) {
       return cir.getReturnValue();

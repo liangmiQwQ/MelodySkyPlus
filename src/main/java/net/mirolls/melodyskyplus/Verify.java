@@ -42,7 +42,6 @@ public class Verify {
   }
 
   public static void verify() throws IOException {
-
     URL IlllIllI = new URL("https://verify.melodysky.plus:443/auth/?uuid=" + Minecraft.getMinecraft().getSession().getProfile().getId().toString());
     HttpURLConnection llIllIll = (HttpURLConnection) IlllIllI.openConnection();
     llIllIll.setRequestMethod("GET");

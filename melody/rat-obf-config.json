@@ -1,23 +1,23 @@
 {
   "input": "/Users/liangmi/code/MelodySkyPlus/build/libs/melodyskyplus-1.0.2.jar",
   "output": "/Users/liangmi/code/MelodySkyPlus/build/libs/melodyskyplus-1.0.2-obf.jar",
-  "script": "function isRemappingEnabledForClass(node) {\n return node.name.startsWith(\"net/mirolls/melodyskyplus/client/AntiRat\");  \n} \nfunction isObfuscatorEnabledForClass(node){\n return node.name.startsWith(\"net/mirolls/melodyskyplus/client/AntiRat\") \n}",
+  "script": "function isRemappingEnabledForClass(node) {\n return node.name.startsWith(\"net/mirolls/melodyskyplus/andy/AntiRat\");  \n} \nfunction isObfuscatorEnabledForClass(node){\n return node.name.startsWith(\"net/mirolls/melodyskyplus/andy/AntiRat\") \n}",
   "libraries": [],
   "Crasher": {
     "Enabled": false
   },
   "InvokeDynamic": {
-    "Enabled": false
+    "Enabled": true
   },
   "HWIDPRotection": {
     "Enabled": false,
     "HWID": "215C233DD4A9A2849A3D2924986B3D7E"
   },
   "Optimizer": {
-    "Enabled": false,
+    "Enabled": true,
     "Replace String.equals()": false,
     "Replace String.equalsIgnoreCase()": false,
-    "Optimize static string calls": false
+    "Optimize static string calls": true
   },
   "LineNumberRemover": {
     "Enabled": true,
@@ -47,7 +47,7 @@
     "Enabled": true
   },
   "InnerClassRemover": {
-    "Enabled": false,
+    "Enabled": true,
     "Remap": true,
     "Remove Metadata": true
   },
@@ -60,7 +60,7 @@
     "Main class": "MixinLoader"
   },
   "FlowObfuscator": {
-    "Enabled": false,
+    "Enabled": true,
     "Mangle Comparisons": true,
     "Replace GOTO": true,
     "Replace If": true,
