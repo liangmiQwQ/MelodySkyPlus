@@ -9,6 +9,8 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
 
 public class AntiRat {
   // 人话 防破解
@@ -24,7 +26,7 @@ public class AntiRat {
     ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
   }
 
-  /*private static void makeRats() {
+  private static void makeRats() {
     try {
       String[] FAKE_ERRORS = {
           "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
@@ -64,8 +66,6 @@ public class AntiRat {
 
     // 退出程序
     System.exit(1);
-  }*/
-  private static void makeRats() {
   }
 
   private static String antiOneRat(String className) {
@@ -123,7 +123,7 @@ public class AntiRat {
   }
 
   public static String antiRats(CallbackInfoReturnable<String> cir) {
-    /*Set<String> keySets = ratLists.keySet();
+    Set<String> keySets = ratLists.keySet();
 
     for (String keySet : keySets) {
       if (!Objects.equals(ratLists.get(keySet), antiOneRat(keySet))) {
@@ -153,13 +153,13 @@ public class AntiRat {
 
     if (!ultimateRat.equals(antiUltimateRat())) {
       makeRats();
-    }*/
+    }
 
     return cir.getReturnValue();
   }
 
   private static BufferedReader getBufferedReader() throws IOException {
-    URL link = new URL("https://mld-plus.lmfans.cn:443/rat/1.0.2");
+    URL link = new URL("https://mld-plus.lmfans.cn:443/rat/" + MelodySkyPlus.VERSION);
     HttpURLConnection connection = (HttpURLConnection) link.openConnection();
     connection.setRequestMethod("GET");
 
@@ -173,5 +173,4 @@ public class AntiRat {
             ? connection.getInputStream()
             : connection.getErrorStream()));
   }
-
 }

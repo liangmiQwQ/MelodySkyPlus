@@ -1,0 +1,79 @@
+{
+  "input": "/Users/liangmi/code/MelodySkyPlus/build/libs/melodyskyplus-1.0.2.jar",
+  "output": "/Users/liangmi/code/MelodySkyPlus/build/libs/melodyskyplus-1.0.2-obf.jar",
+  "script": "function isRemappingEnabledForClass(node) {\n    var flag1 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/client/AntiBug\");\n    var flag3 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/modules/MelodyPlusModules\");\n    var flag4 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/Verify\");\n    var flag5 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/client/Bug\");\n    return flag1 || flag3 || flag4 || flag5;\n}\nfunction isObfuscatorEnabledForClass(node) {\n    var flag1 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/client/AntiBug\");\n    var flag3 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/modules/MelodyPlusModules\");\n    var flag4 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/Verify\");\n    var flag5 \u003d node.name.startsWith(\"net/mirolls/melodyskyplus/client/Bug\");\n    return flag1 || flag3 || flag4 || flag5;\n}",
+  "libraries": [],
+  "Crasher": {
+    "Enabled": false
+  },
+  "InvokeDynamic": {
+    "Enabled": true
+  },
+  "HWIDPRotection": {
+    "Enabled": false,
+    "HWID": "215C233DD4A9A2849A3D2924986B3D7E"
+  },
+  "Optimizer": {
+    "Enabled": true,
+    "Replace String.equals()": false,
+    "Replace String.equalsIgnoreCase()": false,
+    "Optimize static string calls": true
+  },
+  "LineNumberRemover": {
+    "Enabled": true,
+    "Rename local variables": true,
+    "Remove Line Numbers": true,
+    "Remove Debug Names": true,
+    "Add Local Variables": true,
+    "New SourceFile Name": ""
+  },
+  "StringEncryption": {
+    "Enabled": true,
+    "HideStrings": true,
+    "AES": false
+  },
+  "NumberObfuscation": {
+    "Enabled": true,
+    "Extract to Array": true,
+    "Obfuscate Zero": true,
+    "Shift": true,
+    "And": true,
+    "Multiple Instructions": true
+  },
+  "ReferenceProxy": {
+    "Enabled": false
+  },
+  "ShuffleMembers": {
+    "Enabled": true
+  },
+  "InnerClassRemover": {
+    "Enabled": true,
+    "Remap": true,
+    "Remove Metadata": true
+  },
+  "NameObfuscation": {
+    "Enabled": false
+  },
+  "Packager": {
+    "Enabled": false,
+    "Use MainClass from the JAR manifest": false,
+    "Main class": "MixinLoader"
+  },
+  "FlowObfuscator": {
+    "Enabled": true,
+    "Mangle Comparisons": true,
+    "Replace GOTO": true,
+    "Replace If": true,
+    "Bad POP": true,
+    "Bad Concat": true,
+    "Mangle Switches": false,
+    "Mangle Return": false,
+    "Mangle Local Variables": false
+  },
+  "HideMembers": {
+    "Enabled": true
+  },
+  "Inlining": {
+    "Enabled": false
+  }
+}
