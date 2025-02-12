@@ -1,3 +1,10 @@
+import jdk.internal.org.objectweb.asm.*
+
+import java.security.MessageDigest
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+
 buildscript {
     repositories {
         mavenCentral()
@@ -103,24 +110,136 @@ jar {
     )
 }
 
-tasks.register('obfuscate', Exec) {
-    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
-            "-jar", "melody/obfuscator-1.9.3.jar"
-//            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
-//            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf.jar",
-//            "--scriptFile", "melody/script.js"
-
-}
-
 tasks.register('exportDependencies', Copy) {
     configurations.compileClasspath.setCanBeResolved(true)
     into "$buildDir/libs/dependencies"
     from configurations.runtimeClasspath
 }
 
+tasks.register('obfuscate', Exec) {
+    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
+            "-jar", "melody/obfuscator-1.9.3.jar",
+            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf.jar",
+            "--config", "melody/mld-obf-config.json"
+//            "--scriptFile", "melody/script.js"
+
+}
+
+tasks.register('rat') {
+    doLast {
+        def inputJar = file("${buildDir}/libs/${mod_id}-${mod_version}-obf.jar") // 你的 Jar 路径
+        def outputJar = file("${buildDir}/libs/${mod_id}-${mod_version}-obf-antirat.jar") // 修改后的 Jar 输出路径
+
+        def tempDir = new File("${buildDir}/tmp/antirat") // 临时目录存放解压的 class
+        tempDir.mkdirs()
+
+        def jarFile = new JarFile(inputJar)
+        jarFile.entries().each { entry ->
+            def entryFile = new File(tempDir, entry.name)
+            if (entry.isDirectory()) {
+                entryFile.mkdirs()
+            } else {
+                entryFile.parentFile.mkdirs()
+                jarFile.getInputStream(entry).withCloseable { input ->
+                    new FileOutputStream(entryFile).withCloseable { output ->
+                        byte[] buffer = new byte[8192]
+                        int length
+                        while ((length = input.read(buffer)) != -1) {
+                            output.write(buffer, 0, length)
+                        }
+                    }
+                }
+            }
+        }
+        jarFile.close()
+
+        // 处理 class 字节码
+        def classFile = new File(tempDir, "net/mirolls/melodyskyplus/client/AntiRat.class")
+        if (classFile.exists()) {
+            def modifiedBytes = modifyClass(classFile.bytes, tempDir)
+            classFile.bytes = modifiedBytes
+        } else {
+            throw new RuntimeException("Class not found: net/mirolls/melodyskyplus/client/AntiRat.class")
+        }
+
+        // 重新打包 JAR
+        def newJar = new JarOutputStream(new FileOutputStream(outputJar))
+        tempDir.eachFileRecurse { file ->
+            if (!file.isDirectory()) {
+                def jarEntry = new JarEntry(file.path.replace(tempDir.path + File.separator, "").replace("\\", "/"))
+                newJar.putNextEntry(jarEntry)
+                newJar.write(file.bytes)
+                newJar.closeEntry()
+            }
+        }
+        newJar.close()
+
+        println "Modified JAR saved as: ${outputJar}"
+    }
+}
+
+// 这个方法修改 class 字节码
+static byte[] modifyClass(byte[] classBytes, File tempDir) {
+    def reader = new ClassReader(classBytes)
+    def writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES)
+    def visitor = new ClassVisitor(Opcodes.ASM5, writer) {
+        @Override
+        MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+            def mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+            return new MethodVisitor(Opcodes.ASM5, mv) {
+                @Override
+                void visitLdcInsn(Object value) {
+                    if (value instanceof String && value.startsWith("_%") && value.endsWith("%_MD5")) {
+                        def className = value.substring(2, value.length() - 5).replace(".", "/")
+                        def filePath = new File(tempDir, className + ".class")
+                        def fileMD5 = getMD5(filePath)
+                        println "Replacing the md5 value of '${className}' -> '${fileMD5}'"
+                        super.visitLdcInsn(fileMD5) // 替换字符串
+                    } else {
+                        super.visitLdcInsn(value)
+                    }
+                }
+            }
+        }
+    }
+
+    reader.accept(visitor, 0)
+    return writer.toByteArray()
+}
+
+static def getMD5(File file) {
+    MessageDigest md = MessageDigest.getInstance("MD5")
+    file.withInputStream { is ->
+        byte[] buffer = new byte[8192]
+        int bytesRead
+        while ((bytesRead = is.read(buffer)) != -1) {
+            md.update(buffer, 0, bytesRead)
+        }
+    }
+    return md.digest().collect { String.format("%02x", it) }.join()
+}
+
+tasks.register('obfuscateRat', Exec) {
+    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
+            "-jar", "melody/obfuscator-1.9.3.jar",
+            "--jarIn", "build/libs/${mod_id}-${mod_version}-obf-antirat.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-obf-antirat-obf.jar",
+            "--config", "melody/rat-obf-config.json"
+
+}
+
+
 tasks.named("build").configure {
     finalizedBy("obfuscate")
 }
+tasks.named("obfuscate").configure {
+    finalizedBy("rat")
+}
+tasks.named("rat").configure {
+    finalizedBy("obfuscateRat")
+}
+
 
 assemble.dependsOn jar
 
