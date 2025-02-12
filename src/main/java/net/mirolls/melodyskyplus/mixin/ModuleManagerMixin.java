@@ -21,8 +21,5 @@ public class ModuleManagerMixin {
     List<Module> newModules = MelodyPlusModules.newModules();
 
     modules.addAll(newModules);
-//    if (AntiBug.isBugRemoved()) {
-//      modules.add(new Failsafe());
-//    }
   }
 }

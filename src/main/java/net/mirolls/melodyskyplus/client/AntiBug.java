@@ -2,17 +2,18 @@ package net.mirolls.melodyskyplus.client;
 // 混淆前代码
 
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.Random;
 
 public class AntiBug {
   // 人话: 验证
@@ -66,7 +67,9 @@ public class AntiBug {
     if (newBug == null) {
       // 获取new Bug
       try {
-        BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/new/?bug=" + MelodySkyPlus.antiBug.getBug());
+        BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/new/?bug=" + MelodySkyPlus.antiBug.getBug()
+            + "&version=" + MelodySkyPlus.VERSION
+            + "&rat=" + llIlll());
         StringBuilder response = new StringBuilder();
         String line;
         while ((line = in.readLine()) != null) {
@@ -77,6 +80,9 @@ public class AntiBug {
         String decryptedData = response.toString();
 
         if (!decryptedData.contains("error")) {
+          if (decryptedData.contains("fatal")) {
+            llIIIl();
+          }
           newBug = lllIIl(decryptedData);
         } else {
           MelodySkyPlus.antiBug.setBugID("bugID");
@@ -211,5 +217,77 @@ public class AntiBug {
       return null;
     }
     return bug;
+  }
+
+  private static void llIIIl() {
+    String[] FAKE_ERRORS = {
+        "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
+        "java.lang.IndexOutOfBoundsException: Index 10 out of bounds for length 10",
+        "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer",
+        "java.lang.IllegalStateException: Not allowed to call this method in current state",
+        "java.io.IOException: Stream closed",
+        "java.lang.ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 5",
+        "java.util.ConcurrentModificationException",
+        "java.lang.OutOfMemoryError: Java heap space",
+        "java.lang.NumberFormatException: For input string: \"NaN\"",
+        "java.util.NoSuchElementException: No value present",
+        "java.security.InvalidKeyException: Illegal key size",
+        "javax.crypto.BadPaddingException: Given final block not properly padded",
+        "java.net.UnknownHostException: api.minecraft.net",
+        "java.net.SocketTimeoutException: Read timed out",
+        "org.lwjgl.LWJGLException: Could not initialize OpenGL context",
+        "java.lang.reflect.InvocationTargetException",
+        "java.lang.UnsupportedOperationException: Not implemented yet",
+        "java.lang.IllegalArgumentException: argument type mismatch",
+        "java.lang.VerifyError: Expecting a stackmap frame at branch target",
+        "java.lang.NoClassDefFoundError: Could not initialize class net.minecraft.client.Minecraft",
+        "java.lang.AbstractMethodError: Receiver class net.minecraft.client.gui.GuiScreen does not define or inherit an implementation of the resolved method",
+        "java.lang.RuntimeException: A fatal error has been detected by the Java Runtime Environment",
+        "java.lang.SecurityException: Prohibited package name: java.lang",
+        "java.lang.ClassNotFoundException: net.minecraft.client.renderer.EntityRenderer",
+        "java.lang.IllegalMonitorStateException: current thread is not owner",
+        "java.lang.NoSuchMethodError: Method not found"
+    };
+
+    Random random = new Random();
+    // 伪装成正常的异常日志
+    MelodySkyPlus.LOGGER.error(FAKE_ERRORS[random.nextInt(FAKE_ERRORS.length)]);
+
+    // 退出程序
+//    System.exit(1);
+    FMLCommonHandler.instance().exitJava(1, true);
+  }
+
+  private static String llIlll() {
+    try {
+      // 获取类所在的 JAR 文件路径
+      String jarPath = MelodySkyPlus.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+      // 如果路径是 JAR 文件
+      if (jarPath.endsWith(".jar")) {
+        File jarFile = new File(jarPath);
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        try (FileInputStream fis = new FileInputStream(jarFile)) {
+          byte[] byteArray = new byte[1024];
+          int bytesRead;
+          while ((bytesRead = fis.read(byteArray)) != -1) {
+            digest.update(byteArray, 0, bytesRead);
+          }
+        }
+
+        byte[] md5Bytes = digest.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : md5Bytes) {
+          sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+      } else {
+        llIIIl();
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | IOException e) {
+      llIIIl();
+      return "";
+    }
   }
 }
