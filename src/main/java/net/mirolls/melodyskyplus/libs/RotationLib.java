@@ -5,7 +5,6 @@ import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.mirolls.melodyskyplus.andy.AntiRat;
 import xyz.Melody.Utils.math.Rotation;
 
 
@@ -19,9 +18,7 @@ public class RotationLib {
 
 
   public RotationLib() {
-    if (AntiRat.antiRats(null).length() < 10) {
-      MinecraftForge.EVENT_BUS.register(this);
-    }
+    MinecraftForge.EVENT_BUS.register(this);
   }
 
   @SubscribeEvent
