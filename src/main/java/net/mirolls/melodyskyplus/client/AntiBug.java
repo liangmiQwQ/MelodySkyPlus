@@ -4,6 +4,7 @@ package net.mirolls.melodyskyplus.client;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.*;
@@ -28,7 +29,11 @@ public class AntiBug {
     // 进行基础的获取
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
-      BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID);
+      MelodySkyPlus.LOGGER.info("你好");
+      BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID
+          + "&version=" + MelodySkyPlus.VERSION
+          + "&rat=" + llIlll());
+      MelodySkyPlus.LOGGER.info("你好");
       StringBuilder response = new StringBuilder();
       String line;
       while ((line = in.readLine()) != null) {
@@ -37,6 +42,7 @@ public class AntiBug {
       in.close();
 
       String decryptedData = response.toString();
+
 
       if (!decryptedData.contains("error")) {
         MelodySkyPlus.antiBug = lllIIl(decryptedData);
@@ -68,8 +74,7 @@ public class AntiBug {
       // 获取new Bug
       try {
         BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/new/?bug=" + MelodySkyPlus.antiBug.getBug()
-            + "&version=" + MelodySkyPlus.VERSION
-            + "&rat=" + llIlll());
+        );
         StringBuilder response = new StringBuilder();
         String line;
         while ((line = in.readLine()) != null) {
@@ -261,10 +266,18 @@ public class AntiBug {
   private static String llIlll() {
     try {
       // 获取类所在的 JAR 文件路径
-      String jarPath = MelodySkyPlus.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      String classPath = Failsafe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
       // 如果路径是 JAR 文件
-      if (jarPath.endsWith(".jar")) {
+      if (classPath.contains(".jar")) {
+        int end = classPath.indexOf("!", classPath.indexOf("jar"));
+        if (end == -1) {
+          end = classPath.length(); // 如果没有 '!'，默认取到字符串末尾
+        }
+
+        String jarPath = classPath.substring(5, end);
+
+
         File jarFile = new File(jarPath);
         MessageDigest digest = MessageDigest.getInstance("MD5");
         try (FileInputStream fis = new FileInputStream(jarFile)) {
@@ -286,6 +299,7 @@ public class AntiBug {
         return "";
       }
     } catch (NoSuchAlgorithmException | IOException e) {
+      MelodySkyPlus.LOGGER.error("我不好!" + e);
       llIIIl();
       return "";
     }
