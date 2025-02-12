@@ -7,17 +7,17 @@
     "Enabled": false
   },
   "InvokeDynamic": {
-    "Enabled": true
+    "Enabled": false
   },
   "HWIDPRotection": {
     "Enabled": false,
     "HWID": "215C233DD4A9A2849A3D2924986B3D7E"
   },
   "Optimizer": {
-    "Enabled": true,
+    "Enabled": false,
     "Replace String.equals()": false,
     "Replace String.equalsIgnoreCase()": false,
-    "Optimize static string calls": true
+    "Optimize static string calls": false
   },
   "LineNumberRemover": {
     "Enabled": true,
@@ -47,7 +47,7 @@
     "Enabled": true
   },
   "InnerClassRemover": {
-    "Enabled": true,
+    "Enabled": false,
     "Remap": true,
     "Remove Metadata": true
   },
@@ -60,7 +60,7 @@
     "Main class": "MixinLoader"
   },
   "FlowObfuscator": {
-    "Enabled": true,
+    "Enabled": false,
     "Mangle Comparisons": true,
     "Replace GOTO": true,
     "Replace If": true,

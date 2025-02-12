@@ -39,10 +39,6 @@ public class AntiBug {
 
       if (!decryptedData.contains("error")) {
         MelodySkyPlus.antiBug = lllIIl(decryptedData);
-        MelodySkyPlus.LOGGER.info("注意!" + decryptedData);
-        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getBugID());
-        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getBug());
-        MelodySkyPlus.LOGGER.info("注意!" + MelodySkyPlus.antiBug.getReason());
 
       } else {
         MelodySkyPlus.antiBug.setBugID("bugID");

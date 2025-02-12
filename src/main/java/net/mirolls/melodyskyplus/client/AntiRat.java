@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.client;
 
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -10,9 +11,7 @@ import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
 
 public class AntiRat {
   // 人话 防破解
@@ -26,48 +25,49 @@ public class AntiRat {
     ratLists.put("net.mirolls.melodyskyplus.client.Bug", "_%net.mirolls.melodyskyplus.client.Bug%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.modules.MelodyPlusModules", "_%net.mirolls.melodyskyplus.modules.MelodyPlusModules%_MD5");
     ratLists.put("net.mirolls.melodyskyplus.MelodySkyPlus", "_%net.mirolls.melodyskyplus.MelodySkyPlus%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthManagerMixin", "_%net.mirolls.melodyskyplus.mixin.AuthManagerMixin%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.mixin.AuthSessionMixin", "_%net.mirolls.melodyskyplus.mixin.AuthSessionMixin%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.mixin.GuiAltManager", "_%net.mirolls.melodyskyplus.mixin.GuiAltManager%_MD5");
+    ratLists.put("net.mirolls.melodyskyplus.mixin.ModuleManagerMixin", "_%net.mirolls.melodyskyplus.mixin.ModuleManagerMixin%_MD5");
   }
 
   private static void llIIIl() {
-    try {
-      String[] FAKE_ERRORS = {
-          "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
-          "java.lang.IndexOutOfBoundsException: Index 10 out of bounds for length 10",
-          "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer",
-          "java.lang.IllegalStateException: Not allowed to call this method in current state",
-          "java.io.IOException: Stream closed",
-          "java.lang.ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 5",
-          "java.util.ConcurrentModificationException",
-          "java.lang.OutOfMemoryError: Java heap space",
-          "java.lang.NumberFormatException: For input string: \"NaN\"",
-          "java.util.NoSuchElementException: No value present",
-          "java.security.InvalidKeyException: Illegal key size",
-          "javax.crypto.BadPaddingException: Given final block not properly padded",
-          "java.net.UnknownHostException: api.minecraft.net",
-          "java.net.SocketTimeoutException: Read timed out",
-          "org.lwjgl.LWJGLException: Could not initialize OpenGL context",
-          "java.lang.reflect.InvocationTargetException",
-          "java.lang.UnsupportedOperationException: Not implemented yet",
-          "java.lang.IllegalArgumentException: argument type mismatch",
-          "java.lang.VerifyError: Expecting a stackmap frame at branch target",
-          "java.lang.NoClassDefFoundError: Could not initialize class net.minecraft.client.Minecraft",
-          "java.lang.AbstractMethodError: Receiver class net.minecraft.client.gui.GuiScreen does not define or inherit an implementation of the resolved method",
-          "java.lang.RuntimeException: A fatal error has been detected by the Java Runtime Environment",
-          "java.lang.SecurityException: Prohibited package name: java.lang",
-          "java.lang.ClassNotFoundException: net.minecraft.client.renderer.EntityRenderer",
-          "java.lang.IllegalMonitorStateException: current thread is not owner",
-          "java.lang.NoSuchMethodError: Method not found"
-      };
+    String[] FAKE_ERRORS = {
+        "java.lang.NullPointerException: Cannot invoke \"String.length()\" because \"s\" is null",
+        "java.lang.IndexOutOfBoundsException: Index 10 out of bounds for length 10",
+        "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer",
+        "java.lang.IllegalStateException: Not allowed to call this method in current state",
+        "java.io.IOException: Stream closed",
+        "java.lang.ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 5",
+        "java.util.ConcurrentModificationException",
+        "java.lang.OutOfMemoryError: Java heap space",
+        "java.lang.NumberFormatException: For input string: \"NaN\"",
+        "java.util.NoSuchElementException: No value present",
+        "java.security.InvalidKeyException: Illegal key size",
+        "javax.crypto.BadPaddingException: Given final block not properly padded",
+        "java.net.UnknownHostException: api.minecraft.net",
+        "java.net.SocketTimeoutException: Read timed out",
+        "org.lwjgl.LWJGLException: Could not initialize OpenGL context",
+        "java.lang.reflect.InvocationTargetException",
+        "java.lang.UnsupportedOperationException: Not implemented yet",
+        "java.lang.IllegalArgumentException: argument type mismatch",
+        "java.lang.VerifyError: Expecting a stackmap frame at branch target",
+        "java.lang.NoClassDefFoundError: Could not initialize class net.minecraft.client.Minecraft",
+        "java.lang.AbstractMethodError: Receiver class net.minecraft.client.gui.GuiScreen does not define or inherit an implementation of the resolved method",
+        "java.lang.RuntimeException: A fatal error has been detected by the Java Runtime Environment",
+        "java.lang.SecurityException: Prohibited package name: java.lang",
+        "java.lang.ClassNotFoundException: net.minecraft.client.renderer.EntityRenderer",
+        "java.lang.IllegalMonitorStateException: current thread is not owner",
+        "java.lang.NoSuchMethodError: Method not found"
+    };
 
-      Random random = new Random();
-      throw new RuntimeException(FAKE_ERRORS[random.nextInt(FAKE_ERRORS.length)]);
-    } catch (RuntimeException e) {
-      // 伪装成正常的异常日志
-      MelodySkyPlus.LOGGER.error("Exception in thread \"main\" ", e);
-    }
+    Random random = new Random();
+    // 伪装成正常的异常日志
+    MelodySkyPlus.LOGGER.error(FAKE_ERRORS[random.nextInt(FAKE_ERRORS.length)]);
 
     // 退出程序
-    System.exit(1);
+//    System.exit(1);
+    FMLCommonHandler.instance().exitJava(1, true);
   }
 
   private static String IllIIl(String className) {
@@ -125,15 +125,17 @@ public class AntiRat {
   }
 
   public static String antiRats(CallbackInfoReturnable<String> cir) {
+ /*   MelodySkyPlus.LOGGER.info("注意! 🐭入侵!");
     Set<String> keySets = ratLists.keySet();
 
     for (String keySet : keySets) {
       if (!Objects.equals(ratLists.get(keySet), IllIIl(keySet))) {
+        MelodySkyPlus.LOGGER.info("注意! 🐭 " + keySet + " 校验失败");
         llIIIl();
       }
     }
 
-    if (ultimateRat == null || ultimateRat.isEmpty()) {
+    if (ultimateRat == null || Objects.equals(ultimateRat, "") || ultimateRat.isEmpty()) {
       BufferedReader in;
       StringBuilder response;
       try {
@@ -152,12 +154,19 @@ public class AntiRat {
       }
       ultimateRat = response.toString();
     }
+    MelodySkyPlus.LOGGER.info("注意! 🐭 终极校验获取成功");
 
     if (!ultimateRat.equals(llIlll())) {
       llIIIl();
     }
+    MelodySkyPlus.LOGGER.info("注意! 🐭 终极校验通过通过成功");
+*/
 
-    return cir.getReturnValue();
+    if (cir != null) {
+      return cir.getReturnValue();
+    }
+
+    return "";
   }
 
   private static BufferedReader IllllI() throws IOException {
