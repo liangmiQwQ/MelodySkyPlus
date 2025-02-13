@@ -307,7 +307,9 @@ public abstract class GemstoneNukerMixin {
           if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
             // 至少保证这个是稳定的
             melodySkyPlus$missedBlocks++;
-            if (melodySkyPlus$trySlowerBlocks.getValue() >= melodySkyPlus$missedBlocks) { // 如果已经多次这样
+            MelodySkyPlus.LOGGER.info(melodySkyPlus$missedBlocks);
+            if (melodySkyPlus$trySlowerBlocks.getValue() <= melodySkyPlus$missedBlocks) { // 如果已经多次这样
+              melodySkyPlus$missedBlocks = 0; // 重置状态
               if (melodySkyPlus$prevPickaxeAbility) {
                 // 开技能了
                 if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {

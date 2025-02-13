@@ -61,6 +61,7 @@ public class Failsafe extends Module {
   private BlockPos lastLocation = null;
   private boolean reacting = false;
 
+
   public Failsafe() {
     super("Failsafe", ModuleType.QOL);
     antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
@@ -125,14 +126,8 @@ public class Failsafe extends Module {
         returnValue = true;
       }
     }
-
-    if (returnValue) {
-      this.onEnable();
-      return true;
-    } else {
-      this.onDisable();
-      return false;
-    }
+    
+    return returnValue;
   }
 
   private void reactBedrock() {
@@ -342,6 +337,7 @@ public class Failsafe extends Module {
   }
 
   public void onDisable() {
+    MelodySkyPlus.LOGGER.info("onDisable is running");
     // 同时这里打断所有正在运行的React
     MelodySkyPlus.rotationLib.stop();
     MelodySkyPlus.walkLib.stop();

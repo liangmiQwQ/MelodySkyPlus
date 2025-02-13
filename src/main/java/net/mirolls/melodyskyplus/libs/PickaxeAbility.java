@@ -3,7 +3,6 @@ package net.mirolls.melodyskyplus.libs;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
 public class PickaxeAbility {
   private boolean pickaxeAbility = false;
@@ -16,9 +15,9 @@ public class PickaxeAbility {
   public void onPickaxeAbility(ClientChatReceivedEvent event) {
     String message = event.message.getUnformattedText();
 
-    if (message.equalsIgnoreCase(MiningSkill.getINSTANCE().used.getValue())) {
+    if (message.equalsIgnoreCase("You used your Mining Speed Boost Pickaxe Ability!")) {
       this.pickaxeAbility = true;
-    } else if (message.equalsIgnoreCase(MiningSkill.getINSTANCE().expire.getValue())) {
+    } else if (message.equalsIgnoreCase("Your Mining Speed Boost has expired!")) {
       this.pickaxeAbility = false;
     }
   }
