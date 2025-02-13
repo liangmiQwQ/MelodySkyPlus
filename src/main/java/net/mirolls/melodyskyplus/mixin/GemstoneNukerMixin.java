@@ -72,43 +72,57 @@ public abstract class GemstoneNukerMixin {
   public void resetTicksInAdvanced(EventPreUpdate event, CallbackInfo ci) {
     if (blockPos != null) {
       if (checkBlock(blockPos)) {
-        // 如果是空气的
-        switch (melodySkyPlus$miningType) {
-          case "AbilityRuby":
-            MelodySkyPlus.nukerTicks.setAbilityRuby(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "AbilityJ_a_a_s_o":
-            MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "AbilityTopaz":
-            MelodySkyPlus.nukerTicks.setAbilityTopaz(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "AbilityJasper":
-            MelodySkyPlus.nukerTicks.setAbilityJasper(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "AbilityO_a_c_p":
-            MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "Ruby":
-            MelodySkyPlus.nukerTicks.setRuby(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "J_a_a_s_o":
-            MelodySkyPlus.nukerTicks.setJ_a_a_s_o(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "Topaz":
-            MelodySkyPlus.nukerTicks.setTopaz(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "Jasper":
-            MelodySkyPlus.nukerTicks.setJasper(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-          case "O_a_c_p":
-            MelodySkyPlus.nukerTicks.setO_a_c_p(ticks - (int) Math.floor(removeTime.getValue() / 50));
-            break;
-        }
+        if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
+          // 首先 必须保证pickaxeAbility状态稳定!
 
-        this.blockPos = null;
-        this.ticks = 0;
-        ci.cancel();
+          int targetTick = ticks - (int) Math.floor(removeTime.getValue() / 50);
+          switch (melodySkyPlus$miningType) {
+            case "AbilityRuby":
+              MelodySkyPlus.nukerTicks.setAbilityRuby(targetTick);
+              break;
+            case "AbilityJ_a_a_s_o":
+              MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(targetTick);
+              break;
+            case "AbilityTopaz":
+              MelodySkyPlus.nukerTicks.setAbilityTopaz(targetTick);
+              break;
+            case "AbilityJasper":
+              MelodySkyPlus.nukerTicks.setAbilityJasper(targetTick);
+              break;
+            case "AbilityO_a_c_p":
+              MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(targetTick);
+              break;
+            case "Ruby":
+              if (targetTick > 6) {
+                MelodySkyPlus.nukerTicks.setRuby(targetTick);
+              }
+              break;
+            case "J_a_a_s_o":
+              if (targetTick > 8) {
+                MelodySkyPlus.nukerTicks.setJ_a_a_s_o(targetTick);
+              }
+              break;
+            case "Topaz":
+              if (targetTick > 11) {
+                MelodySkyPlus.nukerTicks.setTopaz(targetTick);
+              }
+              break;
+            case "Jasper":
+              if (targetTick > 14) {
+                MelodySkyPlus.nukerTicks.setJasper(targetTick);
+              }
+              break;
+            case "O_a_c_p":
+              if (targetTick > 15) {
+                MelodySkyPlus.nukerTicks.setO_a_c_p(targetTick);
+              }
+              break;
+          }
+
+          this.blockPos = null;
+          this.ticks = 0;
+          ci.cancel();
+        }
       }
     }
   }
