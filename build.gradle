@@ -45,14 +45,14 @@ configurations {
 }
 
 dependencies {
-    embed('org.spongepowered:mixin:0.6.5-SNAPSHOT') {
+    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
-    annotationProcessor 'org.spongepowered:mixin:0.6.5-SNAPSHOT'
+    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:1.0.0') {
+    implementation('xyz.melody:melodySky:2.14.6') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
     }
