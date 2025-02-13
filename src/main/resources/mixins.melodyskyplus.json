@@ -7,7 +7,6 @@
     "AutoFishMixin",
     "AutoRubyCMDMixin",
     "AutoRubyMixin",
-    "ChatMonitorMixin",
     "GemstoneNukerMixin",
     "HUDManagerMixin",
     "MiningProtectMixin",
