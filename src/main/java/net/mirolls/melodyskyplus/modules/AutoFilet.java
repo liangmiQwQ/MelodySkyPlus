@@ -1,0 +1,111 @@
+package net.mirolls.melodyskyplus.modules;
+
+import net.minecraft.item.ItemStack;
+import xyz.Melody.Event.EventHandler;
+import xyz.Melody.Event.events.world.EventTick;
+import xyz.Melody.System.Managers.Client.ModuleManager;
+import xyz.Melody.System.Managers.Skyblock.Area.Areas;
+import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
+import xyz.Melody.Utils.Item.ItemUtils;
+import xyz.Melody.Utils.timer.TimerUtil;
+import xyz.Melody.injection.mixins.gui.GuiPlayerTabAccessor;
+import xyz.Melody.module.Module;
+import xyz.Melody.module.ModuleType;
+import xyz.Melody.module.modules.macros.Mining.AutoRuby;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class AutoFilet extends Module {
+  private final TimerUtil ticksTimer;
+  private final TimerUtil coolDownTimer;
+  private final List<Module> mods;
+  private int fishTick;
+
+  public AutoFilet() {
+    super("AutoFilet", ModuleType.Mining);
+    this.mods = new ArrayList<>();
+    this.fishTick = -1;
+    this.ticksTimer = (new TimerUtil()).reset();
+    this.coolDownTimer = (new TimerUtil()).reset();
+    this.setModInfo("Auto eat Filet O' Fortune.");
+    this.except();
+  }
+
+  @EventHandler
+  public void tick(EventTick event) {
+    SkyblockArea area = new SkyblockArea();
+    area.updateCurrentArea();
+    if (!area.isIn(Areas.NULL)) {
+      // 在skyblock里面
+
+      if (this.ticksTimer.hasReached(1000) && isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
+        String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
+
+        if (!footer.contains("Filet O' Fortune")) {
+          // 要吃鱼了
+          disableMacros();
+          fishTick = 0;
+        }
+
+        this.ticksTimer.reset();
+      }
+
+      // 吃鱼核心逻辑
+      if (fishTick == 10) {
+        for (int i = 0; i < 9; ++i) {
+          ItemStack item = this.mc.thePlayer.inventory.getStackInSlot(i);
+          if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
+            this.mc.thePlayer.inventory.currentItem = i;
+          }
+        }
+      }
+      if (fishTick == 20) {
+        this.mc.playerController.sendUseItem(
+            this.mc.thePlayer, this.mc.theWorld,
+            this.mc.thePlayer.inventory.getStackInSlot(this.mc.thePlayer.inventory.currentItem)
+        );
+      }
+      if (fishTick == 30) {
+        reEnableMacros();
+        coolDownTimer.reset();
+        fishTick = -1;
+      }
+    }
+
+    if (fishTick != -1) {
+      fishTick++;
+    }
+  }
+
+  private void disableMacros() {
+    for (Module mod : ModuleManager.getModulesInType(ModuleType.Mining)) {
+      if (mod != this && mod.isEnabled() && !mod.excepted) {
+        mod.setEnabled(false);
+        this.mods.add(mod);
+      }
+    }
+  }
+
+  private boolean isDoingMacro() {
+    for (Module mod : ModuleManager.getModulesInType(ModuleType.Mining)) {
+      if (mod != this && mod.isEnabled() && !mod.excepted) {
+        if (Objects.equals(mod.getName(), "AutoGemstone")) {
+          return AutoRuby.getINSTANCE().started;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void reEnableMacros() {
+
+    for (Module mod : this.mods) {
+      mod.setEnabled(true);
+    }
+
+    this.mods.clear();
+  }
+}
