@@ -24,15 +24,13 @@ import xyz.Melody.GUI.Hud.HUDManager;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
-import java.util.Random;
-
 @SuppressWarnings("rawtypes")
 @Mixin(value = GemstoneNuker.class, remap = false)
 public abstract class GemstoneNukerMixin {
   public Option<Boolean> melodySkyPlus$advanced = null;
   public Option<Boolean> melodySkyPlus$adaptive = null;
   public Numbers<Double> melodySkyPlus$tryFaster = new Numbers<>("TryFaster(s)", 60.0, 10.0, 300.0, 5.0);
-  public Numbers<Double> melodySkyPlus$trySlowerChange = new Numbers<>("TrySlower(%)", 50.0, 10.0, 100.0, 0.5);
+  public Numbers<Double> melodySkyPlus$trySlowerBlocks = new Numbers<>("TrySlowerBlocks", 5.0, 1.0, 60.0, 1.0);
 
   public TimerUtil tryFasterTimer = new TimerUtil();
   @Shadow
@@ -47,6 +45,8 @@ public abstract class GemstoneNukerMixin {
   private Numbers<Double> removeTime;
   @Shadow
   private Option<Boolean> advanced;
+
+  private int melodySkyPlus$missedBlocks;
   @Shadow
   private BlockPos blockPos;
   private boolean melodySkyPlus$pickaxeAbility;
@@ -121,7 +121,7 @@ public abstract class GemstoneNukerMixin {
       melodySkyPlus$adaptive = new Option<>("Adaptive Mode", false, (val) -> {
         if (GemstoneNuker.getINSTANCE() != null) {
           this.melodySkyPlus$tryFaster.setEnabled(val);
-          this.melodySkyPlus$trySlowerChange.setEnabled(val);
+          this.melodySkyPlus$trySlowerBlocks.setEnabled(val);
           this.miningSpeed.setEnabled(!val);
           this.skillMiningSpeed.setEnabled(!val);
           this.shiftTick.setEnabled(!val);
@@ -137,14 +137,14 @@ public abstract class GemstoneNukerMixin {
           if (val) {
             if (this.melodySkyPlus$adaptive.getValue()) {
               this.melodySkyPlus$tryFaster.setEnabled(true);
-              this.melodySkyPlus$trySlowerChange.setEnabled(true);
+              this.melodySkyPlus$trySlowerBlocks.setEnabled(true);
 
               this.miningSpeed.setEnabled(false);
               this.skillMiningSpeed.setEnabled(false);
               this.shiftTick.setEnabled(false);
             } else {
               this.melodySkyPlus$tryFaster.setEnabled(false);
-              this.melodySkyPlus$trySlowerChange.setEnabled(false);
+              this.melodySkyPlus$trySlowerBlocks.setEnabled(false);
 
               this.miningSpeed.setEnabled(true);
               this.skillMiningSpeed.setEnabled(true);
@@ -166,7 +166,7 @@ public abstract class GemstoneNukerMixin {
         } else if (i == 10) {
           returnValues[i] = melodySkyPlus$tryFaster;
         } else if (i == 11) {
-          returnValues[i] = melodySkyPlus$trySlowerChange;
+          returnValues[i] = melodySkyPlus$trySlowerBlocks;
         } else if (i > 11) {
           returnValues[i] = originalValues[i - 3];
         } else {
@@ -305,8 +305,9 @@ public abstract class GemstoneNukerMixin {
           int metadata = blockState.getBlock().getMetaFromState(blockState);
 
           if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-            if (melodySkyPlus$trySlowerChange.getValue() > new Random().nextDouble()) { // 随机算法
-              // 至少保证这个是稳定的
+            // 至少保证这个是稳定的
+            melodySkyPlus$missedBlocks++;
+            if (melodySkyPlus$trySlowerBlocks.getValue() >= melodySkyPlus$missedBlocks) { // 如果已经多次这样
               if (melodySkyPlus$prevPickaxeAbility) {
                 // 开技能了
                 if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
@@ -352,7 +353,7 @@ public abstract class GemstoneNukerMixin {
   public void onEnable(CallbackInfo ci) {
     if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
       if (!HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
-        HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(false);
+        HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(true);
       }
     }
     tryFasterTimer.reset();
@@ -363,6 +364,6 @@ public abstract class GemstoneNukerMixin {
     if (HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
       HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(false);
     }
-    MelodySkyPlus.nukerTicks.reset();
+//    MelodySkyPlus.nukerTicks.reset();
   }
 }
