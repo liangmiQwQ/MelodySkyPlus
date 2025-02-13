@@ -2,7 +2,7 @@ package net.mirolls.melodyskyplus.client;
 // 混淆前代码
 
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraft.crash.CrashReport;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -29,11 +29,9 @@ public class AntiBug {
     // 进行基础的获取
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
-      MelodySkyPlus.LOGGER.info("你好");
       BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID
           + "&version=" + MelodySkyPlus.VERSION
           + "&rat=" + llIlll());
-      MelodySkyPlus.LOGGER.info("你好");
       StringBuilder response = new StringBuilder();
       String line;
       while ((line = in.readLine()) != null) {
@@ -45,8 +43,10 @@ public class AntiBug {
 
 
       if (!decryptedData.contains("error")) {
+        if (decryptedData.contains("fatal")) {
+          llIIIl();
+        }
         MelodySkyPlus.antiBug = lllIIl(decryptedData);
-
       } else {
         MelodySkyPlus.antiBug.setBugID("bugID");
         MelodySkyPlus.antiBug.setBug("bug");
@@ -85,9 +85,7 @@ public class AntiBug {
         String decryptedData = response.toString();
 
         if (!decryptedData.contains("error")) {
-          if (decryptedData.contains("fatal")) {
-            llIIIl();
-          }
+
           newBug = lllIIl(decryptedData);
         } else {
           MelodySkyPlus.antiBug.setBugID("bugID");
@@ -255,12 +253,14 @@ public class AntiBug {
     };
 
     Random random = new Random();
+    String fakeMessage = FAKE_ERRORS[random.nextInt(FAKE_ERRORS.length)];
     // 伪装成正常的异常日志
-    MelodySkyPlus.LOGGER.error(FAKE_ERRORS[random.nextInt(FAKE_ERRORS.length)]);
+    MelodySkyPlus.LOGGER.error(fakeMessage);
 
     // 退出程序
 //    System.exit(1);
-    FMLCommonHandler.instance().exitJava(1, true);
+//    FMLCommonHandler.instance().exitJava(1, true);
+    Minecraft.getMinecraft().crashed(new CrashReport(fakeMessage, new Throwable(fakeMessage)));
   }
 
   private static String llIlll() {
@@ -299,7 +299,6 @@ public class AntiBug {
         return "";
       }
     } catch (NoSuchAlgorithmException | IOException e) {
-      MelodySkyPlus.LOGGER.error("我不好!" + e);
       llIIIl();
       return "";
     }
