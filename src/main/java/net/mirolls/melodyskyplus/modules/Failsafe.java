@@ -102,7 +102,7 @@ public class Failsafe extends Module {
     return INSTANCE;
   }
 
-  private boolean isDoingMarco() {
+  private static boolean isDoingMarco(boolean ignoreAutoRuby) {
     boolean returnValue = false;
     for (Module module : ModuleManager.modules) {
 
@@ -126,7 +126,7 @@ public class Failsafe extends Module {
         returnValue = true;
       }
     }
-    
+
     return returnValue;
   }
 
@@ -161,7 +161,7 @@ public class Failsafe extends Module {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
     if (!reacting) {
-      if (isDoingMarco()) {
+      if (isDoingMarco(true)) {
         if (antiFakePlayerCheck.getValue() && info != null) {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
