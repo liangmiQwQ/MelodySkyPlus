@@ -14,14 +14,17 @@ import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 public class AutoFilet extends Module {
+  private static AutoFilet INSTANCE;
   private final TimerUtil ticksTimer;
   private final TimerUtil coolDownTimer;
   private final List<Module> mods;
   private int fishTick;
+  private int prevItem;
 
   public AutoFilet() {
     super("AutoFilet", ModuleType.Mining);
@@ -31,6 +34,24 @@ public class AutoFilet extends Module {
     this.coolDownTimer = (new TimerUtil()).reset();
     this.setModInfo("Auto eat Filet O' Fortune.");
     this.except();
+  }
+
+  public static AutoFilet getINSTANCE() {
+    if (INSTANCE == null) {
+      Iterator<Module> var2 = ModuleManager.modules.iterator();
+
+      Module m;
+      do {
+        if (!var2.hasNext()) {
+          return null;
+        }
+
+        m = var2.next();
+      } while (m.getClass() != AutoFilet.class);
+
+      INSTANCE = (AutoFilet) m;
+    }
+    return INSTANCE;
   }
 
   @EventHandler
@@ -57,6 +78,7 @@ public class AutoFilet extends Module {
         for (int i = 0; i < 9; ++i) {
           ItemStack item = this.mc.thePlayer.inventory.getStackInSlot(i);
           if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
+            prevItem = this.mc.thePlayer.inventory.currentItem;
             this.mc.thePlayer.inventory.currentItem = i;
           }
         }
@@ -68,6 +90,7 @@ public class AutoFilet extends Module {
         );
       }
       if (fishTick == 30) {
+        this.mc.thePlayer.inventory.currentItem = prevItem;
         reEnableMacros();
         coolDownTimer.reset();
         fishTick = -1;
@@ -107,5 +130,10 @@ public class AutoFilet extends Module {
     }
 
     this.mods.clear();
+  }
+
+  public void startEatFish() { // 要吃鱼了
+    disableMacros();
+    fishTick = 0;
   }
 }

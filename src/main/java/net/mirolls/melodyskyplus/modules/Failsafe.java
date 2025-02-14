@@ -277,20 +277,13 @@ public class Failsafe extends Module {
       Minecraft mc = Minecraft.getMinecraft();
 
       try {
-        PlayerSoundHandler.addSound("entity.ghast.ambient", 5.0F, 1.5F, 5);
-        PlayerSoundHandler.addSound("entity.ghast.death", 5.0F, 1.5F, 5);
-        PlayerSoundHandler.addSound("entity.ghast.hurt", 5.0F, 1.5F, 5);
-        PlayerSoundHandler.addSound("entity.ghast.scream", 5.0F, 1.5F, 5);
-        PlayerSoundHandler.addSound("entity.ghast.shoot", 5.0F, 1.5F, 5);
-        PlayerSoundHandler.addSound("entity.ghast.warn", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("mob.ghast.charge", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("mob.ghast.death", 5.0F, 1.5F, 5);
+        PlayerSoundHandler.addSound("mob.ghast.scream", 5.0F, 1.5F, 5);
 
-
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.ambient")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.death")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.hurt")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.scream")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.shoot")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("entity.ghast.warn")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.charge")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.death")));
+        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.scream")));
       } catch (RuntimeException e) {
         MelodySkyPlus.LOGGER.error("Cannot play sounds while macro check!");
       }
