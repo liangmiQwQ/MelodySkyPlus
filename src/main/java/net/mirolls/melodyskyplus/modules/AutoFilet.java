@@ -6,6 +6,7 @@ import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.injection.mixins.gui.GuiPlayerTabAccessor;
@@ -65,6 +66,7 @@ public class AutoFilet extends Module {
         String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
 
         if (!footer.contains("Filet O' Fortune")) {
+          Helper.sendMessage("Found Filet O' Fortune Buff Expired! Ready to eat fish!");
           // 要吃鱼了
           disableMacros();
           fishTick = 0;
