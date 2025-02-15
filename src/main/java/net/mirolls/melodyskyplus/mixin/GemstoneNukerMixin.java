@@ -308,6 +308,13 @@ public abstract class GemstoneNukerMixin {
     }
   }
 
+  @Inject(method = "checkBroken", remap = false,
+      at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z", ordinal = 0, remap = false)
+  )
+  public void checkBrokenToRemoveAddWhileAir(CallbackInfo ci) {
+    melodySkyPlus$missedBlocks = 0; // 重置状态
+  }
+
   @ModifyArg(method = "checkBroken", remap = false,
       at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
   )

@@ -11,6 +11,7 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
@@ -275,7 +276,8 @@ public class AntiBug {
           end = classPath.length(); // 如果没有 '!'，默认取到字符串末尾
         }
 
-        String jarPath = classPath.substring(5, end);
+//        String jarPath = classPath.substring(5, end);
+        String jarPath = URLDecoder.decode(classPath.substring(5, end), "UTF-8");
 
 
         File jarFile = new File(jarPath);
