@@ -19,6 +19,8 @@ public class AutoRubyCMDMixin {
       } else if (args[0].toLowerCase().contains("stop")) {
         MelodySkyPlus.nukerTicks.reset();
         Helper.sendMessage("AutoRuby: Adaptive Mode Ticks Cleared.");
+      } else if (args[0].toLowerCase().contains("start")) {
+
       }
     }
   }

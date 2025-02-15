@@ -32,7 +32,7 @@ public abstract class GemstoneNukerMixin {
   public Numbers<Double> melodySkyPlus$tryFaster = new Numbers<>("TryFaster(s)", 60.0, 10.0, 300.0, 5.0);
   public Numbers<Double> melodySkyPlus$trySlowerBlocks = new Numbers<>("TrySlowerBlocks", 5.0, 1.0, 60.0, 1.0);
 
-  public TimerUtil tryFasterTimer = new TimerUtil();
+  public TimerUtil melodySkyPlus$tryFasterTimer = new TimerUtil();
   @Shadow
   private Option<Boolean> pane;
   @Shadow
@@ -209,8 +209,8 @@ public abstract class GemstoneNukerMixin {
       melodySkyPlus$pickaxeAbility = MelodySkyPlus.pickaxeAbility.isPickaxeAbility();
 
       // 尝试加快速度
-      if (tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
-        tryFasterTimer.reset();
+      if (melodySkyPlus$tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
+        melodySkyPlus$tryFasterTimer.reset();
         if (melodySkyPlus$pickaxeAbility) {
           if (blockStr == 2300) {
             MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() - 1);
@@ -372,7 +372,7 @@ public abstract class GemstoneNukerMixin {
         HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(true);
       }
     }
-    tryFasterTimer.reset();
+    melodySkyPlus$tryFasterTimer.resume();
   }
 
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
@@ -380,6 +380,6 @@ public abstract class GemstoneNukerMixin {
     if (HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
       HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(false);
     }
-//    MelodySkyPlus.nukerTicks.reset();
+    melodySkyPlus$tryFasterTimer.pause();
   }
 }
