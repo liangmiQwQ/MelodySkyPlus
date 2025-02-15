@@ -15,9 +15,9 @@ public class PickaxeAbility {
   public void onPickaxeAbility(ClientChatReceivedEvent event) {
     String message = event.message.getUnformattedText();
 
-    if (message.equalsIgnoreCase("You used your Mining Speed Boost Pickaxe Ability!")) {
+    if (message.contains("You used your Mining Speed Boost Pickaxe Ability!")) {
       this.pickaxeAbility = true;
-    } else if (message.equalsIgnoreCase("Your Mining Speed Boost has expired!")) {
+    } else if (message.contains("Your Mining Speed Boost has expired!")) {
       this.pickaxeAbility = false;
     }
   }
