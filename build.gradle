@@ -52,7 +52,7 @@ dependencies {
     }
     annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:2.14.6') {
+    implementation('xyz.melody:melodySky:2.14.7') {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
     }
