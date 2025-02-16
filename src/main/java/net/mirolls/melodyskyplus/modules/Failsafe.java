@@ -7,6 +7,7 @@ import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -14,6 +15,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
+import net.mirolls.melodyskyplus.libs.TPCheckDetector;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
@@ -54,15 +56,13 @@ public class Failsafe extends Module {
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiTPCheck;
   public TextValue<String> TPCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
-
   public long nowTick = 0;
   public long lastLegitTeleport = -16;
   public long lastHurt = -16;
-
   public long lastJump = -16;
-
-  private BlockPos lastLocation = null;
+  //  private BlockPos lastLocation = null;
   private boolean reacting = false;
+//  private boolean nextCheckTP = false;
 
 
   public Failsafe() {
@@ -105,7 +105,7 @@ public class Failsafe extends Module {
     return INSTANCE;
   }
 
-  private static boolean isDoingMarco(boolean ignoreAutoRuby) {
+  private static boolean isDoingMarco() {
     boolean returnValue = false;
     for (Module module : ModuleManager.modules) {
 
@@ -150,11 +150,12 @@ public class Failsafe extends Module {
       }
     }
 
-    react(true);
     if (bedrockHouse) {
+      react(true);
       BedrockHouseReact.react();
     } else {
       if (antiBedrockBoatCheck.getValue()) {
+        react(true);
         BedrockBoatReact.react(bedrockCheckMessage.getValue());
       }
     }
@@ -164,7 +165,7 @@ public class Failsafe extends Module {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
     if (!reacting) {
-      if (isDoingMarco(true)) {
+      if (isDoingMarco()) {
         if (antiFakePlayerCheck.getValue() && info != null) {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
@@ -223,7 +224,7 @@ public class Failsafe extends Module {
         }
 
 
-        if (antiTPCheck.getValue()) {
+        if (antiTPCheck.getValue() && nowTick > 20) {
           // 记录lastLocation
           boolean legitTeleporting =
               Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
@@ -231,30 +232,34 @@ public class Failsafe extends Module {
                   || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
                   || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
-//          boolean hurt = mc.thePlayer.
-
           GameSettings gameSettings = this.mc.gameSettings;
           lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
 
-
-          lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
-          if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30 && nowTick - lastJump > 20) {
-            if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-              if (mc.thePlayer.fallDistance < 0.8) {
-                if (!mc.thePlayer.capabilities.isFlying) {
-                  if (lastLocation != null && MathUtil.distanceToPos(lastLocation, mc.thePlayer.getPosition()) > 0.8) {
-                    // 1 tick 你最多走5米吧 你就算1s走15m你1tick也只能走0.75米 你能走5m都是超人了
-                    // 判定为macro checked
-                    // 直接上TPReact了 因为基岩已经另外处理过了
-                    react(true);
-                    TPCheckReact.react(TPCheckMessage.getValue());
+          lastJump = gameSettings.keyBindJump.isKeyDown() ? nowTick : lastJump;
+          if (TPCheckDetector.checkPositionChange() && nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30) {
+            // 条件: 位置发生移动 并且1s内没有合法传送
+            if (TPCheckDetector.checkEnvironmentChange() || TPCheckDetector.checkVelocityAnomaly()) {
+              // 两个检测 对应了环境和速度
+              react(true);
+              TPCheckReact.react(TPCheckMessage.getValue());
+            } else {
+              if (nowTick - lastJump > 20 && mc.thePlayer.fallDistance < 0.8) {
+                if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
+                  if (!mc.thePlayer.capabilities.isFlying) {
+                    if (!mc.thePlayer.isInLava()
+                        && !mc.thePlayer.isPotionActive(Potion.jump)
+                        && !mc.thePlayer.capabilities.isFlying
+                        && !mc.thePlayer.isRiding() && mc.thePlayer.onGround) {
+                      react(true);
+                      TPCheckReact.react(TPCheckMessage.getValue());
+                    }
                   }
                 }
               }
             }
           }
 
-          lastLocation = mc.thePlayer.getPosition();
+//          lastLocation = mc.thePlayer.getPosition();
         }
       }
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
@@ -272,6 +277,7 @@ public class Failsafe extends Module {
     nowTick++;
   }
 
+
   @EventHandler
   public void onAttack(LivingAttackEvent event) {
     if (event.entity instanceof EntityPlayer) {
@@ -285,6 +291,12 @@ public class Failsafe extends Module {
   @EventHandler
   public void onTick(EventTick event) {
     this.checkMarcoChecked();
+    if (nowTick % 20 == 0) {
+      TPCheckDetector.saveEnvironment();
+    }
+    TPCheckDetector.lastMotionZ = mc.thePlayer.motionZ;
+    TPCheckDetector.lastMotionX = mc.thePlayer.motionX;
+
   }
 
   private void react(boolean delay) {
