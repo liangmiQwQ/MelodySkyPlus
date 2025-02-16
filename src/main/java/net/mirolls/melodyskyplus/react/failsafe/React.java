@@ -16,7 +16,7 @@ public class React {
     // 跳起来 瞎转
     int needReactTimes = 5;
 
-    for (int reactTime = 0; reactTime < 10; reactTime++) {
+    for (int reactTime = 0; reactTime < 20; reactTime++) {
 //    while (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
       if (run.canRun()) {
         int rotatingMode = random.nextInt(4);
