@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -56,6 +57,8 @@ public class Failsafe extends Module {
 
   public long nowTick = 0;
   public long lastLegitTeleport = -16;
+  public long lastHurt = -16;
+
   public long lastJump = -16;
 
   private BlockPos lastLocation = null;
@@ -228,11 +231,14 @@ public class Failsafe extends Module {
                   || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
                   || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
 
+//          boolean hurt = mc.thePlayer.
+
           GameSettings gameSettings = this.mc.gameSettings;
           lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
 
+
           lastJump = gameSettings.keyBindForward.isKeyDown() ? nowTick : lastJump;
-          if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastJump > 20) {
+          if (nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30 && nowTick - lastJump > 20) {
             if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
               if (mc.thePlayer.fallDistance < 0.8) {
                 if (!mc.thePlayer.capabilities.isFlying) {
@@ -264,6 +270,16 @@ public class Failsafe extends Module {
     }
 
     nowTick++;
+  }
+
+  @EventHandler
+  public void onAttack(LivingAttackEvent event) {
+    if (event.entity instanceof EntityPlayer) {
+      if (event.entity.getUniqueID() == mc.thePlayer.getUniqueID()) {
+        // 玩家被殴打了
+        lastHurt = nowTick;
+      }
+    }
   }
 
   @EventHandler
@@ -348,6 +364,7 @@ public class Failsafe extends Module {
     this.resumeTimer.reset();
     this.reacting = false;
     this.lastLegitTeleport = -16;
+    this.lastHurt = -16;
     this.nowTick = 0;
     this.lastLocation = null;
     super.onEnable();
@@ -375,5 +392,6 @@ public class Failsafe extends Module {
     this.resumeTimer.reset();
     nowTick = 0;
     lastLegitTeleport = -16;
+    lastHurt = -16;
   }
 }
