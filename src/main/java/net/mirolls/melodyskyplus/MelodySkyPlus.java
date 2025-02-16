@@ -20,7 +20,7 @@ import java.io.IOException;
 @Mod(modid = MelodySkyPlus.MODID, version = MelodySkyPlus.VERSION)
 public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
-  public static final String VERSION = "1.0.4_b3";
+  public static final String VERSION = "1.0.4_b4";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
