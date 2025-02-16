@@ -7,6 +7,6 @@ public class TPCheckReact {
     Helper.sendMessage("Staff checked you with TP, start to react.");
     new Thread(() -> {
       GeneralReact.react(() -> true, tpCheckMessage);
-    });
+    }).start();
   }
 }
