@@ -2,7 +2,6 @@ package net.mirolls.melodyskyplus.react.failsafe;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -10,6 +9,7 @@ import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.RotationUtil;
 
@@ -31,7 +31,7 @@ public class BedrockBoatReact extends React {
       try {
         Thread.sleep((long) (sleepTime / 1.5));
         // 强力转头
-        rotate(mc, () -> true, sleepTime, random);
+        rotate(mc, () -> true, sleepTime, random, 8);
 
         Thread.sleep((long) (sleepTime / 1.5));
 
@@ -55,31 +55,34 @@ public class BedrockBoatReact extends React {
           // 走路走到这
           MelodySkyPlus.walkLib.setCallBack(() -> {
                 // 挖掘同时也要保证没问题
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
                 MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
-                MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
+                try {
+                  MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
+                } catch (NullPointerException e) {
+                  MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(woodBlockPos.getX(), woodBlockPos.getY(), woodBlockPos.getZ())));
+                }
                 MelodySkyPlus.rotationLib.startRotating();
 
-                MelodySkyPlus.checkAir.setChecking(true);
-                MelodySkyPlus.checkAir.setCheckBP(woodBlockPos);
-                MelodySkyPlus.checkAir.setCallBack((result) -> {
-                  KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+                MelodySkyPlus.miningUtil.setMining(true);
+                MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
+                MelodySkyPlus.miningUtil.setCallBack((result) -> {
                 });
               }
           );
           MelodySkyPlus.walkLib.setTargetBlockPos(woodBlockPos);
           MelodySkyPlus.walkLib.startWalking();
         } else {
-          // 先按住左键 然后在转头
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
           MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
-          MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
+          try {
+            MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
+          } catch (NullPointerException e) {
+            MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(woodBlockPos.getX(), woodBlockPos.getY(), woodBlockPos.getZ())));
+          }
           MelodySkyPlus.rotationLib.startRotating();
 
-          MelodySkyPlus.checkAir.setChecking(true);
-          MelodySkyPlus.checkAir.setCheckBP(woodBlockPos);
-          MelodySkyPlus.checkAir.setCallBack((result) -> {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+          MelodySkyPlus.miningUtil.setMining(true);
+          MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
+          MelodySkyPlus.miningUtil.setCallBack((result) -> {
           });
         }
 

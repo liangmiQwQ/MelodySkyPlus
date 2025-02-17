@@ -7,6 +7,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.RotationUtil;
 
@@ -44,7 +45,11 @@ public class WalkLib {
       } else {
         // 扭头 靠rotationLib
         MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
-        MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(targetBlockPos));
+        try {
+          MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(targetBlockPos));
+        } catch (NullPointerException e) {
+          MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(targetBlockPos.getX(), targetBlockPos.getY(), targetBlockPos.getZ())));
+        }
         MelodySkyPlus.rotationLib.startRotating();
       }
     }
