@@ -13,10 +13,14 @@ import java.util.regex.Pattern;
 
 public class React {
   public static void rotate(Minecraft mc, Run run, long sleepTime, Random random) throws InterruptedException {
+    rotate(mc, run, sleepTime, random, 20);
+  }
+
+  public static void rotate(Minecraft mc, Run run, long sleepTime, Random random, int rotateTime) throws InterruptedException {
     // 跳起来 瞎转
     int needReactTimes = 5;
 
-    for (int reactTime = 0; reactTime < 20; reactTime++) {
+    for (int reactTime = 0; reactTime < rotateTime; reactTime++) {
 //    while (MathUtil.distanceToEntity(mc.thePlayer, fakePlayer) < 50) {
       if (run.canRun()) {
         int rotatingMode = random.nextInt(4);

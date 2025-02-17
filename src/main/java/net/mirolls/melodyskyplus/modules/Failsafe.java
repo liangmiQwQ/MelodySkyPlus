@@ -125,7 +125,6 @@ public class Failsafe extends Module {
       }
 
       if (module.getName().toLowerCase().contains("autofish") && module.isEnabled()) {
-        Helper.sendMessage("1" + module.getName().toLowerCase());
         returnValue = true;
       }
     }
@@ -236,22 +235,30 @@ public class Failsafe extends Module {
           lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
 
           lastJump = gameSettings.keyBindJump.isKeyDown() ? nowTick : lastJump;
-          if (TPCheckDetector.checkPositionChange() && nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30) {
-            // 条件: 位置发生移动 并且1s内没有合法传送
-            if (TPCheckDetector.checkEnvironmentChange() || TPCheckDetector.checkVelocityAnomaly()) {
-              // 两个检测 对应了环境和速度
-              react(true);
-              TPCheckReact.react(TPCheckMessage.getValue());
-            } else {
-              if (nowTick - lastJump > 20 && mc.thePlayer.fallDistance < 0.8) {
-                if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-                  if (!mc.thePlayer.capabilities.isFlying) {
-                    if (!mc.thePlayer.isInLava()
-                        && !mc.thePlayer.isPotionActive(Potion.jump)
-                        && !mc.thePlayer.capabilities.isFlying
-                        && !mc.thePlayer.isRiding() && mc.thePlayer.onGround) {
-                      react(true);
-                      TPCheckReact.react(TPCheckMessage.getValue());
+
+          int warnLevel = TPCheckDetector.checkPositionChange();
+          if (warnLevel > 0 && nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30) {
+            int addLevel = TPCheckDetector.checkMotion();
+            if ((addLevel != 0 && (warnLevel += addLevel) > 3) || warnLevel > 19) { // 如果能通过Motion发现这个事情不是很对劲了
+              warnLevel += TPCheckDetector.checkVelocity();
+              warnLevel += TPCheckDetector.checkEnvironmentChange();
+
+
+              if (warnLevel >= 20) {
+                // 多个检测 你都有点问题你可以去死了
+                react(true);
+                TPCheckReact.react(TPCheckMessage.getValue());
+              } else {
+                if (nowTick - lastJump > 50 && mc.thePlayer.fallDistance < 0.1) {
+                  if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
+                    if (!mc.thePlayer.capabilities.isFlying) {
+                      if (!mc.thePlayer.isInLava()
+                          && !mc.thePlayer.isPotionActive(Potion.jump)
+                          && !mc.thePlayer.capabilities.isFlying
+                          && !mc.thePlayer.isRiding() && mc.thePlayer.onGround) {
+                        react(true);
+                        TPCheckReact.react(TPCheckMessage.getValue());
+                      }
                     }
                   }
                 }
@@ -259,7 +266,6 @@ public class Failsafe extends Module {
             }
           }
 
-//          lastLocation = mc.thePlayer.getPosition();
         }
       }
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
@@ -366,7 +372,6 @@ public class Failsafe extends Module {
     KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
     KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
     KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
-    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
 
     this.mods.clear();
     super.onDisable();
@@ -378,7 +383,6 @@ public class Failsafe extends Module {
     this.lastLegitTeleport = -16;
     this.lastHurt = -16;
     this.nowTick = 0;
-    this.lastLocation = null;
     super.onEnable();
   }
 
@@ -399,7 +403,6 @@ public class Failsafe extends Module {
 
   @SubscribeEvent
   public void clear(WorldEvent.Load event) {
-    lastLocation = null;
     this.reacting = false;
     this.resumeTimer.reset();
     nowTick = 0;
