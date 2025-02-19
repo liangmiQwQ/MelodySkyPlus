@@ -20,7 +20,7 @@ import java.io.IOException;
 @Mod(modid = MelodySkyPlus.MODID, version = MelodySkyPlus.VERSION)
 public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
-  public static final String VERSION = "1.0.6";
+  public static final String VERSION = "1.1.0";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
@@ -29,6 +29,7 @@ public class MelodySkyPlus {
   public static Bug antiBug;
   public static NukerTicks nukerTicks;
   public static PickaxeAbility pickaxeAbility;
+
 
   public static String verify(String text) {
     if (text.startsWith("UUID: ")) {
