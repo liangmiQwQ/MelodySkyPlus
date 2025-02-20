@@ -238,14 +238,18 @@ public class Failsafe extends Module {
 
           int warnLevel = TPCheckDetector.checkPositionChange();
           if (warnLevel > 0 && nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30) {
-            int addLevel = TPCheckDetector.checkMotion();
-            if ((addLevel != 0 && (warnLevel += addLevel) > 3) || warnLevel > 19) { // 如果能通过Motion发现这个事情不是很对劲了
-              warnLevel += TPCheckDetector.checkVelocity();
-              warnLevel += TPCheckDetector.checkEnvironmentChange();
+            int checkMotion = TPCheckDetector.checkMotion();
+            if ((checkMotion != 0 && (warnLevel += checkMotion) > 3) || warnLevel > 19) { // 如果能通过Motion发现这个事情不是很对劲了
+              int checkVelocity = TPCheckDetector.checkVelocity();
+              int checkEnvironmentChange = TPCheckDetector.checkEnvironmentChange();
 
+              warnLevel += checkVelocity;
+              warnLevel += checkEnvironmentChange;
 
               if (warnLevel >= 20) {
                 // 多个检测 你都有点问题你可以去死了
+                Helper.sendMessage("Bad Luck. You was checked by Admin through TP. "
+                    + "WarnLevelL: " + warnLevel + "; CheckMotion" + checkMotion + "; CheckVelocity" + checkVelocity + "; CheckEnvironmentChange" + checkEnvironmentChange);
                 react(true);
                 TPCheckReact.react(TPCheckMessage.getValue());
               } else {
@@ -326,22 +330,17 @@ public class Failsafe extends Module {
       this.reacting = true;
       new Thread(() -> {
         try {
+          Thread.sleep(100L);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+
           if (delay) {
-            Thread.sleep(500 + new Random().nextInt(1000));
+            Thread.sleep(400 + new Random().nextInt(1000));
           }
           this.disableMacros();
         } catch (InterruptedException e) {
           throw new RuntimeException(e);
         }
       }).start();
-      Client.async(() -> {
-        try {
-          Thread.sleep(100L);
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-        } catch (Exception e) {
-          MelodySkyPlus.LOGGER.error(e.getMessage());
-        }
-      });
       Client.warn();
       Helper.sendMessage("[Melody+ Failsafe] Alert! Macro Check! ");
       NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, (int) (resumeTime.getValue() - 1) * 1000);
