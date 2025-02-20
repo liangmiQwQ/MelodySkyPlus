@@ -17,9 +17,12 @@ public class AutoRubyMixin {
   @Shadow
   private TimerUtil timer;
 
+  @Shadow
+  private TimerUtil ewTimer;
+
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
   private void idk(EventTick event, CallbackInfo ci) {
-    if (this.timer.hasReached(75)) {
+    if (this.ewTimer.hasReached(0)) {
       Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
     }
   }
