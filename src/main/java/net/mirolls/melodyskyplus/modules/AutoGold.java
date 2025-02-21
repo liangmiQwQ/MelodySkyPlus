@@ -2,24 +2,34 @@ package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
+import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
+import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 public class AutoGold extends Module {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
-  private int findingGoldTicks;
+  private int findingGoldTick;
+  private int rotateDoneTick = -2147483647;
+  private int rotateToGoldDoneTick = -2147483647;
+  private boolean doRotated = false;
+
   private Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 4.0, 1.0, 10.0, 0.5);
 
 
@@ -50,9 +60,10 @@ public class AutoGold extends Module {
   }
 
   public void findGold() {
-    if (findingGoldTicks < 0) {
+    rotateDoneTick = 0;
+    if (findingGoldTick < 0) {
       // 最复杂的部分
-      findingGoldTicks = 0;
+      findingGoldTick = 0;
       KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), false);
       KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
 
@@ -60,9 +71,33 @@ public class AutoGold extends Module {
         ModuleManager.getModuleByName("GoldNuker").setEnabled(false);
       }
 
+      if (this.mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(this.mc.thePlayer.getHeldItem()).equals("ASPECT_OF_THE_VOID") || this.mc.thePlayer.getHeldItem() == null) {
+        for (int i = 0; i < 9; ++i) {
+          ItemStack itemStack = this.mc.thePlayer.inventory.mainInventory[i];
+          if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).equals("ASPECT_OF_THE_VOID")) {
+            this.mc.thePlayer.inventory.currentItem = i;
+            break;
+          }
+        }
+      }
 
+      MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
+      MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
+      MelodySkyPlus.rotationLib.startRotating();
+      MelodySkyPlus.rotationLib.setCallBack(() -> {
+        Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone();
+      });
     }
   }
+
+  public void rotateDone() {
+    rotateDoneTick = findingGoldTick + 4 /*模拟正常人类反应速度*/;
+  }
+
+  public void rotateToGoldDone() {
+    rotateToGoldDoneTick = findingGoldTick + 1 /*模拟正常人类反应速度*/;
+  }
+
 
   private Rotation gotoAir() {
     // 寻找八个方向 找哪个方向最有出息: 45度斜上角
@@ -146,13 +181,42 @@ public class AutoGold extends Module {
       }
     }
 
-    return new Rotation(0f, 45f);
+    return new Rotation(sidesAroundPlayer.getMaxSideYaw(), 45f);
   }
 
   @EventHandler
   private void onTick(EventTick event) {
-    if (findingGoldTicks >= 0) {
-      findingGoldTicks++;
+    if (findingGoldTick >= 0) {
+      findingGoldTick++;
+      if (rotateDoneTick == findingGoldTick) {
+        // 如果已经旋转完毕了
+        Client.rightClick();
+        KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
+      }
+      if (findingGoldTick >= rotateDoneTick && !doRotated) {
+        if ( // 一个缩小版本的TPCheckDetector
+            Math.abs(mc.thePlayer.motionZ - (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ)) > 0.001
+                && Math.abs(mc.thePlayer.motionX - (mc.thePlayer.posX - mc.thePlayer.lastTickPosX)) > 0.001
+        ) {
+          // tp完毕了 进行下一个转向
+          doRotated = true;
+          rotateToGold();
+        }
+      }
+      if (findingGoldTick == rotateToGoldDoneTick) {
+        Client.rightClick();
+      }
+      if (findingGoldTick == rotateToGoldDoneTick + 20) {
+        findingGoldTick = -1;
+        rotateDoneTick = -2147483647;
+        rotateToGoldDoneTick = -2147483647;
+        doRotated = false;
+        KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+
+        if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
+          ModuleManager.getModuleByName("GoldNuker").setEnabled(true);
+        }
+      }
     } else {
       KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
@@ -160,11 +224,55 @@ public class AutoGold extends Module {
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
       }
       if (walkTimer.hasReached(1000)) {
+
         walkTimer.reset();
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
       }
     }
   }
+
+  private void rotateToGold() {
+    for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-25, -9, -25), mc.thePlayer.getPosition().add(25, 0, 25))) {
+      // 寻找下一个金子
+      if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+        // 是金子
+        if (RotationUtil.rayTrace(blockPos)) {
+          // 能看到
+          if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air) {
+            int aroundBlocks = 0;
+            if (mc.theWorld.getBlockState(blockPos.down()).getBlock() == Blocks.gold_block) {
+              aroundBlocks++;
+            }
+            if (mc.theWorld.getBlockState(blockPos.east()).getBlock() == Blocks.gold_block) {
+              aroundBlocks++;
+            }
+            if (mc.theWorld.getBlockState(blockPos.north()).getBlock() == Blocks.gold_block) {
+              aroundBlocks++;
+            }
+            if (mc.theWorld.getBlockState(blockPos.west()).getBlock() == Blocks.gold_block) {
+              aroundBlocks++;
+            }
+            if (mc.theWorld.getBlockState(blockPos.south()).getBlock() == Blocks.gold_block) {
+              aroundBlocks++;
+            }
+
+            if (aroundBlocks >= 3) {
+              // 周围有东西
+              // 找到了targetBlock
+              MelodySkyPlus.rotationLib.setSpeedCoefficient(0.5F);
+              MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(blockPos));
+              MelodySkyPlus.rotationLib.startRotating();
+              MelodySkyPlus.rotationLib.setCallBack(() -> {
+                Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone();
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
 
   @Override
   public void onDisable() {
@@ -200,34 +308,42 @@ class SidesAroundPlayer {
   public double northeast;
   public double southeast;
 
-  public double getMaxSide() {
+  public float getMaxSideYaw() {
     double max = 0;
+    float yaw = 0;
 
     if (south > max) {
       max = south;
+      yaw = 0;
     }
     if (west > max) {
       max = west;
+      yaw = 90;
     }
     if (north > max) {
       max = north;
+      yaw = 180;
     }
     if (east > max) {
       max = east;
+      yaw = -90;
     }
     if (southwest > max) {
       max = southwest;
+      yaw = 45;
     }
     if (northwest > max) {
       max = northwest;
+      yaw = 135;
     }
     if (northeast > max) {
       max = northeast;
+      yaw = -135;
     }
     if (southeast > max) {
-      max = southeast;
+      yaw = -45;
     }
 
-    return max;
+    return yaw;
   }
 }
