@@ -7,6 +7,7 @@ import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
+import xyz.Melody.Event.events.rendering.EventRender3D;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.System.Managers.Client.ModuleManager;
@@ -16,12 +17,15 @@ import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
+import xyz.Melody.Utils.render.RenderUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
+import java.awt.*;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Random;
 
 public class AutoGold extends Module {
   private static AutoGold INSTANCE;
@@ -30,6 +34,9 @@ public class AutoGold extends Module {
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
   private int rotateToGoldDoneTick = -2147483647;
+  private BlockPos targetBlock = null;
+
+  private int prevItem;
 
 
   public AutoGold() {
@@ -75,13 +82,14 @@ public class AutoGold extends Module {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = this.mc.thePlayer.inventory.mainInventory[i];
           if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).equals("ASPECT_OF_THE_VOID")) {
+            prevItem = this.mc.thePlayer.inventory.currentItem;
             this.mc.thePlayer.inventory.currentItem = i;
             break;
           }
         }
       }
 
-      MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
+      MelodySkyPlus.rotationLib.setSpeedCoefficient(3.0F);
       MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
       MelodySkyPlus.rotationLib.startRotating();
       MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
@@ -93,7 +101,7 @@ public class AutoGold extends Module {
   }
 
   public void rotateToGoldDone() {
-    rotateToGoldDoneTick = findingGoldTick + 2 /*模拟正常人类反应速度*/;
+    rotateToGoldDoneTick = findingGoldTick + 10 /*让人类可以看清*/;
   }
 
   private Rotation gotoAir() {
@@ -194,7 +202,14 @@ public class AutoGold extends Module {
       }
     }
 
-    return new Rotation(sidesAroundPlayer.getMaxSideYaw(), -45f);
+    return new Rotation(sidesAroundPlayer.getMaxSideYaw(), (new Random().nextBoolean() ? -1 : 1) * new Random().nextInt(45));
+  }
+
+  @EventHandler
+  public void onRender(EventRender3D event) {
+    if (this.targetBlock != null) {
+      RenderUtil.drawFullBlockESP(this.targetBlock, new Color(44, 125, 173, 200), event.getPartialTicks());
+    }
   }
 
   @EventHandler
@@ -203,36 +218,36 @@ public class AutoGold extends Module {
       if (findingGoldTick >= 0) {
         findingGoldTick++;
         if (rotateDoneTick == findingGoldTick) {
-          Helper.sendMessage("Rotate Done");
           // 如果已经旋转完毕了
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
         }
-        if (findingGoldTick >= rotateDoneTick && findingGoldTick <= rotateDoneTick + 40) {
-          Helper.sendMessage("Walking");
+        if (findingGoldTick >= rotateDoneTick && findingGoldTick <= rotateDoneTick + 60 && rotateDoneTick != -2147483647) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), false);
           if (mc.thePlayer.onGround) {
             mc.thePlayer.jump();
           }
         }
-        if (findingGoldTick == rotateDoneTick + 40) {
+        if (findingGoldTick == rotateDoneTick + 60) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
         }
-        if (findingGoldTick == rotateDoneTick + 60) {
+        if (findingGoldTick == rotateDoneTick + 120) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
           rotateToGold();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
-          Helper.sendMessage("RotateDone");
           Client.rightClick();
         }
         if (findingGoldTick == rotateToGoldDoneTick + 20) {
-          Helper.sendMessage("All Things Done");
+          this.mc.thePlayer.inventory.currentItem = prevItem;
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+        }
+
+        if (findingGoldTick == rotateToGoldDoneTick + 40) {
           findingGoldTick = -1;
           rotateDoneTick = -2147483647;
           rotateToGoldDoneTick = -2147483647;
-          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
-
+          targetBlock = null;
           if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
             ModuleManager.getModuleByName("GoldNuker").setEnabled(true);
           }
@@ -252,13 +267,14 @@ public class AutoGold extends Module {
   }
 
   private void rotateToGold() {
-    for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-35, -9, -35), mc.thePlayer.getPosition().add(35, 0, 35))) {
+    for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-35, -6, -35), mc.thePlayer.getPosition().add(35, 5, 35))) {
       // 寻找下一个金子
       if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
         // 是金子
         if (RotationUtil.rayTrace(blockPos)) {
           // 能看到
-          if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air) {
+          if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
+            // 支持aotv到这里
             int aroundBlocks = 0;
             if (mc.theWorld.getBlockState(blockPos.down()).getBlock() == Blocks.gold_block) {
               aroundBlocks++;
@@ -276,19 +292,21 @@ public class AutoGold extends Module {
               aroundBlocks++;
             }
 
-            if (aroundBlocks >= 3) {
+            if (aroundBlocks >= 2) {
+              this.targetBlock = blockPos;
               // 周围有东西
               // 找到了targetBlock
-              MelodySkyPlus.rotationLib.setSpeedCoefficient(0.5F);
+              MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
               MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(blockPos));
               MelodySkyPlus.rotationLib.startRotating();
               MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
-              break;
+              return;
             }
           }
         }
       }
     }
+    Helper.sendMessage("Cannot Find Gold Blocks at all. Maybe you're out of Mines of Divan");
   }
 
 
