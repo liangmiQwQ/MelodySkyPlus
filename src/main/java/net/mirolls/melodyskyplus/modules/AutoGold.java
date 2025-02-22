@@ -30,7 +30,6 @@ public class AutoGold extends Module {
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
   private int rotateToGoldDoneTick = -2147483647;
-  private boolean doRotated = false;
 
 
   public AutoGold() {
@@ -85,9 +84,7 @@ public class AutoGold extends Module {
       MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
       MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
       MelodySkyPlus.rotationLib.startRotating();
-      MelodySkyPlus.rotationLib.setCallBack(() -> {
-        Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone();
-      });
+      MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
     }
   }
 
@@ -96,9 +93,8 @@ public class AutoGold extends Module {
   }
 
   public void rotateToGoldDone() {
-    rotateToGoldDoneTick = findingGoldTick + 1 /*模拟正常人类反应速度*/;
+    rotateToGoldDoneTick = findingGoldTick + 2 /*模拟正常人类反应速度*/;
   }
-
 
   private Rotation gotoAir() {
     SidesAroundPlayer sidesAroundPlayer = new SidesAroundPlayer();
@@ -211,29 +207,30 @@ public class AutoGold extends Module {
           // 如果已经旋转完毕了
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
         }
-        if (findingGoldTick >= rotateDoneTick && !doRotated) {
-          Helper.sendMessage("CheckingTP");
-          if ( // 一个缩小版本的TPCheckDetector
-              Math.abs(mc.thePlayer.motionZ - (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ)) > 0.001
-                  && Math.abs(mc.thePlayer.motionX - (mc.thePlayer.posX - mc.thePlayer.lastTickPosX)) > 0.001
-          ) {
-            Helper.sendMessage("Teleported");
-            // tp完毕了 进行下一个转向
-            doRotated = true;
-            KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
-            rotateToGold();
+        if (findingGoldTick >= rotateDoneTick && findingGoldTick <= rotateDoneTick + 40) {
+          Helper.sendMessage("Walking");
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), false);
+          if (mc.thePlayer.onGround) {
+            mc.thePlayer.jump();
           }
+        }
+        if (findingGoldTick == rotateDoneTick + 40) {
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
+        }
+        if (findingGoldTick == rotateDoneTick + 60) {
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+          rotateToGold();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           Helper.sendMessage("RotateDone");
           Client.rightClick();
         }
         if (findingGoldTick == rotateToGoldDoneTick + 20) {
-          Helper.sendMessage("Allthing Do Well");
+          Helper.sendMessage("All Things Done");
           findingGoldTick = -1;
           rotateDoneTick = -2147483647;
           rotateToGoldDoneTick = -2147483647;
-          doRotated = false;
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
           if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
@@ -247,7 +244,6 @@ public class AutoGold extends Module {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
         }
         if (walkTimer.hasReached(1000)) {
-
           walkTimer.reset();
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
         }
@@ -256,7 +252,7 @@ public class AutoGold extends Module {
   }
 
   private void rotateToGold() {
-    for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-25, -9, -25), mc.thePlayer.getPosition().add(25, 0, 25))) {
+    for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-35, -9, -35), mc.thePlayer.getPosition().add(35, 0, 35))) {
       // 寻找下一个金子
       if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
         // 是金子
@@ -286,9 +282,7 @@ public class AutoGold extends Module {
               MelodySkyPlus.rotationLib.setSpeedCoefficient(0.5F);
               MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(blockPos));
               MelodySkyPlus.rotationLib.startRotating();
-              MelodySkyPlus.rotationLib.setCallBack(() -> {
-                Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone();
-              });
+              MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
               break;
             }
           }
@@ -303,7 +297,6 @@ public class AutoGold extends Module {
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
-    doRotated = false;
     if (ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
       ModuleManager.getModuleByName("GoldNuker").setEnabled(false);
     }
@@ -316,7 +309,6 @@ public class AutoGold extends Module {
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
-    doRotated = false;
     SkyblockArea area = new SkyblockArea();
     area.updateCurrentArea();
     if (!area.isIn(Areas.Crystal_Hollows)) {
