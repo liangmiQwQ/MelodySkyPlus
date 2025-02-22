@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.module.modules.macros.Mining.GoldNuker;
 
 import java.util.Objects;
@@ -14,7 +15,7 @@ import java.util.Objects;
 public class GoldNukerMixin {
   @Inject(method = "getBlock", remap = false, at = @At("RETURN"))
   public void getBlock(CallbackInfoReturnable<BlockPos> cir) {
-    if (cir.getReturnValue() == null) {
+    if (cir.getReturnValue() == null || !RotationUtil.rayTrace(cir.getReturnValue())) {
       Objects.requireNonNull(AutoGold.getINSTANCE()).findGold();
     }
   }
