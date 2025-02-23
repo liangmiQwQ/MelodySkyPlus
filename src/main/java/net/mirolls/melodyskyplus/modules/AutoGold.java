@@ -4,6 +4,9 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
@@ -247,7 +250,8 @@ public class AutoGold extends Module {
                 mc.thePlayer.getPosition().up().add(-1 * range.getValue(), -1 * range.getValue(), -1 * range.getValue()),
                 mc.thePlayer.getPosition().up().add(range.getValue(), range.getValue(), range.getValue())
             )) {
-              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block && RotationUtil.rayTrace(blockPos)) {
+                this.mc.thePlayer.inventory.currentItem = prevItem;
                 resume();
                 return;
               }
@@ -300,27 +304,42 @@ public class AutoGold extends Module {
       if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
         if (RotationUtil.rayTrace(blockPos)) {
           if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
+            int aroundBlocks = 0;
+            for (int i = 0; i < 4; i++) {
+              BlockPos checkingBlockDown = blockPos;
+              BlockPos checkingBlockEast = blockPos;
+              BlockPos checkingBlockNorth = blockPos;
+              BlockPos checkingBlockWest = blockPos;
+              BlockPos checkingBlockSouth = blockPos;
 
-            if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
-              int aroundBlocks = 0;
-              if (mc.theWorld.getBlockState(blockPos.down()).getBlock() == Blocks.gold_block) {
-                aroundBlocks++;
-              }
-              if (mc.theWorld.getBlockState(blockPos.east()).getBlock() == Blocks.gold_block) {
-                aroundBlocks++;
-              }
-              if (mc.theWorld.getBlockState(blockPos.north()).getBlock() == Blocks.gold_block) {
-                aroundBlocks++;
-              }
-              if (mc.theWorld.getBlockState(blockPos.west()).getBlock() == Blocks.gold_block) {
-                aroundBlocks++;
-              }
-              if (mc.theWorld.getBlockState(blockPos.south()).getBlock() == Blocks.gold_block) {
-                aroundBlocks++;
+              for (int j = 0; j < i + 1; j++) {
+                checkingBlockDown = checkingBlockDown.down();
+                checkingBlockEast = checkingBlockEast.east();
+                checkingBlockNorth = checkingBlockNorth.north();
+                checkingBlockWest = checkingBlockWest.west();
+                checkingBlockSouth = checkingBlockSouth.south();
               }
 
-              if (aroundBlocks >= 2) {
+              if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+            }
 
+
+            if (aroundBlocks >= 3) {
+              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
                 this.targetBlock = blockPos;
                 // 周围有东西
                 // 找到了targetBlock
@@ -329,9 +348,9 @@ public class AutoGold extends Module {
                 MelodySkyPlus.rotationLib.startRotating();
                 MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
                 return;
+              } else {
+                replaceBlock = blockPos;
               }
-            } else {
-              replaceBlock = blockPos;
             }
           }
         }
@@ -339,14 +358,13 @@ public class AutoGold extends Module {
     }
 
     if (replaceBlock != null) {
-
+      Helper.sendMessage("Cannot Find Gold Blocks at all. Will teleport you to random block.");
       MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
       MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(replaceBlock));
       MelodySkyPlus.rotationLib.startRotating();
       MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
     } else {
       Helper.sendMessage("Cannot Find Gold Blocks at all. Maybe you're out of Mines of Divan.");
-
     }
   }
 
@@ -361,6 +379,12 @@ public class AutoGold extends Module {
     }
     KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), false);
     KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), false);
+  }
+
+  @SubscribeEvent
+  public void clear(WorldEvent.Load event) {
+    Helper.sendMessage("[MacroProtection] Auto Disabled " + EnumChatFormatting.GREEN + this.getName() + EnumChatFormatting.GRAY + " due to World Change.");
+    this.setEnabled(false);
   }
 
   @Override
