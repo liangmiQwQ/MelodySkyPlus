@@ -21,8 +21,10 @@ import xyz.Melody.Utils.render.RenderUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
+import xyz.Melody.module.modules.macros.Mining.GoldNuker;
 
 import java.awt.*;
+import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Random;
@@ -233,6 +235,26 @@ public class AutoGold extends Module {
         }
         if (findingGoldTick == rotateDoneTick + 120) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+
+          try {
+            // 我们先检测周围是否有金子
+            GoldNuker goldNuker = (GoldNuker) ModuleManager.getModuleByName("GoldNuker");
+            Field field = GoldNuker.class.getDeclaredField("range");
+            field.setAccessible(true);
+            Numbers<Double> range = (Numbers<Double>) field.get(goldNuker);
+
+            for (BlockPos blockPos : BlockPos.getAllInBox(
+                mc.thePlayer.getPosition().up().add(-1 * range.getValue(), -1 * range.getValue(), -1 * range.getValue()),
+                mc.thePlayer.getPosition().up().add(range.getValue(), range.getValue(), range.getValue())
+            )) {
+              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+                resume();
+                return;
+              }
+            }
+          } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+          }
           rotateToGold();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
@@ -244,13 +266,7 @@ public class AutoGold extends Module {
         }
 
         if (findingGoldTick == rotateToGoldDoneTick + 40) {
-          findingGoldTick = -1;
-          rotateDoneTick = -2147483647;
-          rotateToGoldDoneTick = -2147483647;
-          targetBlock = null;
-          if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
-            ModuleManager.getModuleByName("GoldNuker").setEnabled(true);
-          }
+          resume();
         }
       } else {
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
@@ -266,47 +282,72 @@ public class AutoGold extends Module {
     }
   }
 
+  private void resume() {
+    findingGoldTick = -1;
+    rotateDoneTick = -2147483647;
+    rotateToGoldDoneTick = -2147483647;
+    targetBlock = null;
+    if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
+      ModuleManager.getModuleByName("GoldNuker").setEnabled(true);
+    }
+  }
+
+
   private void rotateToGold() {
+    BlockPos replaceBlock = null;
     for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-35, -6, -35), mc.thePlayer.getPosition().add(35, 5, 35))) {
       // 寻找下一个金子
-      if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
-        // 是金子
+      if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
         if (RotationUtil.rayTrace(blockPos)) {
-          // 能看到
           if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
-            // 支持aotv到这里
-            int aroundBlocks = 0;
-            if (mc.theWorld.getBlockState(blockPos.down()).getBlock() == Blocks.gold_block) {
-              aroundBlocks++;
-            }
-            if (mc.theWorld.getBlockState(blockPos.east()).getBlock() == Blocks.gold_block) {
-              aroundBlocks++;
-            }
-            if (mc.theWorld.getBlockState(blockPos.north()).getBlock() == Blocks.gold_block) {
-              aroundBlocks++;
-            }
-            if (mc.theWorld.getBlockState(blockPos.west()).getBlock() == Blocks.gold_block) {
-              aroundBlocks++;
-            }
-            if (mc.theWorld.getBlockState(blockPos.south()).getBlock() == Blocks.gold_block) {
-              aroundBlocks++;
-            }
 
-            if (aroundBlocks >= 2) {
-              this.targetBlock = blockPos;
-              // 周围有东西
-              // 找到了targetBlock
-              MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
-              MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(blockPos));
-              MelodySkyPlus.rotationLib.startRotating();
-              MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
-              return;
+            if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+              int aroundBlocks = 0;
+              if (mc.theWorld.getBlockState(blockPos.down()).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(blockPos.east()).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(blockPos.north()).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(blockPos.west()).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+              if (mc.theWorld.getBlockState(blockPos.south()).getBlock() == Blocks.gold_block) {
+                aroundBlocks++;
+              }
+
+              if (aroundBlocks >= 2) {
+
+                this.targetBlock = blockPos;
+                // 周围有东西
+                // 找到了targetBlock
+                MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+                MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(blockPos));
+                MelodySkyPlus.rotationLib.startRotating();
+                MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
+                return;
+              }
+            } else {
+              replaceBlock = blockPos;
             }
           }
         }
       }
     }
-    Helper.sendMessage("Cannot Find Gold Blocks at all. Maybe you're out of Mines of Divan");
+
+    if (replaceBlock != null) {
+
+      MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+      MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(replaceBlock));
+      MelodySkyPlus.rotationLib.startRotating();
+      MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
+    } else {
+      Helper.sendMessage("Cannot Find Gold Blocks at all. Maybe you're out of Mines of Divan.");
+
+    }
   }
 
 
