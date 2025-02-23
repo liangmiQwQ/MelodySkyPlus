@@ -87,8 +87,13 @@ public class AutoFilet extends Module {
             if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
               prevItem = this.mc.thePlayer.inventory.currentItem;
               this.mc.thePlayer.inventory.currentItem = i;
+              return;
             }
           }
+          Helper.sendMessage("Cannot find Filet O' Fortune to eat. continue to mine (>_<)");
+          reEnableMacros();
+          coolDownTimer.reset();
+          fishTick = -1;
         }
         if (fishTick == 20) {
           this.mc.playerController.sendUseItem(
