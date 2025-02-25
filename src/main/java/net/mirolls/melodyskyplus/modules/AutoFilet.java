@@ -82,18 +82,22 @@ public class AutoFilet extends Module {
 
         // 吃鱼核心逻辑
         if (fishTick == 10) {
+          prevItem = -1;
           for (int i = 0; i < 9; ++i) {
             ItemStack item = this.mc.thePlayer.inventory.getStackInSlot(i);
             if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
               prevItem = this.mc.thePlayer.inventory.currentItem;
               this.mc.thePlayer.inventory.currentItem = i;
-              return;
+              break;
             }
           }
-          Helper.sendMessage("Cannot find Filet O' Fortune to eat. continue to mine (>_<)");
-          reEnableMacros();
-          coolDownTimer.reset();
-          fishTick = -1;
+          if (prevItem == -1) {
+            Helper.sendMessage("Cannot find Filet O' Fortune to eat. continue to mine (>_<)");
+            reEnableMacros();
+            coolDownTimer.reset();
+            fishTick = -1;
+            prevItem = -1;
+          }
         }
         if (fishTick == 20) {
           this.mc.playerController.sendUseItem(
@@ -106,6 +110,7 @@ public class AutoFilet extends Module {
           reEnableMacros();
           coolDownTimer.reset();
           fishTick = -1;
+          prevItem = -1;
         }
       }
 
