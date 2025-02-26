@@ -69,6 +69,10 @@ public class AutoFilet extends Module {
 
         if (this.ticksTimer.hasReached(1000) && isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
           String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
+          if (!footer.toLowerCase().contains("effects")) {
+            Helper.sendMessage("You need to add the information of effects to tab to enable AutoFilet.");
+            Objects.requireNonNull(AutoFilet.getINSTANCE()).setEnabled(false);
+          }
 
           if (!footer.contains("Filet O' Fortune")) {
             Helper.sendMessage("Found Filet O' Fortune Buff Expired! Ready to eat fish!");
