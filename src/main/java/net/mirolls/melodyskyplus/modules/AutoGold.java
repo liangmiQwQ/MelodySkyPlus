@@ -93,16 +93,20 @@ public class AutoGold extends Module {
         }
       }
 
-      MelodySkyPlus.rotationLib.setSpeedCoefficient(3.0F);
       BlockPos gold = findGoldNearPlayer();
       if (gold == null) {
-        MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
-        MelodySkyPlus.rotationLib.startRotating();
-        MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
+        gotoGold();
       } else {
         rotateToGold(gold);
       }
     }
+  }
+
+  private void gotoGold() {
+    MelodySkyPlus.rotationLib.setSpeedCoefficient(3.0F);
+    MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
+    MelodySkyPlus.rotationLib.startRotating();
+    MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
   }
 
   public void rotateDone() {
@@ -269,13 +273,24 @@ public class AutoGold extends Module {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
           Client.rightClick();
         }
-        if (findingGoldTick == rotateToGoldDoneTick + 20) {
-          this.mc.thePlayer.inventory.currentItem = prevItem;
-          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+        if (findingGoldTick > rotateToGoldDoneTick && rotateToGoldDoneTick < findingGoldTick + 40) {
+          if (Math.hypot(mc.thePlayer.posX - mc.thePlayer.lastTickPosX, mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) >= 0.99) {
+            if (this.mc.thePlayer.inventory.currentItem != prevItem) {
+              this.mc.thePlayer.inventory.currentItem = prevItem;
+            }
+            KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+          }
         }
 
         if (findingGoldTick == rotateToGoldDoneTick + 40) {
-          resume();
+          if (this.mc.thePlayer.inventory.currentItem != prevItem) {
+            rotateDoneTick = -2147483647;
+            rotateToGoldDoneTick = -2147483647;
+            gotoGold();
+          } else {
+            resume();
+          }
+          targetBlock = null;
         }
       } else {
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
