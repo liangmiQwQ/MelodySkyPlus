@@ -52,7 +52,7 @@ dependencies {
     }
     annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:2.14.7') {
+    implementation('xyz.melody:melodySky:' + melody_version) {
         exclude module: 'mixin'
         exclude group: 'org.spongepowered'
     }
@@ -96,6 +96,8 @@ jar {
 
     }
 
+    archiveName = "${mod_id}-${mod_version}-${melody_version}.jar"
+
     manifest.attributes(
             'ForceLoadAsMod': 'true',
             'FMLCorePluginContainsFMLMod': 'true',
@@ -114,8 +116,8 @@ tasks.register('exportDependencies', Copy) {
 tasks.register('obfuscate', Exec) {
     commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
             "-jar", "melody/obfuscator-1.9.3.jar",
-            "--jarIn", "build/libs/${mod_id}-${mod_version}.jar",
-            "--jarOut", "build/libs/${mod_id}-${mod_version}-finished.jar",
+            "--jarIn", "build/libs/${mod_id}-${mod_version}-${melody_version}.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar",
             "--config", "melody/mld-obf-config.json"
 //            "--scriptFile", "melody/script.js"
 
@@ -136,10 +138,9 @@ static def getMD5(File file) {
 
 tasks.register("pushMD5") {
     doLast {
-//        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-SUPER.jar"))
-        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-finished.jar"))
+        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar"))
 
-        def urlStr = "https://mld-plus.lmfans.cn:443/update-rat/${version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
+        def urlStr = "https://mld-plus.lmfans.cn:443/update-rat/${version}_${melody_version}/?md5=${md5}&pwd=0c579f7c197cc1240d39a17d42f60dfe"
 
         try {
             URL url = new URL(urlStr)

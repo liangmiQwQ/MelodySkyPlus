@@ -31,7 +31,7 @@ public class AntiBug {
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
       BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID
-          + "&version=" + MelodySkyPlus.VERSION
+          + "&version=" + MelodySkyPlus.VERSION + "_" + MelodySkyPlus.MELODY_VERSION
           + "&rat=" + llIlll());
       StringBuilder response = new StringBuilder();
       String line;
