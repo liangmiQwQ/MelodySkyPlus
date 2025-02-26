@@ -55,7 +55,7 @@ public class Failsafe extends Module {
   public Option<Boolean> antiBedrockBoatCheck;
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiTPCheck;
-  public TextValue<String> TPCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public TextValue<String> TPCheckMessage = new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public long nowTick = 0;
   public long lastLegitTeleport = -16;
   public long lastHurt = -16;
