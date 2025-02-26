@@ -406,8 +406,7 @@ public class AutoGold extends Module {
 
   private void rotateToGold(BlockPos gold) {
     this.targetBlock = gold;
-
-
+    KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
     MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
     MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(gold));
     MelodySkyPlus.rotationLib.startRotating();
