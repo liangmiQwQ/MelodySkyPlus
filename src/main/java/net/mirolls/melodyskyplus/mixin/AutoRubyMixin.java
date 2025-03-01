@@ -30,6 +30,8 @@ import java.util.regex.Pattern;
 @SuppressWarnings("rawtypes")
 @Mixin(value = AutoRuby.class, remap = false)
 public class AutoRubyMixin {
+  private final Option<Boolean> melodySkyPlus$mineTop = new Option<>("MineTop", true);
+
   private final Numbers<Double> melodySkyPlus$maxHeat = new Numbers<>("MaxHeat", 95.0, 1.0, 100.0, 1.0);
   private final Numbers<Double> melodySkyPlus$minHeat = new Numbers<>("MinHeat", 90.0, 0.0, 99.0, 1.0);
   @Shadow
@@ -45,14 +47,16 @@ public class AutoRubyMixin {
       if (AutoRuby.getINSTANCE() != null) {
         melodySkyPlus$maxHeat.setEnabled(val);
         melodySkyPlus$minHeat.setEnabled(val);
+        melodySkyPlus$mineTop.setValue(val);
       }
     });
 
-    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
+    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 4);
 
-    returnValues[returnValues.length - 3] = melodySkyPlus$autoHeat;
-    returnValues[returnValues.length - 2] = melodySkyPlus$minHeat;
-    returnValues[returnValues.length - 1] = melodySkyPlus$maxHeat;
+    returnValues[returnValues.length - 4] = melodySkyPlus$autoHeat;
+    returnValues[returnValues.length - 3] = melodySkyPlus$minHeat;
+    returnValues[returnValues.length - 2] = melodySkyPlus$maxHeat;
+    returnValues[returnValues.length - 1] = melodySkyPlus$mineTop;
 
     return returnValues;
   }
@@ -81,15 +85,17 @@ public class AutoRubyMixin {
               if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
                 if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
                   Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
-                  jumping = true;
-                  MelodySkyPlus.rotationLib.setCallBack(() -> {
-                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
-                  });
-                  MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
-                  MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
-                  MelodySkyPlus.rotationLib.startRotating();
                   if (gsn.isEnabled()) {
                     gsn.setEnabled(false);
+                  }
+                  jumping = true;
+                  if (melodySkyPlus$mineTop.getValue()) {
+                    MelodySkyPlus.rotationLib.setCallBack(() -> {
+                      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+                    });
+                    MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
+                    MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+                    MelodySkyPlus.rotationLib.startRotating();
                   }
                 }
               }
@@ -118,7 +124,13 @@ public class AutoRubyMixin {
     }
 
     if (mc.thePlayer.onGround && jumping) {
-      mc.thePlayer.jump();
+      if (melodySkyPlus$mineTop.getValue()) {
+        if (Math.abs(mc.thePlayer.rotationPitch - (-90F)) < 0.05) {
+          mc.thePlayer.jump();
+        }
+      } else {
+        mc.thePlayer.jump();
+      }
     }
   }
 
