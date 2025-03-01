@@ -50,7 +50,7 @@ public class AutoGold extends Module {
   public AutoGold() {
     super("AutoGold", new String[]{""}, ModuleType.Mining);
 
-    this.addValues(walkTime);
+    this.addValues(walkTime, findGoldRadius);
     walkTimer = (new TimerUtil()).reset();
 
     this.setModInfo("Auto mine gold and find path in Mines of Divan");
@@ -327,17 +327,23 @@ public class AutoGold extends Module {
   }
 
   private BlockPos findGoldNearPlayer() {
+    Helper.sendMessage("Finding Gold...");
     BlockPos replaceBlock = null;
     BlockPos goldBlock = null;
 
     List<BlockPos> blocks = new ArrayList<>();
+    List<BlockPos> needToRemove = new ArrayList<>();
+
 
     for (BlockPos bp : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * findGoldRadius.getValue(), -1 * findGoldRadius.getValue() / 5, -1 * findGoldRadius.getValue() / 5), mc.thePlayer.getPosition().add(findGoldRadius.getValue(), findGoldRadius.getValue() / 5, findGoldRadius.getValue()))) {
       blocks.add(bp);
     }
 
-    for (int radius = 0; radius < findGoldRadius.getValue(); radius++) {
+    Double readyFindGoldRadius = findGoldRadius.getValue();
+    for (int radius = 0; radius < readyFindGoldRadius; radius++) {
       // 我们对y进行一个/5的操作 其他正常操作
+      if (goldBlock != null) break;
+
       for (BlockPos blockPos : blocks) {
         double distance = Math.hypot(Math.hypot(
                 blockPos.getX() - mc.thePlayer.getPosition().getX(),
@@ -347,7 +353,8 @@ public class AutoGold extends Module {
         );
 
         if (distance < radius + 1 && distance >= radius) {
-          blocks.remove(blockPos);
+//          blocks.remove(blockPos);
+          needToRemove.add(blockPos);
 
           if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
             if (rayTrace(blockPos)) {
@@ -400,6 +407,10 @@ public class AutoGold extends Module {
           }
         }
       }
+
+      for (BlockPos blockPos : needToRemove) {
+        blocks.remove(blockPos);
+      }
     }
 
     if (goldBlock != null) {
@@ -414,6 +425,7 @@ public class AutoGold extends Module {
   }
 
   private void rotateToGold(BlockPos gold) {
+    Helper.sendMessage("Find done. Rotating to gold...");
     this.targetBlock = gold;
     KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
     MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
