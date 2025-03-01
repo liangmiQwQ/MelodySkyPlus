@@ -43,13 +43,15 @@ public class AutoRubyMixin {
     melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
       if (AutoRuby.getINSTANCE() != null) {
         melodySkyPlus$maxHeat.setEnabled(val);
+        melodySkyPlus$minHeat.setEnabled(val);
       }
     });
 
-    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
+    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
 
-    returnValues[returnValues.length - 2] = melodySkyPlus$autoHeat;
-    returnValues[returnValues.length - 2] = melodySkyPlus$maxHeat;
+    returnValues[returnValues.length - 3] = melodySkyPlus$autoHeat;
+    returnValues[returnValues.length - 2] = melodySkyPlus$minHeat;
+    returnValues[returnValues.length - 1] = melodySkyPlus$maxHeat;
 
     return returnValues;
   }
@@ -74,8 +76,8 @@ public class AutoRubyMixin {
         for (String line : scoreBoard) {
           if (line.toLowerCase().contains("heat:")) {
             if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
-              int heat = melodySkyPlus$getHeat(line.replace(Pattern.quote("Heat: §c"), ""));
-              if (melodySkyPlus$maxHeat.getValue() >= heat && !jumping) {
+              int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+              if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
                 jumping = true;
                 MelodySkyPlus.rotationLib.setCallBack(() -> {
                   KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
@@ -102,6 +104,7 @@ public class AutoRubyMixin {
                 }).start();
               }
             }
+            break;
           }
         }
       }
