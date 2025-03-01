@@ -14,6 +14,7 @@ import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.game.ScoreboardUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.timer.TimerUtil;
@@ -30,7 +31,7 @@ import java.util.regex.Pattern;
 @Mixin(value = AutoRuby.class, remap = false)
 public class AutoRubyMixin {
   private final Numbers<Double> melodySkyPlus$maxHeat = new Numbers<>("MaxHeat", 95.0, 1.0, 100.0, 1.0);
-  private final Numbers<Double> melodySkyPlus$minHeat = new Numbers<>("MinHeat", 95.0, 1.0, 100.0, 1.0);
+  private final Numbers<Double> melodySkyPlus$minHeat = new Numbers<>("MinHeat", 90.0, 0.0, 99.0, 1.0);
   @Shadow
   public boolean started;
   @Shadow
@@ -71,25 +72,30 @@ public class AutoRubyMixin {
 
     if (melodySkyPlus$autoHeat.getValue()) {
       GemstoneNuker gsn = GemstoneNuker.getINSTANCE();
-      if (gsn.isEnabled() && this.started) {
+      if (this.started) {
         List<String> scoreBoard = ScoreboardUtils.getScoreboard();
         for (String line : scoreBoard) {
           if (line.toLowerCase().contains("heat:")) {
-            if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
-              int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+            int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+            if (gsn.isEnabled()) {
               if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
-                jumping = true;
-                MelodySkyPlus.rotationLib.setCallBack(() -> {
-                  KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
-                });
-                MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
-                MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
-                MelodySkyPlus.rotationLib.startRotating();
-                if (gsn.isEnabled()) {
-                  gsn.setEnabled(false);
+                if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
+                  Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
+                  jumping = true;
+                  MelodySkyPlus.rotationLib.setCallBack(() -> {
+                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+                  });
+                  MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
+                  MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+                  MelodySkyPlus.rotationLib.startRotating();
+                  if (gsn.isEnabled()) {
+                    gsn.setEnabled(false);
+                  }
                 }
               }
+            } else {
               if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
+                Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
                 jumping = false;
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
                 new Thread(() -> {
@@ -104,6 +110,7 @@ public class AutoRubyMixin {
                 }).start();
               }
             }
+
             break;
           }
         }
