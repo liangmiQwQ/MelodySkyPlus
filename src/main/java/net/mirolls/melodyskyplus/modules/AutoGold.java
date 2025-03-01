@@ -37,6 +37,8 @@ public class AutoGold extends Module {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
+  private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
+
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
   private int rotateToGoldDoneTick = -2147483647;
@@ -321,69 +323,72 @@ public class AutoGold extends Module {
   }
 
   private BlockPos findGoldNearPlayer() {
-    List<BlockPos> chekcedBlockPosList = new ArrayList<>();
     BlockPos replaceBlock = null;
     BlockPos goldBlock = null;
 
-    for (int radius = 0; radius < 35; radius++) {
+    List<BlockPos> blocks = new ArrayList<>();
+
+    for (BlockPos bp : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * findGoldRadius.getValue(), -1 * findGoldRadius.getValue() / 5, -1 * findGoldRadius.getValue() / 5), mc.thePlayer.getPosition().add(findGoldRadius.getValue(), findGoldRadius.getValue() / 5, findGoldRadius.getValue()))) {
+      blocks.add(bp);
+    }
+
+    for (int radius = 0; radius < findGoldRadius.getValue(); radius++) {
       // 我们对y进行一个/5的操作 其他正常操作
-      for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * radius, -1 * radius / 5, -1 * radius / 5), mc.thePlayer.getPosition().add(radius, radius / 5, radius))) {
-        if (!chekcedBlockPosList.contains(blockPos)) {
-          double distance = Math.hypot(Math.hypot(
-                  blockPos.getX() - mc.thePlayer.getPosition().getX(),
-                  blockPos.getZ() - mc.thePlayer.getPosition().getZ()
-              ),
-              (blockPos.getY() - mc.thePlayer.getPosition().getY()) * 5 // 这里直接*5他到一定程度给你反馈超出范围就ok了
-          );
+      for (BlockPos blockPos : blocks) {
+        double distance = Math.hypot(Math.hypot(
+                blockPos.getX() - mc.thePlayer.getPosition().getX(),
+                blockPos.getZ() - mc.thePlayer.getPosition().getZ()
+            ),
+            (blockPos.getY() - mc.thePlayer.getPosition().getY()) * 5 // 这里直接*5他到一定程度给你反馈超出范围就ok了
+        );
 
-          if (distance < radius + 1 && distance >= radius) {
-            chekcedBlockPosList.add(blockPos);
+        if (distance < radius + 1 && distance >= radius) {
+          blocks.remove(blockPos);
 
-            if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
-              if (rayTrace(blockPos)) {
-                if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
-                  int aroundBlocks = 0;
-                  for (int i = 0; i < 4; i++) {
-                    BlockPos checkingBlockDown = blockPos;
-                    BlockPos checkingBlockEast = blockPos;
-                    BlockPos checkingBlockNorth = blockPos;
-                    BlockPos checkingBlockWest = blockPos;
-                    BlockPos checkingBlockSouth = blockPos;
+          if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
+            if (rayTrace(blockPos)) {
+              if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
+                int aroundBlocks = 0;
+                for (int i = 0; i < 4; i++) {
+                  BlockPos checkingBlockDown = blockPos;
+                  BlockPos checkingBlockEast = blockPos;
+                  BlockPos checkingBlockNorth = blockPos;
+                  BlockPos checkingBlockWest = blockPos;
+                  BlockPos checkingBlockSouth = blockPos;
 
-                    for (int j = 0; j < i + 1; j++) {
-                      checkingBlockDown = checkingBlockDown.down();
-                      checkingBlockEast = checkingBlockEast.east();
-                      checkingBlockNorth = checkingBlockNorth.north();
-                      checkingBlockWest = checkingBlockWest.west();
-                      checkingBlockSouth = checkingBlockSouth.south();
-                    }
-
-                    if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
+                  for (int j = 0; j < i + 1; j++) {
+                    checkingBlockDown = checkingBlockDown.down();
+                    checkingBlockEast = checkingBlockEast.east();
+                    checkingBlockNorth = checkingBlockNorth.north();
+                    checkingBlockWest = checkingBlockWest.west();
+                    checkingBlockSouth = checkingBlockSouth.south();
                   }
 
+                  if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                }
 
-                  if (aroundBlocks >= 3) {
-                    if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
-                      // 周围有东西
-                      goldBlock = blockPos;
-                      break;
-                    } else {
-                      replaceBlock = blockPos;
-                    }
+
+                if (aroundBlocks >= 3) {
+                  if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+                    // 周围有东西
+                    goldBlock = blockPos;
+                    break;
+                  } else {
+                    replaceBlock = blockPos;
                   }
                 }
               }
