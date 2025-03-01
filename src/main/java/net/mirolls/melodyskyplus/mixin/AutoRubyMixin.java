@@ -39,7 +39,7 @@ public class AutoRubyMixin {
   private boolean jumping = false;
   private Option<Boolean> melodySkyPlus$autoHeat = null;
 
-  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
+  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V", remap = false))
   private Value[] init(Value[] originalValues) {
     melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
       if (AutoRuby.getINSTANCE() != null) {
