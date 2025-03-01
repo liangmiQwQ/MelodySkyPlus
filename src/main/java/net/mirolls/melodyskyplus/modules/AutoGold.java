@@ -99,12 +99,14 @@ public class AutoGold extends Module {
         }
       }
 
-      BlockPos gold = findGoldNearPlayer();
-      if (gold == null) {
-        gotoGold();
-      } else {
-        rotateToGold(gold);
-      }
+      new Thread(() -> {
+        BlockPos gold = findGoldNearPlayer();
+        if (gold == null) {
+          gotoGold();
+        } else {
+          rotateToGold(gold);
+        }
+      }).start();
     }
   }
 
@@ -273,7 +275,9 @@ public class AutoGold extends Module {
           } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
           }
-          rotateToGold(findGoldNearPlayer());
+          new Thread(() -> {
+            rotateToGold(findGoldNearPlayer());
+          }).start();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
