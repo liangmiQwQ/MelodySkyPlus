@@ -19,7 +19,6 @@ import xyz.Melody.Utils.game.ScoreboardUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
-import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
 import java.util.Arrays;
 import java.util.List;
@@ -75,18 +74,17 @@ public class AutoRubyMixin {
     }
 
     if (melodySkyPlus$autoHeat.getValue()) {
-      GemstoneNuker gsn = GemstoneNuker.getINSTANCE();
       if (this.started) {
         List<String> scoreBoard = ScoreboardUtils.getScoreboard();
         for (String line : scoreBoard) {
           if (line.toLowerCase().contains("heat:")) {
             int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
-            if (gsn.isEnabled()) {
+            if (AutoRuby.getINSTANCE().started) {
               if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
                 if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
                   Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
-                  if (gsn.isEnabled()) {
-                    gsn.setEnabled(false);
+                  if (AutoRuby.getINSTANCE().started) {
+                    AutoRuby.getINSTANCE().started = false;
                   }
                   jumping = true;
                   if (melodySkyPlus$mineTop.getValue()) {
@@ -110,8 +108,8 @@ public class AutoRubyMixin {
                   } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                   }
-                  if (!gsn.isEnabled()) {
-                    gsn.setEnabled(true);
+                  if (!AutoRuby.getINSTANCE().started) {
+                    AutoRuby.getINSTANCE().started = true;
                   }
                 }).start();
               }
