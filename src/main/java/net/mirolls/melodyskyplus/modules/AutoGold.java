@@ -37,6 +37,8 @@ public class AutoGold extends Module {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
+  private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
+
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
   private int rotateToGoldDoneTick = -2147483647;
@@ -48,7 +50,7 @@ public class AutoGold extends Module {
   public AutoGold() {
     super("AutoGold", new String[]{""}, ModuleType.Mining);
 
-    this.addValues(walkTime);
+    this.addValues(walkTime, findGoldRadius);
     walkTimer = (new TimerUtil()).reset();
 
     this.setModInfo("Auto mine gold and find path in Mines of Divan");
@@ -97,12 +99,14 @@ public class AutoGold extends Module {
         }
       }
 
-      BlockPos gold = findGoldNearPlayer();
-      if (gold == null) {
-        gotoGold();
-      } else {
-        rotateToGold(gold);
-      }
+      new Thread(() -> {
+        BlockPos gold = findGoldNearPlayer();
+        if (gold == null) {
+          gotoGold();
+        } else {
+          rotateToGold(gold);
+        }
+      }).start();
     }
   }
 
@@ -271,7 +275,9 @@ public class AutoGold extends Module {
           } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
           }
-          rotateToGold(findGoldNearPlayer());
+          new Thread(() -> {
+            rotateToGold(findGoldNearPlayer());
+          }).start();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
@@ -321,75 +327,89 @@ public class AutoGold extends Module {
   }
 
   private BlockPos findGoldNearPlayer() {
-    List<BlockPos> chekcedBlockPosList = new ArrayList<>();
+    Helper.sendMessage("Finding Gold...");
     BlockPos replaceBlock = null;
     BlockPos goldBlock = null;
 
-    for (int radius = 0; radius < 35; radius++) {
+    List<BlockPos> blocks = new ArrayList<>();
+    List<BlockPos> needToRemove = new ArrayList<>();
+
+
+    for (BlockPos bp : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * findGoldRadius.getValue(), -1 * findGoldRadius.getValue() / 5, -1 * findGoldRadius.getValue() / 5), mc.thePlayer.getPosition().add(findGoldRadius.getValue(), findGoldRadius.getValue() / 5, findGoldRadius.getValue()))) {
+      blocks.add(bp);
+    }
+
+    Double readyFindGoldRadius = findGoldRadius.getValue();
+    for (int radius = 0; radius < readyFindGoldRadius; radius++) {
       // 我们对y进行一个/5的操作 其他正常操作
-      for (BlockPos blockPos : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * radius, -1 * radius / 5, -1 * radius / 5), mc.thePlayer.getPosition().add(radius, radius / 5, radius))) {
-        if (!chekcedBlockPosList.contains(blockPos)) {
-          double distance = Math.hypot(Math.hypot(
-                  blockPos.getX() - mc.thePlayer.getPosition().getX(),
-                  blockPos.getZ() - mc.thePlayer.getPosition().getZ()
-              ),
-              (blockPos.getY() - mc.thePlayer.getPosition().getY()) * 5 // 这里直接*5他到一定程度给你反馈超出范围就ok了
-          );
+      if (goldBlock != null) break;
 
-          if (distance < radius + 1 && distance >= radius) {
-            chekcedBlockPosList.add(blockPos);
+      for (BlockPos blockPos : blocks) {
+        double distance = Math.hypot(Math.hypot(
+                blockPos.getX() - mc.thePlayer.getPosition().getX(),
+                blockPos.getZ() - mc.thePlayer.getPosition().getZ()
+            ),
+            (blockPos.getY() - mc.thePlayer.getPosition().getY()) * 5 // 这里直接*5他到一定程度给你反馈超出范围就ok了
+        );
 
-            if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
-              if (rayTrace(blockPos)) {
-                if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
-                  int aroundBlocks = 0;
-                  for (int i = 0; i < 4; i++) {
-                    BlockPos checkingBlockDown = blockPos;
-                    BlockPos checkingBlockEast = blockPos;
-                    BlockPos checkingBlockNorth = blockPos;
-                    BlockPos checkingBlockWest = blockPos;
-                    BlockPos checkingBlockSouth = blockPos;
+        if (distance < radius + 1 && distance >= radius) {
+//          blocks.remove(blockPos);
+          needToRemove.add(blockPos);
 
-                    for (int j = 0; j < i + 1; j++) {
-                      checkingBlockDown = checkingBlockDown.down();
-                      checkingBlockEast = checkingBlockEast.east();
-                      checkingBlockNorth = checkingBlockNorth.north();
-                      checkingBlockWest = checkingBlockWest.west();
-                      checkingBlockSouth = checkingBlockSouth.south();
-                    }
+          if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
+            if (rayTrace(blockPos)) {
+              if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
+                int aroundBlocks = 0;
+                for (int i = 0; i < 4; i++) {
+                  BlockPos checkingBlockDown = blockPos;
+                  BlockPos checkingBlockEast = blockPos;
+                  BlockPos checkingBlockNorth = blockPos;
+                  BlockPos checkingBlockWest = blockPos;
+                  BlockPos checkingBlockSouth = blockPos;
 
-                    if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
-                    if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
-                      aroundBlocks++;
-                    }
+                  for (int j = 0; j < i + 1; j++) {
+                    checkingBlockDown = checkingBlockDown.down();
+                    checkingBlockEast = checkingBlockEast.east();
+                    checkingBlockNorth = checkingBlockNorth.north();
+                    checkingBlockWest = checkingBlockWest.west();
+                    checkingBlockSouth = checkingBlockSouth.south();
                   }
 
+                  if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                  if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
+                    aroundBlocks++;
+                  }
+                }
 
-                  if (aroundBlocks >= 3) {
-                    if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
-                      // 周围有东西
-                      goldBlock = blockPos;
-                      break;
-                    } else {
-                      replaceBlock = blockPos;
-                    }
+
+                if (aroundBlocks >= 3) {
+                  if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
+                    // 周围有东西
+                    goldBlock = blockPos;
+                    break;
+                  } else {
+                    replaceBlock = blockPos;
                   }
                 }
               }
             }
           }
         }
+      }
+
+      for (BlockPos blockPos : needToRemove) {
+        blocks.remove(blockPos);
       }
     }
 
@@ -405,6 +425,7 @@ public class AutoGold extends Module {
   }
 
   private void rotateToGold(BlockPos gold) {
+    Helper.sendMessage("Find done. Rotating to gold...");
     this.targetBlock = gold;
     KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
     MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);

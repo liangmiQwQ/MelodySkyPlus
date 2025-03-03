@@ -38,6 +38,7 @@ import xyz.Melody.module.FMLModules.PlayerSoundHandler;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
+import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -83,7 +84,7 @@ public class Failsafe extends Module {
       }
     });
     this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckMessage);
-    this.setModInfo("Anti staffs.");
+    this.setModInfo("Anti staffs while doing macro (ONLY WORK ON AUTO_GEMSTONE).");
     this.except();
   }
 
@@ -106,30 +107,7 @@ public class Failsafe extends Module {
   }
 
   private static boolean isDoingMarco() {
-    boolean returnValue = false;
-    for (Module module : ModuleManager.modules) {
-
-      if (module.getName().toLowerCase().contains("nuker") && module.isEnabled() && !module.excepted) {
-        if (module.getName().toLowerCase().contains("gemstonenuker") ||
-            module.getName().toLowerCase().contains("mithrilnuker")) { // 是宝石努克
-          if (AutoRuby.getINSTANCE().isEnabled()) {// 在开启了坳头宝石的情况下的
-            if (AutoRuby.getINSTANCE().started) { // 并且运行了.ar start
-              returnValue = true;
-            }
-          } else { // 开启了秘银努克 但是没开坳头宝石
-            returnValue = true;
-          }
-        } else { // 其他努克
-          returnValue = true;
-        }
-      }
-
-      if (module.getName().toLowerCase().contains("autofish") && module.isEnabled()) {
-        returnValue = true;
-      }
-    }
-
-    return returnValue;
+    return AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started && GemstoneNuker.getINSTANCE().isEnabled();
   }
 
   private void reactBedrock() {
