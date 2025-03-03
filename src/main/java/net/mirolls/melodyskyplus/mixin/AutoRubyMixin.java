@@ -65,6 +65,13 @@ public class AutoRubyMixin {
     jumping = false;
   }
 
+  @Inject(method = "onDisable", at = @At("HEAD"))
+  private void onDisable(CallbackInfo ci) {
+    KeyBinding.setKeyBindState(Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode(), false);
+    jumping = false;
+  }
+
+
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
   private void idk(EventTick event, CallbackInfo ci) {
     Minecraft mc = Minecraft.getMinecraft();
@@ -74,49 +81,47 @@ public class AutoRubyMixin {
     }
 
     if (melodySkyPlus$autoHeat.getValue()) {
-      if (this.started) {
-        List<String> scoreBoard = ScoreboardUtils.getScoreboard();
-        for (String line : scoreBoard) {
-          if (line.toLowerCase().contains("heat:")) {
-            int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
-            if (AutoRuby.getINSTANCE().started) {
-              if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
-                if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
-                  Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
-                  if (AutoRuby.getINSTANCE().started) {
-                    AutoRuby.getINSTANCE().started = false;
-                  }
-                  jumping = true;
-                  if (melodySkyPlus$mineTop.getValue()) {
-                    MelodySkyPlus.rotationLib.setCallBack(() -> {
-                      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
-                    });
-                    MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
-                    MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
-                    MelodySkyPlus.rotationLib.startRotating();
-                  }
+      List<String> scoreBoard = ScoreboardUtils.getScoreboard();
+      for (String line : scoreBoard) {
+        if (line.toLowerCase().contains("heat:")) {
+          int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+          if (AutoRuby.getINSTANCE().started) {
+            if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
+              if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
+                Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
+                if (AutoRuby.getINSTANCE().started) {
+                  AutoRuby.getINSTANCE().started = false;
+                }
+                jumping = true;
+                if (melodySkyPlus$mineTop.getValue()) {
+                  MelodySkyPlus.rotationLib.setCallBack(() -> {
+                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+                  });
+                  MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
+                  MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+                  MelodySkyPlus.rotationLib.startRotating();
                 }
               }
-            } else {
-              if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
-                Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
-                jumping = false;
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
-                new Thread(() -> {
-                  try {
-                    Thread.sleep(1000);
-                  } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                  }
-                  if (!AutoRuby.getINSTANCE().started) {
-                    AutoRuby.getINSTANCE().started = true;
-                  }
-                }).start();
-              }
             }
-
-            break;
+          } else {
+            if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
+              Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
+              jumping = false;
+              KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+              new Thread(() -> {
+                try {
+                  Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                  throw new RuntimeException(e);
+                }
+                if (!AutoRuby.getINSTANCE().started) {
+                  AutoRuby.getINSTANCE().started = true;
+                }
+              }).start();
+            }
           }
+
+          break;
         }
       }
     }
