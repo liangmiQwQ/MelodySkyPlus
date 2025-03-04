@@ -5,8 +5,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SmartyPathFinder {
   private Minecraft mc = null;
+
+  private List<BlockPos> unMineableBlocks = new ArrayList<>();
 
   public SmartyPathFinder() {
     mc = Minecraft.getMinecraft();
@@ -27,23 +32,39 @@ public class SmartyPathFinder {
   }
 
   public Boolean isWalkable(BlockPos pos) {
-    Block dataBlock = mc.theWorld.getBlockState(pos).getBlock();
-    if (dataBlock.getMaterial().isLiquid() || (!dataBlock.getMaterial().isSolid() && Block.getIdFromBlock(dataBlock) != 78)) {
+    Block block = mc.theWorld.getBlockState(pos).getBlock();
+    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
       return Boolean.FALSE;
     }
     double totalHeight = 0.0D;
-    Block block1 = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
-    Block block2 = mc.theWorld.getBlockState(pos.add(0, 2, 0)).getBlock();
-    Block block3 = mc.theWorld.getBlockState(pos.add(0, 3, 0)).getBlock();
-    if (block1 != Blocks.air) {
-      totalHeight = totalHeight + block1.getBlockBoundsMaxY();
+    Block blockHead = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
+    Block blockTop = mc.theWorld.getBlockState(pos.add(0, 2, 0)).getBlock();
+    Block blockHigh = mc.theWorld.getBlockState(pos.add(0, 3, 0)).getBlock();
+    if (blockHead != Blocks.air) {
+      totalHeight = totalHeight + blockHead.getBlockBoundsMaxY();
     }
-    if (block2 != Blocks.air) {
-      totalHeight = totalHeight + block2.getBlockBoundsMaxY();
+    if (blockTop != Blocks.air) {
+      totalHeight = totalHeight + blockTop.getBlockBoundsMaxY();
     }
-    if (block3 != Blocks.air) {
-      totalHeight = totalHeight + block3.getBlockBoundsMaxY();
+    if (blockHigh != Blocks.air) {
+      totalHeight = totalHeight + blockHigh.getBlockBoundsMaxY();
     }
     return totalHeight < 0.6D;
   }
+
+  public Boolean isMineable(BlockPos pos) {
+    Block block = mc.theWorld.getBlockState(pos).getBlock();
+    if (
+        block != Blocks.cobblestone_wall
+            && block != Blocks.wool
+            && block != Blocks.sand
+            && block != Blocks.gravel
+            && block != Blocks.rail
+    ) {
+      return !unMineableBlocks.contains(pos);
+    }
+    
+    return false;
+  }
+
 }
