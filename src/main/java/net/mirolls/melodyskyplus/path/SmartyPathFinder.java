@@ -11,7 +11,9 @@ import java.util.List;
 
 public class SmartyPathFinder {
   private final List<BlockPos> specialUnbreakableBlocks = new ArrayList<>();
-  private final List<BlockPos> testedBlocks = new ArrayList<>();
+  private final List<PathNode> testedBlocks = new ArrayList<>();
+  private final List<PathNode> closedBlocks = new ArrayList<>();
+
   private final Minecraft mc;
 
 
@@ -27,33 +29,52 @@ public class SmartyPathFinder {
     }
   }
 
-  private void findAround(PathNode parent, BlockPos target) {
-    List<PathNode> testingBlock;
 
-    for (int i = 0; i < 6; i++) {
-      BlockPos pos;
-      if (i == 0) {
-        pos = parent.pos.add(1, 0, 0);
-      } else if (i == 1) {
-        pos = parent.pos.add(0, 1, 0);
-      } else if (i == 2) {
-        pos = parent.pos.add(0, 0, 1);
-      } else if (i == 3) {
-        pos = parent.pos.add(-1, 0, 0);
-      } else if (i == 4) {
-        pos = parent.pos.add(0, -1, 0);
-      } else {
-        pos = parent.pos.add(0, 0, -1);
-      }
+  /**
+   * 作用就是找到一个点周围的方块 然后添加到数组里头
+   *
+   * @param parent 父节点
+   * @param target 终点
+   */
+  private void openBlock(PathNode parent, BlockPos target) {
+    if (!closedBlocks.contains(parent)) {
+      closedBlocks.add(parent); // 关闭
 
-      if (!testedBlocks.contains(pos)) {
-        if (isWalkable(pos)) {
-
+      for (int i = 0; i < 6; i++) {
+        BlockPos pos;
+        if (i == 0) {
+          pos = parent.pos.add(1, 0, 0);
+        } else if (i == 1) {
+          pos = parent.pos.add(0, 1, 0);
+        } else if (i == 2) {
+          pos = parent.pos.add(0, 0, 1);
+        } else if (i == 3) {
+          pos = parent.pos.add(-1, 0, 0);
+        } else if (i == 4) {
+          pos = parent.pos.add(0, -1, 0);
+        } else {
+          pos = parent.pos.add(0, 0, -1);
         }
-        new PathNode(1, distance(pos, target), parent, pos);
+
+        boolean posChecked = false;
+        for (PathNode node : testedBlocks) {
+          if (node.pos.getX() == pos.getX() && node.pos.getY() == pos.getY() && node.pos.getZ() == pos.getZ()) {
+            posChecked = true;
+            break;
+          }
+        }
+
+        if (!posChecked) {
+          if (isWalkable(pos)) {
+            new PathNode(1, distance(pos, target), parent, pos);
+          } else {
+            if (isBreakable(pos)) {
+              new PathNode(1, distance(pos, target), parent, pos);
+            }
+          }
+        }
       }
     }
-
   }
 
   private int distance(BlockPos pos1, BlockPos pos2) {
