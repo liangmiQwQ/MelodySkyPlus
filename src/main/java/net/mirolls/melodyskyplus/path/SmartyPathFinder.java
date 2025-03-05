@@ -6,10 +6,11 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SmartyPathFinder {
-  private final List<BlockPos> unMineableBlocks = new ArrayList<>();
+  private final List<BlockPos> specialUnbreakableBlocks = new ArrayList<>();
   private final List<BlockPos> testedBlocks = new ArrayList<>();
   private final Minecraft mc;
 
@@ -46,6 +47,9 @@ public class SmartyPathFinder {
       }
 
       if (!testedBlocks.contains(pos)) {
+        if (isWalkable(pos)) {
+
+        }
         new PathNode(1, distance(pos, target), parent, pos);
       }
     }
@@ -72,7 +76,7 @@ public class SmartyPathFinder {
   public Boolean isWalkable(BlockPos pos) {
     Block block = mc.theWorld.getBlockState(pos).getBlock();
     if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
-      return Boolean.FALSE;
+      return false;
     }
     double totalHeight = 0.0D;
     Block blockHead = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
@@ -90,19 +94,27 @@ public class SmartyPathFinder {
     return totalHeight < 0.6D;
   }
 
-  public Boolean isMineable(BlockPos pos) {
-    Block block = mc.theWorld.getBlockState(pos).getBlock();
-    if (
-        block != Blocks.cobblestone_wall
-            && block != Blocks.wool
-            && block != Blocks.sand
-            && block != Blocks.gravel
-            && block != Blocks.rail
-    ) {
-      return !unMineableBlocks.contains(pos);
+  public Boolean isBreakable(BlockPos pos) {
+    Block footBlock = mc.theWorld.getBlockState(pos).getBlock();
+    Block headBlock = mc.theWorld.getBlockState(pos).getBlock();
+
+    List<Block> unbreakableBlocks = Arrays.asList(
+        Blocks.wool, Blocks.sand, Blocks.gravel, Blocks.rail,
+        Blocks.bedrock
+    );
+
+    boolean footBlockBreakable = false;
+    boolean headBlockBreakable = false;
+
+    if (unbreakableBlocks.contains(footBlock)) {
+      footBlockBreakable = !specialUnbreakableBlocks.contains(pos);
     }
 
-    return false;
+    if (unbreakableBlocks.contains(headBlock)) {
+      headBlockBreakable = !specialUnbreakableBlocks.contains(pos);
+    }
+
+    return footBlockBreakable && headBlockBreakable;
   }
 
 }
