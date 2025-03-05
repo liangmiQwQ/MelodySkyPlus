@@ -9,14 +9,52 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SmartyPathFinder {
-  private Minecraft mc = null;
+  private final List<BlockPos> unMineableBlocks = new ArrayList<>();
+  private final List<BlockPos> testedBlocks = new ArrayList<>();
+  private final Minecraft mc;
 
-  private List<BlockPos> unMineableBlocks = new ArrayList<>();
 
   public SmartyPathFinder() {
     mc = Minecraft.getMinecraft();
   }
 
+  public List<BlockPos> findPath(BlockPos target) {
+    BlockPos posPlayer = mc.thePlayer.getPosition();
+    PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer);
+
+    while (true) {
+    }
+  }
+
+  private void findAround(PathNode parent, BlockPos target) {
+    List<PathNode> testingBlock;
+
+    for (int i = 0; i < 6; i++) {
+      BlockPos pos;
+      if (i == 0) {
+        pos = parent.pos.add(1, 0, 0);
+      } else if (i == 1) {
+        pos = parent.pos.add(0, 1, 0);
+      } else if (i == 2) {
+        pos = parent.pos.add(0, 0, 1);
+      } else if (i == 3) {
+        pos = parent.pos.add(-1, 0, 0);
+      } else if (i == 4) {
+        pos = parent.pos.add(0, -1, 0);
+      } else {
+        pos = parent.pos.add(0, 0, -1);
+      }
+
+      if (!testedBlocks.contains(pos)) {
+        new PathNode(1, distance(pos, target), parent, pos);
+      }
+    }
+
+  }
+
+  private int distance(BlockPos pos1, BlockPos pos2) {
+    return (pos1.getX() - pos2.getX()) + (pos1.getY() - pos2.getY()) + (pos1.getZ() - pos2.getZ());
+  }
 
   private double getPenalty(PathNode pathNode) {
     double cost = 0.0D;
@@ -63,7 +101,7 @@ public class SmartyPathFinder {
     ) {
       return !unMineableBlocks.contains(pos);
     }
-    
+
     return false;
   }
 

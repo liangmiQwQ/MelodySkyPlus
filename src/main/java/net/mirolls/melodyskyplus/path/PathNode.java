@@ -7,24 +7,20 @@ public class PathNode {
 
   public BlockPos posParent;
 
-  public double movement;
-
-  public Boolean isCustomNode;
-
   public double gCost;
 
   public double hCost;
   public PathNode nodeParent;
 
-  public PathNode(double g, double h, PathNode parent, BlockPos pos, Double cost, Boolean custom) {
+  public PathNode(double g, double h, PathNode parent, BlockPos pos) {
     this.gCost = g;
     this.hCost = h;
     this.nodeParent = parent;
-    this.posParent = parent.pos;
+    if (parent != null) {
+      this.posParent = parent.pos;
+    }
 
     this.pos = pos;
-    this.movement = cost;
-    this.isCustomNode = custom;
   }
 
   public double fCost() {
