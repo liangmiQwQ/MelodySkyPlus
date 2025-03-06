@@ -383,6 +383,7 @@ public abstract class GemstoneNukerMixin {
       }
     }
     melodySkyPlus$tryFasterTimer.resume();
+    AutoRubyTimer.timer.reset();
   }
 
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
@@ -391,5 +392,6 @@ public abstract class GemstoneNukerMixin {
       HUDManager.getApiByName("GemstoneTick").setEnabled(false);
     }
     melodySkyPlus$tryFasterTimer.pause();
+    AutoRubyTimer.timer.pause();
   }
 }

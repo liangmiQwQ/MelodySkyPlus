@@ -215,7 +215,7 @@ public class Failsafe extends Module {
           lastJump = gameSettings.keyBindJump.isKeyDown() ? nowTick : lastJump;
 
           int warnLevel = TPCheckDetector.checkPositionChange();
-          if (warnLevel > 0 && nowTick > 20 && nowTick - lastLegitTeleport > 20 && nowTick - lastHurt > 30) {
+          if (warnLevel > 0 && nowTick > 20 && nowTick - lastLegitTeleport > 40 && nowTick - lastHurt > 30) {
             int checkMotion = TPCheckDetector.checkMotion();
             if ((checkMotion != 0 && (warnLevel += checkMotion) > 3) || warnLevel > 19) { // 如果能通过Motion发现这个事情不是很对劲了
               int checkVelocity = TPCheckDetector.checkVelocity();
