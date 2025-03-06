@@ -14,11 +14,9 @@ public class SmartyPathFinder {
   // 一个BlockPos有3个状态
   /* 1. 没有被扫描过 toOpen
      2. 被扫描过了 opened
-     3. 被扫描过了 并且以他为中心开展了新的节点 closed
-     4. `特殊状态` cantOpen 无法打开的方块 避免重复多次尝试打开这个方块 */
+     3. 被扫描过了 并且以他为中心开展了新的节点 closed */
   private final List<PathNode> openedBlocks = new ArrayList<>();
   private final List<PathNode> closedBlocks = new ArrayList<>();
-  private final List<BlockPos> cantOpenBlocks = new ArrayList<>();
 
 
   private final Minecraft mc;
@@ -111,7 +109,7 @@ public class SmartyPathFinder {
           } else {
             if (isBreakable(pos)) {
               int distance = distance(pos, target);
-              PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance * 1.5 /* 挖掘可能会让效率略微减少2/3左右*/, parent, pos);
+              PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos) + 3, distance, parent, pos);
               openedBlocks.add(node);
               if (distance == 0) {
                 return node;
@@ -119,7 +117,6 @@ public class SmartyPathFinder {
             }
           }
 
-          cantOpenBlocks.add(pos);
         }
       }
     }
@@ -140,14 +137,11 @@ public class SmartyPathFinder {
         break;
       }
     }
-    if (cantOpenBlocks.contains(pos)) {
-      posChecked = true;
-    }
     return posChecked;
   }
 
   private int distance(BlockPos pos1, BlockPos pos2) {
-    return (pos1.getX() - pos2.getX()) + (pos1.getY() - pos2.getY()) + (pos1.getZ() - pos2.getZ());
+    return Math.abs(pos1.getX() - pos2.getX()) + Math.abs(pos1.getY() - pos2.getY()) + Math.abs(pos1.getZ() - pos2.getZ());
   }
 
   private double getPenalty(BlockPos pos) {
@@ -193,15 +187,19 @@ public class SmartyPathFinder {
         Blocks.bedrock
     );
 
-    boolean footBlockBreakable = false;
-    boolean headBlockBreakable = false;
+    boolean footBlockBreakable = true;
+    boolean headBlockBreakable = true;
 
     if (unbreakableBlocks.contains(footBlock)) {
-      footBlockBreakable = !specialUnbreakableBlocks.contains(pos);
+      footBlockBreakable = false;
+    } else if (specialUnbreakableBlocks.contains(pos)) {
+      footBlockBreakable = false;
     }
 
     if (unbreakableBlocks.contains(headBlock)) {
-      headBlockBreakable = !specialUnbreakableBlocks.contains(pos);
+      headBlockBreakable = false;
+    } else if (specialUnbreakableBlocks.contains(pos)) {
+      headBlockBreakable = false;
     }
 
     return footBlockBreakable && headBlockBreakable;
