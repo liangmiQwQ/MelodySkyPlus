@@ -6,6 +6,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
