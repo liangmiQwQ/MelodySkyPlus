@@ -10,20 +10,29 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SmartyPathFinder {
-  private final List<BlockPos> specialUnbreakableBlocks = new ArrayList<>();
+  private final List<BlockPos> specialUnbreakableBlocks;
   // 一个BlockPos有3个状态
   /* 1. 没有被扫描过 toOpen
      2. 被扫描过了 opened
      3. 被扫描过了 并且以他为中心开展了新的节点 closed */
   private final List<PathNode> openedBlocks = new ArrayList<>();
   private final List<PathNode> closedBlocks = new ArrayList<>();
-
-
+  private final boolean canMineBlocks;
   private final Minecraft mc;
 
 
-  public SmartyPathFinder() {
+  public SmartyPathFinder(boolean canMineBlocks, List<BlockPos> specialUnbreakableBlocks) {
     mc = Minecraft.getMinecraft();
+    this.canMineBlocks = canMineBlocks;
+    this.specialUnbreakableBlocks = specialUnbreakableBlocks;
+  }
+
+  public SmartyPathFinder(boolean canMineBlocks) {
+    this(canMineBlocks, new ArrayList<>());
+  }
+
+  public SmartyPathFinder() {
+    this(true);
   }
 
   public List<BlockPos> findPath(BlockPos target) {
@@ -157,7 +166,7 @@ public class SmartyPathFinder {
     return cost;
   }
 
-  public Boolean isWalkable(BlockPos pos) {
+  public boolean isWalkable(BlockPos pos) {
     Block block = mc.theWorld.getBlockState(pos).getBlock();
     if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
       return false;
@@ -178,7 +187,10 @@ public class SmartyPathFinder {
     return totalHeight < 0.6D;
   }
 
-  public Boolean isBreakable(BlockPos pos) {
+  public boolean isBreakable(BlockPos pos) {
+    if (!canMineBlocks) {// 如果不能挖掘方块
+      return false;
+    }
     Block footBlock = mc.theWorld.getBlockState(pos).getBlock();
     Block headBlock = mc.theWorld.getBlockState(pos).getBlock();
 
@@ -204,5 +216,4 @@ public class SmartyPathFinder {
 
     return footBlockBreakable && headBlockBreakable;
   }
-
 }
