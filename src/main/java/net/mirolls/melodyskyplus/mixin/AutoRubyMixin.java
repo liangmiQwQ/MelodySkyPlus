@@ -2,7 +2,9 @@ package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,6 +21,7 @@ import xyz.Melody.Utils.game.ScoreboardUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
+import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +40,12 @@ public class AutoRubyMixin {
   public boolean started;
   @Shadow
   private TimerUtil ewTimer;
+  @Shadow
+  private boolean etherWarped;
+  @Shadow
+  private BlockPos nextBP;
+  @Shadow
+  private TimerUtil timer;
   private boolean jumping = false;
   private Option<Boolean> melodySkyPlus$autoHeat = null;
 
@@ -76,52 +85,54 @@ public class AutoRubyMixin {
   private void idk(EventTick event, CallbackInfo ci) {
     Minecraft mc = Minecraft.getMinecraft();
 
-    if (this.ewTimer.hasReached(0)) {
+    if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
       Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
-    }
-
-    if (melodySkyPlus$autoHeat.getValue()) {
-      List<String> scoreBoard = ScoreboardUtils.getScoreboard();
-      for (String line : scoreBoard) {
-        if (line.toLowerCase().contains("heat:")) {
-          int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
-          if (AutoRuby.getINSTANCE().started) {
-            if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
-              if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
-                Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
-                if (AutoRuby.getINSTANCE().started) {
-                  AutoRuby.getINSTANCE().started = false;
-                }
-                jumping = true;
-                if (melodySkyPlus$mineTop.getValue()) {
-                  MelodySkyPlus.rotationLib.setCallBack(() -> {
-                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
-                  });
-                  MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
-                  MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
-                  MelodySkyPlus.rotationLib.startRotating();
+    } else {
+      // 如果没有在进行TP
+      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500)) {
+        // 主要部分 处理AutoHeat
+        List<String> scoreBoard = ScoreboardUtils.getScoreboard();
+        for (String line : scoreBoard) {
+          if (line.toLowerCase().contains("heat:")) {
+            int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+            if (AutoRuby.getINSTANCE().started) {
+              if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
+                if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
+                  Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
+                  if (AutoRuby.getINSTANCE().started) {
+                    AutoRuby.getINSTANCE().started = false;
+                  }
+                  jumping = true;
+                  if (melodySkyPlus$mineTop.getValue()) {
+                    MelodySkyPlus.rotationLib.setCallBack(() -> {
+                      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+                    });
+                    MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(mc.thePlayer.rotationYaw, -90F));
+                    MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
+                    MelodySkyPlus.rotationLib.startRotating();
+                  }
                 }
               }
+            } else {
+              if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
+                Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
+                jumping = false;
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+                new Thread(() -> {
+                  try {
+                    Thread.sleep(1000);
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
+                  if (!AutoRuby.getINSTANCE().started) {
+                    AutoRuby.getINSTANCE().started = true;
+                  }
+                }).start();
+              }
             }
-          } else {
-            if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
-              Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
-              jumping = false;
-              KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
-              new Thread(() -> {
-                try {
-                  Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
-                if (!AutoRuby.getINSTANCE().started) {
-                  AutoRuby.getINSTANCE().started = true;
-                }
-              }).start();
-            }
-          }
 
-          break;
+            break;
+          }
         }
       }
     }
