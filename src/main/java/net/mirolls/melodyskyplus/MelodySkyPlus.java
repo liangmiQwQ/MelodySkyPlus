@@ -12,6 +12,7 @@ import net.mirolls.melodyskyplus.libs.NukerTicks;
 import net.mirolls.melodyskyplus.libs.PickaxeAbility;
 import net.mirolls.melodyskyplus.libs.RotationLib;
 import net.mirolls.melodyskyplus.libs.WalkLib;
+import net.mirolls.melodyskyplus.path.PathRenderer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,6 +31,7 @@ public class MelodySkyPlus {
   public static Bug antiBug;
   public static NukerTicks nukerTicks;
   public static PickaxeAbility pickaxeAbility;
+  public static PathRenderer pathRenderer;
 
 
   public static String verify(String text) {
@@ -51,6 +53,7 @@ public class MelodySkyPlus {
     antiBug = new Bug();
     nukerTicks = new NukerTicks();
     pickaxeAbility = new PickaxeAbility();
+    pathRenderer = new PathRenderer();
     // events
 
     try {
