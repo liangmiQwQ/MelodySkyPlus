@@ -18,7 +18,6 @@ public class SmartyPathFinder {
      3. 被扫描过了 并且以他为中心开展了新的节点 closed */
   private final List<PathNode> openedBlocks = new ArrayList<>();
   private final List<PathNode> closedBlocks = new ArrayList<>();
-  private final List<BlockPos> blocksToMine = new ArrayList<>();
 
   private final boolean canMineBlocks;
   private final Minecraft mc;
@@ -40,7 +39,7 @@ public class SmartyPathFinder {
 
   public List<PathPos> findPath(BlockPos target) {
     BlockPos posPlayer = mc.thePlayer.getPosition();
-    PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer);
+    PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathNodeType.WALK);
 
     if (posPlayer == target) {
       return new ArrayList<>();
@@ -96,7 +95,7 @@ public class SmartyPathFinder {
     }
 
     for (PathNode node : paths) {
-      returnPaths.add(new PathPos(blocksToMine.contains(node.pos), node.pos));
+      returnPaths.add(new PathPos(node.type, node.pos));
     }
 
     return returnPaths;
@@ -137,17 +136,23 @@ public class SmartyPathFinder {
           int walkType = getWalkType(pos);
           if (walkType == 0) {
             int distance = distance(pos, target);
-            PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos);
+            PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, PathNodeType.WALK);
             openedBlocks.add(node);
             if (distance == 0) {
               return node;
             }
-          } else if (walkType == 2) {
-            if (isBreakable(pos)) {
+          } else if (walkType == 1) {
+            int distance = distance(pos, target);
+            PathNode node = new PathNode(parent.gCost + 1 + 5, distance, parent, pos, PathNodeType.ABILITY);
+            openedBlocks.add(node);
+            if (distance == 0) {
+              return node;
+            }
+          } else {
+            if (isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
               int distance = distance(pos, target);
-              PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos);
+              PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.MINE);
               openedBlocks.add(node);
-              blocksToMine.add(pos);
               if (distance == 0) {
                 return node;
               }
