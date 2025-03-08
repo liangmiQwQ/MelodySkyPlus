@@ -28,10 +28,10 @@ public class CrystalHollowGoTo extends Command {
         MelodySkyPlus.pathRenderer.startRender(targetBP, path);
       }
     } else if (args.length == 4) {
-      Helper.sendMessage("Start to find path without break ability");
+      Helper.sendMessage("Start to find path without break ability and jumpBoost");
       long startTime = System.currentTimeMillis();
       BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-      List<PathPos> path = new SmartyPathFinder(false).findPath(targetBP);
+      List<PathPos> path = new SmartyPathFinder(false, false).findPath(targetBP);
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
