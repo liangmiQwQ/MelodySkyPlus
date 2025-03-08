@@ -37,8 +37,6 @@ public class AutoRubyMixin {
   private final Numbers<Double> melodySkyPlus$maxHeat = new Numbers<>("MaxHeat", 95.0, 1.0, 100.0, 1.0);
   private final Numbers<Double> melodySkyPlus$minHeat = new Numbers<>("MinHeat", 90.0, 0.0, 99.0, 1.0);
   @Shadow
-  public boolean started;
-  @Shadow
   private TimerUtil ewTimer;
   @Shadow
   private boolean etherWarped;
@@ -99,7 +97,7 @@ public class AutoRubyMixin {
           if (line.toLowerCase().contains("heat:")) {
             int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
             if (AutoRuby.getINSTANCE().started) {
-              if (heat >= melodySkyPlus$maxHeat.getValue() && !melodySkyPlus$jumping && melodySkyPlus$jumpTimer.hasReached(30_000)) {
+              if (heat >= melodySkyPlus$maxHeat.getValue() && !melodySkyPlus$jumping && melodySkyPlus$jumpTimer.hasReached(20_000)) {
                 if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
                   Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
                   if (AutoRuby.getINSTANCE().started) {
@@ -121,9 +119,10 @@ public class AutoRubyMixin {
               if (melodySkyPlus$jumping) {
                 if (melodySkyPlus$minHeat.getValue() >= heat) {
                   Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
-                }
-                if (melodySkyPlus$jumpTimer.hasReached(10_000)) {
-                  Helper.sendMessage("Found jump too much, retry in 30s.");
+                } else if (melodySkyPlus$jumpTimer.hasReached(10_000)) {
+                  Helper.sendMessage("Found jump too much, retry in 20s.");
+                } else {
+                  break;
                 }
                 melodySkyPlus$jumping = false;
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
