@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.path.PathPos;
 import net.mirolls.melodyskyplus.path.SmartyPathFinder;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
@@ -19,7 +20,18 @@ public class CrystalHollowGoTo extends Command {
       Helper.sendMessage("Start to find path");
       long startTime = System.currentTimeMillis();
       BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-      List<BlockPos> path = new SmartyPathFinder().findPath(targetBP);
+      List<PathPos> path = new SmartyPathFinder().findPath(targetBP);
+      long finishTime = System.currentTimeMillis();
+      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
+
+      if (path != null) {
+        MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+      }
+    } else if (args.length == 4) {
+      Helper.sendMessage("Start to find path without break ability");
+      long startTime = System.currentTimeMillis();
+      BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+      List<PathPos> path = new SmartyPathFinder(false).findPath(targetBP);
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
