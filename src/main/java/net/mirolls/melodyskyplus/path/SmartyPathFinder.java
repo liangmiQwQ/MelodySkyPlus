@@ -1,36 +1,46 @@
 package net.mirolls.melodyskyplus.path;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class SmartyPathFinder {
-  private final List<BlockPos> specialUnbreakableBlocks;
+  private static final BlockPos[] OFFSETS = {
+      new BlockPos(1, 0, 0),  // 右
+      new BlockPos(-1, 0, 0), // 左
+      new BlockPos(0, 1, 0),  // 上
+      new BlockPos(0, -1, 0), // 下
+      new BlockPos(0, 0, 1),  // 前
+      new BlockPos(0, 0, -1)  // 后
+  };
+  private final Set<BlockPos> specialUnbreakableBlocks;
   // 一个BlockPos有3个状态
   /* 1. 没有被扫描过 toOpen
      2. 被扫描过了 opened
      3. 被扫描过了 并且以他为中心开展了新的节点 closed */
-  private final List<PathNode> openedBlocks = new ArrayList<>();
-  private final List<PathNode> closedBlocks = new ArrayList<>();
 
+  //  private final Set<PathNode> openedBlocks = new HashSet<>();
+  private final PriorityQueue<PathNode> openedBlocks = new PriorityQueue<>(Comparator.comparingDouble(PathNode::fCost));
+
+  private final Set<BlockPos> visitedPositions = new HashSet<>();
+  private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
+  private final Set<PathNode> closedBlocks = new HashSet<>();
   private final boolean canMineBlocks;
   private final Minecraft mc;
 
 
-  public SmartyPathFinder(boolean canMineBlocks, List<BlockPos> specialUnbreakableBlocks) {
+  public SmartyPathFinder(boolean canMineBlocks, Set<BlockPos> specialUnbreakableBlocks) {
     mc = Minecraft.getMinecraft();
     this.canMineBlocks = canMineBlocks;
     this.specialUnbreakableBlocks = specialUnbreakableBlocks;
   }
 
   public SmartyPathFinder(boolean canMineBlocks) {
-    this(canMineBlocks, new ArrayList<>());
+    this(canMineBlocks, new HashSet<>());
   }
 
   public SmartyPathFinder() {
@@ -46,6 +56,7 @@ public class SmartyPathFinder {
       // 如果开局即巅峰 则直接返回
     }
     openedBlocks.add(root);
+    visitedPositions.add(root.pos);
 
     PathNode targetPathNode;
     do {
@@ -114,21 +125,8 @@ public class SmartyPathFinder {
       closedBlocks.add(parent); // 关闭
       openedBlocks.remove(parent);
 
-      for (int i = 0; i < 6; i++) {
-        BlockPos pos;
-        if (i == 0) {
-          pos = parent.pos.add(1, 0, 0);
-        } else if (i == 1) {
-          pos = parent.pos.add(0, 1, 0);
-        } else if (i == 2) {
-          pos = parent.pos.add(0, 0, 1);
-        } else if (i == 3) {
-          pos = parent.pos.add(-1, 0, 0);
-        } else if (i == 4) {
-          pos = parent.pos.add(0, -1, 0);
-        } else {
-          pos = parent.pos.add(0, 0, -1);
-        }
+      for (BlockPos offset : OFFSETS) {
+        BlockPos pos = parent.pos.add(offset);
 
         boolean posChecked = isPosChecked(pos);
 
@@ -138,6 +136,7 @@ public class SmartyPathFinder {
             int distance = distance(pos, target);
             PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, PathNodeType.WALK);
             openedBlocks.add(node);
+            visitedPositions.add(node.pos);
             if (distance == 0) {
               return node;
             }
@@ -145,6 +144,7 @@ public class SmartyPathFinder {
             int distance = distance(pos, target);
             PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
             openedBlocks.add(node);
+            visitedPositions.add(node.pos);
             if (distance == 0) {
               return node;
             }
@@ -153,6 +153,7 @@ public class SmartyPathFinder {
               int distance = distance(pos, target);
               PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
               openedBlocks.add(node);
+              visitedPositions.add(node.pos);
               if (distance == 0) {
                 return node;
               }
@@ -166,20 +167,7 @@ public class SmartyPathFinder {
   }
 
   private boolean isPosChecked(BlockPos pos) {
-    boolean posChecked = false;
-    for (PathNode node : closedBlocks) {
-      if (node.pos.getX() == pos.getX() && node.pos.getY() == pos.getY() && node.pos.getZ() == pos.getZ()) {
-        posChecked = true;
-        break;
-      }
-    }
-    for (PathNode node : openedBlocks) {
-      if (node.pos.getX() == pos.getX() && node.pos.getY() == pos.getY() && node.pos.getZ() == pos.getZ()) {
-        posChecked = true;
-        break;
-      }
-    }
-    return posChecked;
+    return visitedPositions.contains(pos);
   }
 
   private int distance(BlockPos pos1, BlockPos pos2) {
@@ -190,7 +178,7 @@ public class SmartyPathFinder {
     double cost = 0.0D;
     for (int i = -1; i <= 1; i++) {
       for (int j = -1; j <= 1; j++) {
-        Block block = mc.theWorld.getBlockState(pos.add(i, 1, j)).getBlock();
+        Block block = getBlockState(pos.add(i, 1, j)).getBlock();
         if (block != Blocks.air && block != Blocks.snow_layer && block != Blocks.snow) {
           cost += 2.0D;
         }
@@ -205,10 +193,10 @@ public class SmartyPathFinder {
    * @return 返回0则代表可以走 返回1则代表因为没有支撑点无法走路 返回2则达标高度不够无法走路
    */
   public int getWalkType(BlockPos pos) {
-    Block block = mc.theWorld.getBlockState(pos.down()).getBlock(); // 找下面的那个方块
+    Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
     if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
-      Block blockFoot = mc.theWorld.getBlockState(pos).getBlock();
-      Block blockHead = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
+      Block blockFoot = getBlockState(pos).getBlock();
+      Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
       if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
         return 2;
       } else {
@@ -217,9 +205,9 @@ public class SmartyPathFinder {
     }
 
     double height = 0.0D;
-    Block blockFoot = mc.theWorld.getBlockState(pos).getBlock();
-    Block blockHead = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
-    Block blockTop = mc.theWorld.getBlockState(pos.add(0, 2, 0)).getBlock();
+    Block blockFoot = getBlockState(pos).getBlock();
+    Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
+    Block blockTop = getBlockState(pos.add(0, 2, 0)).getBlock();
     if (blockFoot != Blocks.air) {
       height += blockFoot.getBlockBoundsMaxY();
     }
@@ -236,8 +224,8 @@ public class SmartyPathFinder {
     if (!canMineBlocks) {// 如果不能挖掘方块
       return false;
     }
-    Block footBlock = mc.theWorld.getBlockState(pos).getBlock();
-    Block headBlock = mc.theWorld.getBlockState(pos).getBlock();
+    Block footBlock = getBlockState(pos).getBlock();
+    Block headBlock = getBlockState(pos).getBlock();
 
     List<Block> unbreakableBlocks = Arrays.asList(
         Blocks.wool, Blocks.sand, Blocks.gravel, Blocks.rail,
@@ -260,5 +248,15 @@ public class SmartyPathFinder {
     }
 
     return footBlockBreakable && headBlockBreakable;
+  }
+
+  private IBlockState getBlockState(BlockPos pos) {
+    IBlockState state = blockStateMap.get(pos);
+    if (state == null) {
+      state = mc.theWorld.getBlockState(pos);
+      blockStateMap.put(pos, state);
+    }
+
+    return state;
   }
 }
