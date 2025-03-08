@@ -77,7 +77,7 @@ public class SmartyPathFinder {
     } while (true);
 
 
-    return new ArrayList<>(); // TODO: 增加返回 优化节点 剔除冗余等
+    return buildPath(targetPathNode); // TODO: 增加返回 优化节点 剔除冗余等
   }
 
   private List<BlockPos> buildPath(PathNode endNode) {
@@ -86,7 +86,7 @@ public class SmartyPathFinder {
 
     paths.add(endNode);
     if (endNode == null) return null;
-    
+
     while (true) {
       PathNode node = paths.get(0);
       if (node.nodeParent == null) break;

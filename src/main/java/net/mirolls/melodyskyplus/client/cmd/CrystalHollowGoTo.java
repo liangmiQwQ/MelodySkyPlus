@@ -23,7 +23,9 @@ public class CrystalHollowGoTo extends Command {
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
-      MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+      if (path != null) {
+        MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+      }
     } else if (args.length == 1) {
       Helper.sendMessage("Renderer cleared");
 
