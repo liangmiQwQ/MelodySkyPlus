@@ -26,6 +26,8 @@ public class CrystalHollowGoTo extends Command {
 
       if (path != null) {
         MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+      } else {
+        Helper.sendMessage("Sorry, Cant find path.");
       }
     } else if (args.length == 4) {
       Helper.sendMessage("Start to find path without break ability and jumpBoost");
@@ -37,6 +39,8 @@ public class CrystalHollowGoTo extends Command {
 
       if (path != null) {
         MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+      } else {
+        Helper.sendMessage("Sorry, Cant find path.");
       }
     } else if (args.length == 1) {
       Helper.sendMessage("Renderer cleared");
