@@ -7,6 +7,7 @@ import net.minecraft.util.BlockPos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SmartyPathFinder {
@@ -45,6 +46,7 @@ public class SmartyPathFinder {
     }
     openedBlocks.add(root);
 
+    PathNode targetPathNode;
     do {
       PathNode nodeToClose = null;
       for (PathNode openedBlock : openedBlocks) {
@@ -69,11 +71,33 @@ public class SmartyPathFinder {
       PathNode block = closeBlock(nodeToClose, target);
 
       if (block != null) {
+        targetPathNode = block;
         break;
       }
     } while (true);
 
+
     return new ArrayList<>(); // TODO: 增加返回 优化节点 剔除冗余等
+  }
+
+  private List<BlockPos> buildPath(PathNode endNode) {
+    LinkedList<PathNode> paths = new LinkedList<>();
+    List<BlockPos> returnPaths = new ArrayList<>();
+
+    paths.add(endNode);
+    if (endNode == null) return null;
+    
+    while (true) {
+      PathNode node = paths.get(0);
+      if (node.nodeParent == null) break;
+      paths.addFirst(node.nodeParent);
+    }
+
+    for (PathNode node : paths) {
+      returnPaths.add(node.pos);
+    }
+
+    return returnPaths;
   }
 
 
