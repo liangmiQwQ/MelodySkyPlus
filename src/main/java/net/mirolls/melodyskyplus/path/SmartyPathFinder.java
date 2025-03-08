@@ -9,14 +9,15 @@ import net.minecraft.util.BlockPos;
 import java.util.*;
 
 public class SmartyPathFinder {
-  private static final BlockPos[] BASIC_OFFSETS = {
+  private final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左
-      new BlockPos(0, 1, 0),  // 上
+      // new BlockPos(0, 1, 0),  // 上 留给JUMP_OFFSETS了
       new BlockPos(0, -1, 0), // 下
       new BlockPos(0, 0, 1),  // 前
       new BlockPos(0, 0, -1)  // 后
   };
+
   private final Set<BlockPos> specialUnbreakableBlocks;
   // 一个BlockPos有3个状态
   /* 1. 没有被扫描过 toOpen
@@ -30,20 +31,22 @@ public class SmartyPathFinder {
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
   private final boolean canMineBlocks;
   private final Minecraft mc;
+  private final boolean jumpBoost;
 
 
-  public SmartyPathFinder(boolean canMineBlocks, Set<BlockPos> specialUnbreakableBlocks) {
+  public SmartyPathFinder(boolean canMineBlocks, boolean jumpBoost, Set<BlockPos> specialUnbreakableBlocks) {
     mc = Minecraft.getMinecraft();
     this.canMineBlocks = canMineBlocks;
     this.specialUnbreakableBlocks = specialUnbreakableBlocks;
+    this.jumpBoost = jumpBoost;
   }
 
-  public SmartyPathFinder(boolean canMineBlocks) {
-    this(canMineBlocks, new HashSet<>());
+  public SmartyPathFinder(boolean canMineBlocks, boolean jumpBoost) {
+    this(canMineBlocks, jumpBoost, new HashSet<>());
   }
 
   public SmartyPathFinder() {
-    this(true);
+    this(true, true);
   }
 
   public List<PathPos> findPath(BlockPos target) {
@@ -124,42 +127,85 @@ public class SmartyPathFinder {
       openedBlocks.remove(parent);
 
       for (BlockPos offset : BASIC_OFFSETS) {
-        BlockPos pos = parent.pos.add(offset);
+        PathNode node = openBlock(parent, target, offset, true);
+        if (node != null) return node;
+      }
+      // 总是要跑的
+      if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK) {
+        if (jumpBoost) {
+          for (int i = 0; i < 6; i++) {
+            BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
+            BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 1, 0);
 
-        boolean posChecked = isPosChecked(pos);
+            if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
+              break;
+            }
 
-        if (!posChecked) {
-          int walkType = getWalkType(pos);
-          if (walkType == 0) {
-            int distance = distance(pos, target);
-            PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, PathNodeType.WALK);
-            openedBlocks.add(node);
-            visitedPositions.add(node.pos);
-            if (distance == 0) {
-              return node;
-            }
-          } else if (walkType == 1) {
-            int distance = distance(pos, target);
-            PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
-            openedBlocks.add(node);
-            visitedPositions.add(node.pos);
-            if (distance == 0) {
-              return node;
-            }
-          } else {
-            if (isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
-              int distance = distance(pos, target);
-              PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
-              openedBlocks.add(node);
-              visitedPositions.add(node.pos);
-              if (distance == 0) {
-                return node;
-              }
+            for (BlockPos offset : getOffsets(i + 1)) {
+              PathNode node = openBlock(parent, target, offset, false);
+              if (node != null) return node;
             }
           }
-
+        } else {
+          for (BlockPos offset : getOffsets(1)) {
+            BlockPos posFoot = mc.thePlayer.getPosition().add(0, 1, 0);
+            BlockPos posHead = mc.thePlayer.getPosition().add(0, 2, 0);
+            if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
+              break;
+            }
+            PathNode node = openBlock(parent, target, offset, true);
+            if (node != null) return node;
+          }
         }
       }
+    }
+    return null;
+  }
+
+  private BlockPos[] getOffsets(int layer) {
+    return new BlockPos[]{
+        new BlockPos(1, layer, 0),
+        new BlockPos(0, layer, 1),
+        new BlockPos(-1, layer, 0),
+        new BlockPos(0, layer, -1)
+    };
+  }
+
+  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean breakable) {
+    BlockPos pos = parent.pos.add(offset);
+
+    boolean posChecked = isPosChecked(pos);
+
+    if (!posChecked) {
+      int walkType = getWalkType(pos);
+      if (walkType == 0) {
+        int distance = distance(pos, target);
+        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, PathNodeType.WALK);
+        openedBlocks.add(node);
+        visitedPositions.add(node.pos);
+        if (distance == 0) {
+          return node;
+        }
+      } else if (walkType == 1) {
+        int distance = distance(pos, target);
+        PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
+        openedBlocks.add(node);
+        visitedPositions.add(node.pos);
+        if (distance == 0) {
+          return node;
+        }
+      } else {
+        if (breakable && isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
+          int distance = distance(pos, target);
+          PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
+          openedBlocks.add(node);
+          visitedPositions.add(node.pos);
+          if (distance == 0) {
+            return node;
+          }
+        }
+      }
+
     }
     return null;
   }
