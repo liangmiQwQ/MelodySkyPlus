@@ -9,7 +9,7 @@ import net.minecraft.util.BlockPos;
 import java.util.*;
 
 public class SmartyPathFinder {
-  private static final BlockPos[] OFFSETS = {
+  private static final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左
       new BlockPos(0, 1, 0),  // 上
@@ -28,7 +28,6 @@ public class SmartyPathFinder {
 
   private final Set<BlockPos> visitedPositions = new HashSet<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
-  private final Set<PathNode> closedBlocks = new HashSet<>();
   private final boolean canMineBlocks;
   private final Minecraft mc;
 
@@ -122,10 +121,9 @@ public class SmartyPathFinder {
    */
   private PathNode closeBlock(PathNode parent, BlockPos target) {
     if (visitedPositions.contains(parent.pos)) {
-      closedBlocks.add(parent); // 关闭
       openedBlocks.remove(parent);
 
-      for (BlockPos offset : OFFSETS) {
+      for (BlockPos offset : BASIC_OFFSETS) {
         BlockPos pos = parent.pos.add(offset);
 
         boolean posChecked = isPosChecked(pos);
