@@ -92,14 +92,14 @@ public class AutoRubyMixin {
       Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
     } else {
       // 如果没有在进行TP
-      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500) && melodySkyPlus$jumpTimer.hasReached(30_000)) {
+      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500)) {
         // 主要部分 处理AutoHeat
         List<String> scoreBoard = ScoreboardUtils.getScoreboard();
         for (String line : scoreBoard) {
           if (line.toLowerCase().contains("heat:")) {
             int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
             if (AutoRuby.getINSTANCE().started) {
-              if (heat >= melodySkyPlus$maxHeat.getValue() && !melodySkyPlus$jumping) {
+              if (heat >= melodySkyPlus$maxHeat.getValue() && !melodySkyPlus$jumping && melodySkyPlus$jumpTimer.hasReached(30_000)) {
                 if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
                   Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
                   if (AutoRuby.getINSTANCE().started) {
@@ -118,8 +118,13 @@ public class AutoRubyMixin {
                 }
               }
             } else {
-              if ((melodySkyPlus$minHeat.getValue() >= heat || melodySkyPlus$jumpTimer.hasReached(10_000)) && melodySkyPlus$jumping) {
-                Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
+              if (melodySkyPlus$jumping) {
+                if (melodySkyPlus$minHeat.getValue() >= heat) {
+                  Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
+                }
+                if (melodySkyPlus$jumpTimer.hasReached(10_000)) {
+                  Helper.sendMessage("Found jump too much, retry in 30s.");
+                }
                 melodySkyPlus$jumping = false;
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
                 new Thread(() -> {
