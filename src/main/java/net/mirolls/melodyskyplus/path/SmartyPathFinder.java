@@ -5,6 +5,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 
 import java.util.*;
 
@@ -82,7 +83,11 @@ public class SmartyPathFinder {
         }
       }*/
 
-      PathNode block = closeBlock(nodeToClose, target);
+      PathNode block;
+      if (nodeToClose == null) {
+        return null; // 找不到路径
+      }
+      block = closeBlock(nodeToClose, target);
 
       if (block != null) {
         targetPathNode = block;
@@ -127,13 +132,15 @@ public class SmartyPathFinder {
       openedBlocks.remove(parent);
 
       for (BlockPos offset : BASIC_OFFSETS) {
-        PathNode node = openBlock(parent, target, offset, true);
+        PathNode node = openBlock(parent, target, offset, false, false, false);
         if (node != null) return node;
       }
-      // 总是要跑的
+
+      // 跳跃部分
       if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK) {
         if (jumpBoost) {
           for (int i = 0; i < 6; i++) {
+            MelodySkyPlus.LOGGER.info("Layer" + i);
             BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
             BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 1, 0);
 
@@ -142,7 +149,7 @@ public class SmartyPathFinder {
             }
 
             for (BlockPos offset : getOffsets(i + 1)) {
-              PathNode node = openBlock(parent, target, offset, false);
+              PathNode node = openBlock(parent, target, offset, true, i > 3, true);
               if (node != null) return node;
             }
           }
@@ -153,7 +160,7 @@ public class SmartyPathFinder {
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
-            PathNode node = openBlock(parent, target, offset, true);
+            PathNode node = openBlock(parent, target, offset, true, false, false);
             if (node != null) return node;
           }
         }
@@ -171,7 +178,7 @@ public class SmartyPathFinder {
     };
   }
 
-  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean breakable) {
+  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean jumpEnd, boolean disableMining, boolean disableAbility) {
     BlockPos pos = parent.pos.add(offset);
 
     boolean posChecked = isPosChecked(pos);
@@ -180,13 +187,13 @@ public class SmartyPathFinder {
       int walkType = getWalkType(pos);
       if (walkType == 0) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, PathNodeType.WALK);
+        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, jumpEnd ? PathNodeType.JUMP_END : PathNodeType.WALK);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
           return node;
         }
-      } else if (walkType == 1) {
+      } else if (walkType == 1 && !disableAbility) {
         int distance = distance(pos, target);
         PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
         openedBlocks.add(node);
@@ -195,7 +202,7 @@ public class SmartyPathFinder {
           return node;
         }
       } else {
-        if (breakable && isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
+        if (!disableMining && isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
           int distance = distance(pos, target);
           PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
           openedBlocks.add(node);

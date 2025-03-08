@@ -27,8 +27,10 @@ public class PathRenderer {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());
         } else if (pathPos.getType() == PathNodeType.MINE) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(189, 2, 13, 100), event.getPartialTicks());
-        } else { // Ability
+        } else if (pathPos.getType() == PathNodeType.ABILITY) { // Ability
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(37, 200, 255, 100), event.getPartialTicks());
+        } else {
+          RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(255, 166, 0, 100), event.getPartialTicks());
         }
       }
 
