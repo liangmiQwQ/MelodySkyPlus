@@ -143,7 +143,7 @@ public class SmartyPathFinder {
             }
           } else if (walkType == 1) {
             int distance = distance(pos, target);
-            PathNode node = new PathNode(parent.gCost + 1 + 5, distance, parent, pos, PathNodeType.ABILITY);
+            PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
             openedBlocks.add(node);
             if (distance == 0) {
               return node;
@@ -151,7 +151,7 @@ public class SmartyPathFinder {
           } else {
             if (isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
               int distance = distance(pos, target);
-              PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.MINE);
+              PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
               openedBlocks.add(node);
               if (distance == 0) {
                 return node;
@@ -207,7 +207,13 @@ public class SmartyPathFinder {
   public int getWalkType(BlockPos pos) {
     Block block = mc.theWorld.getBlockState(pos.down()).getBlock(); // 找下面的那个方块
     if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
-      return 1;
+      Block blockFoot = mc.theWorld.getBlockState(pos).getBlock();
+      Block blockHead = mc.theWorld.getBlockState(pos.add(0, 1, 0)).getBlock();
+      if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
+        return 2;
+      } else {
+        return 1;
+      }
     }
 
     double height = 0.0D;
