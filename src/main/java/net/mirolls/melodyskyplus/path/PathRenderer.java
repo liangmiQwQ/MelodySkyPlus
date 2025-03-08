@@ -23,14 +23,16 @@ public class PathRenderer {
   public void onRender(EventRender3D event) {
     if (target != null && path != null && !path.isEmpty()) {
       for (PathPos pathPos : path) {
-        if (pathPos.isToMine()) {
+        if (pathPos.getType() == PathNodeType.WALK) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());
-        } else {
+        } else if (pathPos.getType() == PathNodeType.MINE) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(189, 2, 13, 100), event.getPartialTicks());
+        } else { // Ability
+          RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(37, 200, 255, 100), event.getPartialTicks());
         }
       }
 
-      RenderUtil.drawFullBlockESP(target, new Color(44, 105, 133, 100), event.getPartialTicks());
+      RenderUtil.drawFullBlockESP(target, new Color(0, 0, 0, 100), event.getPartialTicks());
     }
   }
 

@@ -3,20 +3,12 @@ package net.mirolls.melodyskyplus.path;
 import net.minecraft.util.BlockPos;
 
 public class PathPos {
-  private boolean toMine;
+  private int type;
   private BlockPos pos;
 
-  public PathPos(boolean toMine, BlockPos pos) {
-    this.toMine = toMine;
+  public PathPos(int type, BlockPos pos) {
+    this.type = type;
     this.pos = pos;
-  }
-
-  public boolean isToMine() {
-    return toMine;
-  }
-
-  public void setToMine(boolean toMine) {
-    this.toMine = toMine;
   }
 
   public BlockPos getPos() {
@@ -25,5 +17,13 @@ public class PathPos {
 
   public void setPos(BlockPos pos) {
     this.pos = pos;
+  }
+
+  public int getType() {
+    return type;
+  }
+
+  public void setType(int type) {
+    this.type = type;
   }
 }

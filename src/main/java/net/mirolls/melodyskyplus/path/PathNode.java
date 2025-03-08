@@ -11,8 +11,9 @@ public class PathNode {
 
   public double hCost;
   public PathNode nodeParent;
+  public int type;
 
-  public PathNode(double g, double h, PathNode parent, BlockPos pos) {
+  public PathNode(double g, double h, PathNode parent, BlockPos pos, int type) {
     this.gCost = g;
     this.hCost = h;
     this.nodeParent = parent;
@@ -21,9 +22,11 @@ public class PathNode {
     }
 
     this.pos = pos;
+    this.type = type;
   }
 
   public double fCost() {
     return gCost + hCost;
   }
 }
+
