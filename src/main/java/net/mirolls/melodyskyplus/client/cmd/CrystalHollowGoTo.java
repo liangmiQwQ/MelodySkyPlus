@@ -1,6 +1,12 @@
 package net.mirolls.melodyskyplus.client.cmd;
 
+import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.path.SmartyPathFinder;
 import xyz.Melody.System.Commands.Command;
+import xyz.Melody.Utils.Helper;
+
+import java.util.List;
 
 public class CrystalHollowGoTo extends Command {
   public CrystalHollowGoTo() {
@@ -8,8 +14,21 @@ public class CrystalHollowGoTo extends Command {
   }
 
   @Override
-  public String execute(String[] strings) {
-    
+  public String execute(String[] args) {
+    if (args.length == 3) {
+      Helper.sendMessage("Start to find path");
+      long startTime = System.currentTimeMillis();
+      BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+      List<BlockPos> path = new SmartyPathFinder().findPath(targetBP);
+      long finishTime = System.currentTimeMillis();
+      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
+
+      MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+    } else if (args.length == 1) {
+      Helper.sendMessage("Renderer cleared");
+
+      MelodySkyPlus.pathRenderer.clear();
+    }
     return null;
   }
 }
