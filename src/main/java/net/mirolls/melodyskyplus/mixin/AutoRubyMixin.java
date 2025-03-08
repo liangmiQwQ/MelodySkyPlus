@@ -46,11 +46,14 @@ public class AutoRubyMixin {
   private BlockPos nextBP;
   @Shadow
   private TimerUtil timer;
-  private boolean jumping = false;
+  private boolean melodySkyPlus$jumping = false;
+  private TimerUtil melodySkyPlus$jumpTimer;
+
   private Option<Boolean> melodySkyPlus$autoHeat = null;
 
   @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
+    melodySkyPlus$jumpTimer = new TimerUtil().reset();
     melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
       if (AutoRuby.getINSTANCE() != null) {
         melodySkyPlus$maxHeat.setEnabled(val);
@@ -71,13 +74,13 @@ public class AutoRubyMixin {
 
   @Inject(method = "onEnable", at = @At("HEAD"))
   private void onEnable(CallbackInfo ci) {
-    jumping = false;
+    melodySkyPlus$jumping = false;
   }
 
   @Inject(method = "onDisable", at = @At("HEAD"))
   private void onDisable(CallbackInfo ci) {
     KeyBinding.setKeyBindState(Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode(), false);
-    jumping = false;
+    melodySkyPlus$jumping = false;
   }
 
 
@@ -89,20 +92,21 @@ public class AutoRubyMixin {
       Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
     } else {
       // 如果没有在进行TP
-      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500)) {
+      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500) && melodySkyPlus$jumpTimer.hasReached(30_000)) {
         // 主要部分 处理AutoHeat
         List<String> scoreBoard = ScoreboardUtils.getScoreboard();
         for (String line : scoreBoard) {
           if (line.toLowerCase().contains("heat:")) {
             int heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
             if (AutoRuby.getINSTANCE().started) {
-              if (heat >= melodySkyPlus$maxHeat.getValue() && !jumping) {
+              if (heat >= melodySkyPlus$maxHeat.getValue() && !melodySkyPlus$jumping) {
                 if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
                   Helper.sendMessage("Found heat too high (" + heat + "), start to jump to make heat lower.");
                   if (AutoRuby.getINSTANCE().started) {
                     AutoRuby.getINSTANCE().started = false;
                   }
-                  jumping = true;
+                  melodySkyPlus$jumping = true;
+                  melodySkyPlus$jumpTimer.reset();
                   if (melodySkyPlus$mineTop.getValue()) {
                     MelodySkyPlus.rotationLib.setCallBack(() -> {
                       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
@@ -114,9 +118,9 @@ public class AutoRubyMixin {
                 }
               }
             } else {
-              if (melodySkyPlus$minHeat.getValue() >= heat && jumping) {
+              if ((melodySkyPlus$minHeat.getValue() >= heat || melodySkyPlus$jumpTimer.hasReached(10_000)) && melodySkyPlus$jumping) {
                 Helper.sendMessage("Found heat comfortable now (" + heat + "), macro resume.");
-                jumping = false;
+                melodySkyPlus$jumping = false;
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
                 new Thread(() -> {
                   try {
@@ -137,7 +141,7 @@ public class AutoRubyMixin {
       }
     }
 
-    if (mc.thePlayer.onGround && jumping) {
+    if (mc.thePlayer.onGround && melodySkyPlus$jumping) {
       if (melodySkyPlus$mineTop.getValue()) {
         if (Math.abs(mc.thePlayer.rotationPitch - (-90F)) < 0.05) {
           mc.thePlayer.jump();
