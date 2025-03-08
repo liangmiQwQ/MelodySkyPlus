@@ -60,8 +60,8 @@ public class SmartyPathFinder {
 
     PathNode targetPathNode;
     do {
-      PathNode nodeToClose = null;
-      for (PathNode openedBlock : openedBlocks) {
+      PathNode nodeToClose = openedBlocks.poll();
+      /*for (PathNode openedBlock : openedBlocks) {
         if (nodeToClose == null) {
           nodeToClose = openedBlock;
         } else {
@@ -78,7 +78,7 @@ public class SmartyPathFinder {
             nodeToClose = openedBlock;
           }
         }
-      }
+      }*/
 
       PathNode block = closeBlock(nodeToClose, target);
 
@@ -121,7 +121,7 @@ public class SmartyPathFinder {
    * @return 如果返回 则代表到达了终点
    */
   private PathNode closeBlock(PathNode parent, BlockPos target) {
-    if (openedBlocks.contains(parent)) {
+    if (visitedPositions.contains(parent.pos)) {
       closedBlocks.add(parent); // 关闭
       openedBlocks.remove(parent);
 
