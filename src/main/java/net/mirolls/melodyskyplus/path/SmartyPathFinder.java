@@ -5,7 +5,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
 
@@ -13,7 +16,6 @@ public class SmartyPathFinder {
   private final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左
-      // new BlockPos(0, 1, 0),  // 上 留给JUMP_OFFSETS了
       new BlockPos(0, -1, 0), // 下
       new BlockPos(0, 0, 1),  // 前
       new BlockPos(0, 0, -1)  // 后
@@ -112,8 +114,35 @@ public class SmartyPathFinder {
       paths.addFirst(node.nodeParent);
     }
 
+    PathPos startAbilityNode = null;
+    List<PathPos> savedPathPos = new ArrayList<>();
     for (PathNode node : paths) {
-      returnPaths.add(new PathPos(node.type, node.pos));
+      if (node.type == PathNodeType.ABILITY) {
+        // 如果需要用技能
+        if (startAbilityNode == null) {
+          // 并且没有存储过释放技能钱的点
+          startAbilityNode = returnPaths.get(returnPaths.size() - 1); // 就存储这个点 在这个点释放技能
+        }
+        savedPathPos.add(new PathPos(node.type, node.pos));
+        // 放入缓存数组
+      } else {
+        if (startAbilityNode == null) {
+          // 正常的跑 就让它跑
+          returnPaths.add(new PathPos(node.type, node.pos));
+        } else {
+          // 找到终点了
+          if (rayTrace(startAbilityNode.getPos(), node.pos)) {
+            // 如果是可以直接看到的
+            startAbilityNode = null;
+            savedPathPos = new ArrayList<>();
+            returnPaths.add(new PathPos(PathNodeType.ABILITY_ETHER_WARP, node.pos));
+          } else {
+            // 如果是不能看到的 留给普通的aotv吧
+            // TODO: 优化普通aotv节点
+            returnPaths.addAll(savedPathPos);
+          }
+        }
+      }
     }
 
     return returnPaths;
@@ -137,7 +166,7 @@ public class SmartyPathFinder {
       }
 
       // 跳跃部分
-      if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK) {
+      if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK || parent.type == PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 6; i++) {
             MelodySkyPlus.LOGGER.info("Layer" + i);
@@ -149,7 +178,7 @@ public class SmartyPathFinder {
             }
 
             for (BlockPos offset : getOffsets(i + 1)) {
-              PathNode node = openBlock(parent, target, offset, true, i > 3, true);
+              PathNode node = openBlock(parent, target, offset, true, i < 1, true);
               if (node != null) return node;
             }
           }
@@ -160,7 +189,7 @@ public class SmartyPathFinder {
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
-            PathNode node = openBlock(parent, target, offset, true, false, false);
+            PathNode node = openBlock(parent, target, offset, true, false, true);
             if (node != null) return node;
           }
         }
@@ -309,5 +338,46 @@ public class SmartyPathFinder {
     }
 
     return state;
+  }
+
+  private boolean rayTrace(BlockPos from, BlockPos to) {
+    Vec3d target = null;
+    Vec3d[] var2 = Vec3d.points(to);
+    int var3 = var2.length;
+    int var4 = 0;
+
+    while (var4 < var3) {
+      Vec3d vec = var2[var4];
+      Vec3 playerVec = new Vec3(from.getX(), from.getY() + 0.6, from.getZ());
+      MovingObjectPosition trajectory = mc.theWorld.rayTraceBlocks(playerVec, vec.toVec3(), false, true, true);
+      if (trajectory == null) {
+        target = vec;
+        break;
+      }
+
+      label69:
+      {
+        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
+          if (trajectory.getBlockPos() == null) {
+            break label69;
+          }
+
+          boolean sameX = trajectory.getBlockPos().getX() == to.getX();
+          boolean sameY = trajectory.getBlockPos().getY() == to.getY();
+          boolean sameZ = trajectory.getBlockPos().getZ() == to.getZ();
+          if (sameX && sameY && sameZ) {
+            break label69;
+          }
+        }
+
+        ++var4;
+        continue;
+      }
+
+      target = vec;
+      break;
+    }
+
+    return target != null;
   }
 }
