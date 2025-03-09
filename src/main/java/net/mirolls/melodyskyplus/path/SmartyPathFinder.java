@@ -116,7 +116,7 @@ public class SmartyPathFinder {
     PathPos startAbilityNode = null;
     List<PathPos> savedPathPos = new ArrayList<>();
     for (PathNode node : paths) {
-      /*if (node.type == PathNodeType.ABILITY) {
+      if (node.type == PathNodeType.ABILITY) {
         // 如果需要用技能
         if (startAbilityNode == null) {
           // 并且没有存储过释放技能钱的点
@@ -143,8 +143,8 @@ public class SmartyPathFinder {
             savedPathPos = new ArrayList<>();
           }
         }
-      }*/
-      returnPaths.add(new PathPos(node.type, node.pos));
+      }
+//      returnPaths.add(new PathPos(node.type, node.pos));
     }
 
     return returnPaths;
@@ -179,7 +179,7 @@ public class SmartyPathFinder {
             }
 
             for (BlockPos offset : getOffsets(i + 1)) {
-              PathNode node = openBlock(parent, target, offset, true, i < 1, true);
+              PathNode node = openBlock(parent, target, offset, true, true, true);
               if (node != null) return node;
             }
           }
