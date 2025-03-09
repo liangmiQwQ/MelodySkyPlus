@@ -7,7 +7,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
@@ -117,7 +116,7 @@ public class SmartyPathFinder {
     PathPos startAbilityNode = null;
     List<PathPos> savedPathPos = new ArrayList<>();
     for (PathNode node : paths) {
-      if (node.type == PathNodeType.ABILITY) {
+      /*if (node.type == PathNodeType.ABILITY) {
         // 如果需要用技能
         if (startAbilityNode == null) {
           // 并且没有存储过释放技能钱的点
@@ -140,9 +139,12 @@ public class SmartyPathFinder {
             // 如果是不能看到的 留给普通的aotv吧
             // TODO: 优化普通aotv节点
             returnPaths.addAll(savedPathPos);
+            startAbilityNode = null;
+            savedPathPos = new ArrayList<>();
           }
         }
-      }
+      }*/
+      returnPaths.add(new PathPos(node.type, node.pos));
     }
 
     return returnPaths;
@@ -169,7 +171,6 @@ public class SmartyPathFinder {
       if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK || parent.type == PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 6; i++) {
-            MelodySkyPlus.LOGGER.info("Layer" + i);
             BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
             BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 1, 0);
 
@@ -224,16 +225,16 @@ public class SmartyPathFinder {
         }
       } else if (walkType == 1 && !disableAbility) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + 3, distance, parent, pos, PathNodeType.ABILITY);
+        PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathNodeType.ABILITY);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
           return node;
         }
-      } else {
-        if (!disableMining && isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
+      } else if (walkType == 2 && !disableMining) {
+        if (isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
           int distance = distance(pos, target);
-          PathNode node = new PathNode(parent.gCost + 1 + 4, distance, parent, pos, PathNodeType.MINE);
+          PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathNodeType.MINE);
           openedBlocks.add(node);
           visitedPositions.add(node.pos);
           if (distance == 0) {
@@ -278,7 +279,7 @@ public class SmartyPathFinder {
       Block blockFoot = getBlockState(pos).getBlock();
       Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
       if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
-        return 2;
+        return 3; // 无敌情况 舍去
       } else {
         return 1;
       }
@@ -287,17 +288,13 @@ public class SmartyPathFinder {
     double height = 0.0D;
     Block blockFoot = getBlockState(pos).getBlock();
     Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
-    Block blockTop = getBlockState(pos.add(0, 2, 0)).getBlock();
     if (blockFoot != Blocks.air) {
       height += blockFoot.getBlockBoundsMaxY();
     }
     if (blockHead != Blocks.air) {
       height += blockHead.getBlockBoundsMaxY();
     }
-    if (blockTop != Blocks.air) {
-      height += blockTop.getBlockBoundsMaxY();
-    }
-    return height < 0.6D ? 0 : 2;
+    return height < 0.2D ? 0 : 2;
   }
 
   public boolean isBreakable(BlockPos pos) {
