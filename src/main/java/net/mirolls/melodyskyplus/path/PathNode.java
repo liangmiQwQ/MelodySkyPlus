@@ -28,5 +28,17 @@ public class PathNode {
   public double fCost() {
     return gCost + hCost;
   }
+
+  @Override
+  public String toString() {
+    return "PathNode{" +
+        "pos=" + pos +
+        ", posParent=" + posParent +
+        ", gCost=" + gCost +
+        ", hCost=" + hCost +
+        ", nodeParent=" + nodeParent +
+        ", type=" + type +
+        '}';
+  }
 }
 

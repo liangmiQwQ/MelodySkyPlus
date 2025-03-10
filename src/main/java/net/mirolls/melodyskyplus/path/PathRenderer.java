@@ -36,7 +36,7 @@ public class PathRenderer {
         }
       }
 
-      RenderUtil.drawFullBlockESP(target, new Color(0, 0, 0, 100), event.getPartialTicks());
+      RenderUtil.drawSolidBlockESP(target, Color.BLUE.getBlue(), event.getPartialTicks());
     }
   }
 
