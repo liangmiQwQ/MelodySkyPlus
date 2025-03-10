@@ -7,6 +7,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
@@ -52,10 +53,13 @@ public class SmartyPathFinder {
   }
 
   public List<PathPos> findPath(BlockPos target) {
-    BlockPos posPlayer = mc.thePlayer.getPosition();
+    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1);
+    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
+    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1);
+    BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
     PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathNodeType.WALK);
 
-    if (posPlayer == target) {
+    if (posPlayer.equals(target)) {
       return new ArrayList<>();
       // 如果开局即巅峰 则直接返回
     }
@@ -63,6 +67,8 @@ public class SmartyPathFinder {
     visitedPositions.add(root.pos);
 
     PathNode targetPathNode;
+
+    MelodySkyPlus.LOGGER.info("Start to find path. player pos:" + posPlayer + " targetPos:" + target);
     do {
       PathNode nodeToClose = openedBlocks.poll();
       /*for (PathNode openedBlock : openedBlocks) {
@@ -84,11 +90,11 @@ public class SmartyPathFinder {
         }
       }*/
 
-      PathNode block;
       if (nodeToClose == null) {
         return null; // 找不到路径
       }
-      block = closeBlock(nodeToClose, target);
+
+      PathNode block = closeBlock(nodeToClose, target);
 
       if (block != null) {
         targetPathNode = block;
@@ -101,6 +107,7 @@ public class SmartyPathFinder {
   }
 
   private List<PathPos> buildPath(PathNode endNode) {
+    MelodySkyPlus.LOGGER.info("Building Paths");
     LinkedList<PathNode> paths = new LinkedList<>();
     List<PathPos> returnPaths = new ArrayList<>();
 
@@ -130,7 +137,8 @@ public class SmartyPathFinder {
           returnPaths.add(new PathPos(node.type, node.pos));
         } else {
           // 找到终点了
-          if (rayTrace(startAbilityNode.getPos(), node.pos)) {
+          if (rayTrace(startAbilityNode.getPos(), node.pos.down() /*看这个方块下面这个 落脚点*/)
+              && getBlockState(node.pos.down()).getBlock().getMaterial().isSolid()) {
             // 如果是可以直接看到的
             startAbilityNode = null;
             savedPathPos = new ArrayList<>();
