@@ -12,6 +12,7 @@ public class MelodyPlusModules {
 
     if (AntiBug.isBugRemoved()) {
       newModules.add(new Failsafe());
+      newModules.add(new AutoReconnect());
       newModules.add(new AutoFilet());
       newModules.add(new AutoGold());
     }
