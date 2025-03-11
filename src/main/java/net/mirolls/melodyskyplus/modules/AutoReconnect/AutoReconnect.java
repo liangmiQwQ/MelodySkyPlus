@@ -53,6 +53,7 @@ public class AutoReconnect extends Module {
           oneSecond(callbackSetString, callbackReconnect);
           callbackSetString.call(String.valueOf(second));
         } else {
+          Thread.sleep(1000);
           callbackReconnect.call();
         }
       } catch (InterruptedException e) {

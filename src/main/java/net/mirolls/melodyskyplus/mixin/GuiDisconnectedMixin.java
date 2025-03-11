@@ -20,6 +20,7 @@ public class GuiDisconnectedMixin extends GuiScreen {
   private static final int GAP = 22;
   @Shadow
   private int field_175353_i;
+  private boolean reconnecting = false;
 
   @Inject(method = "initGui", at = @At("RETURN"))
   public void initGui(CallbackInfo ci) {
@@ -36,18 +37,9 @@ public class GuiDisconnectedMixin extends GuiScreen {
         )
     );
     if (Objects.requireNonNull(AutoReconnect.getInstance()).isEnabled()) {
+      reconnecting = true;
       // 自动重新链接
-      AutoReconnect.getInstance().reconnect((second) -> {
-        GuiButton reconnectButton = null;
-        for (GuiButton button : buttonList) {
-          if (button.id == 8091) {
-            reconnectButton = button;
-          }
-        }
-        if (reconnectButton != null) {
-          reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
-        }
-      }, this::reconnect);
+      autoReconnect();
     }
   }
 
@@ -57,12 +49,35 @@ public class GuiDisconnectedMixin extends GuiScreen {
       reconnect();
     }
     if (button.id == 8091) {
-      Objects.requireNonNull(AutoReconnect.getInstance()).setEnabled(!AutoReconnect.getInstance().isEnabled());
-      // 进行设置
+      boolean setValue = !Objects.requireNonNull(AutoReconnect.getInstance()).isEnabled();
+      Objects.requireNonNull(AutoReconnect.getInstance()).setEnabled(setValue);
+      if (setValue && !reconnecting) {
+        reconnecting = true;
+        autoReconnect();
+      } else if (!setValue && reconnecting) {
+        reconnecting = false;
+        // 进行设置
+      }
     }
   }
 
   private void reconnect() {
-    FMLClientHandler.instance().connectToServer(new GuiMainMenu(), new ServerData("server", Objects.requireNonNull(AutoReconnect.getInstance()).host, false));
+    mc.addScheduledTask(() -> {
+      FMLClientHandler.instance().connectToServer(new GuiMainMenu(), new ServerData("server", Objects.requireNonNull(AutoReconnect.getInstance()).host, false));
+    });
+  }
+
+  private void autoReconnect() {
+    Objects.requireNonNull(AutoReconnect.getInstance()).reconnect((second) -> {
+      GuiButton reconnectButton = null;
+      for (GuiButton button : buttonList) {
+        if (button.id == 8091) {
+          reconnectButton = button;
+        }
+      }
+      if (reconnectButton != null) {
+        reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
+      }
+    }, this::reconnect);
   }
 }
