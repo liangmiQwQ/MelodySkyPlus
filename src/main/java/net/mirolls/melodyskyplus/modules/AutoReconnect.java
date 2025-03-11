@@ -9,6 +9,7 @@ import java.util.Iterator;
 public class AutoReconnect extends Module {
 
   private static AutoReconnect INSTANCE;
+  public String host;
 
   public AutoReconnect() {
     super("AutoReconnect", ModuleType.QOL);
