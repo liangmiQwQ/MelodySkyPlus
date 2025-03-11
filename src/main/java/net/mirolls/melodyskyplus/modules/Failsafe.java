@@ -67,7 +67,7 @@ public class Failsafe extends Module {
 
 
   public Failsafe() {
-    super("Failsafe", ModuleType.QOL);
+    super("Failsafe", ModuleType.Mining);
     antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
       if (getINSTANCE() != null) {
         INSTANCE.fakePlayerCheckMessage.setEnabled(true);
