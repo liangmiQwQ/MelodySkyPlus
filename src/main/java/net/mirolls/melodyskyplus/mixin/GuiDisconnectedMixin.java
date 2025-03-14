@@ -78,6 +78,10 @@ public class GuiDisconnectedMixin extends GuiScreen {
       if (reconnectButton != null) {
         reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
       }
-    }, this::reconnect);
+    }, () -> {
+      if (AutoReconnect.getInstance().isEnabled()) {
+        reconnect();
+      }
+    });
   }
 }
