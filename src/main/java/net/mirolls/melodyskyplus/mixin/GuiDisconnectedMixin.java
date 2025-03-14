@@ -46,6 +46,7 @@ public class GuiDisconnectedMixin extends GuiScreen {
   @Inject(method = "actionPerformed", at = @At("RETURN"))
   protected void actionPerformed(GuiButton button, CallbackInfo ci) {
     if (button.id == 8090) {
+      reconnecting = true;
       reconnect();
     }
     if (button.id == 8091) {
@@ -62,9 +63,12 @@ public class GuiDisconnectedMixin extends GuiScreen {
   }
 
   private void reconnect() {
-    mc.addScheduledTask(() -> {
-      FMLClientHandler.instance().connectToServer(new GuiMainMenu(), new ServerData("server", Objects.requireNonNull(AutoReconnect.getInstance()).host, false));
-    });
+    if (reconnecting) {
+      reconnecting = false;
+      mc.addScheduledTask(() -> {
+        FMLClientHandler.instance().connectToServer(new GuiMainMenu(), new ServerData("server", Objects.requireNonNull(AutoReconnect.getInstance()).host, false));
+      });
+    }
   }
 
   private void autoReconnect() {
@@ -78,6 +82,10 @@ public class GuiDisconnectedMixin extends GuiScreen {
       if (reconnectButton != null) {
         reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
       }
-    }, this::reconnect);
+    }, () -> {
+      if (AutoReconnect.getInstance().isEnabled()) {
+        reconnect();
+      }
+    });
   }
 }
