@@ -98,7 +98,7 @@ public class NgComeReact {
 
                   if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
                       && currentArea != Areas.In_Dungeon) {
-                    mc.thePlayer.sendChatMessage(replyMessage[new Random().nextInt(replyMessage.length)]);
+                    mc.thePlayer.sendChatMessage("/ac " + replyMessage[new Random().nextInt(replyMessage.length)]);
                   }
                 }
               } else {

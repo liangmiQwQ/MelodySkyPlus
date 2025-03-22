@@ -207,7 +207,7 @@ public class React {
     if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
         && currentArea != Areas.In_Dungeon) {
       if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
-        mc.thePlayer.sendChatMessage(replyMessage[random.nextInt(replyMessage.length)].trim());
+        mc.thePlayer.sendChatMessage("/ac " + replyMessage[random.nextInt(replyMessage.length)].trim());
       }
     }
   }
