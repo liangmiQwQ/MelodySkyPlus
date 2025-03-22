@@ -17,6 +17,8 @@
   ],
   "client": [
     "GuiAltManager",
+    "GuiConnectingMixin",
+    "GuiDisconnectedMixin",
     "MiningProtectMixin"
   ],
   "server": [],

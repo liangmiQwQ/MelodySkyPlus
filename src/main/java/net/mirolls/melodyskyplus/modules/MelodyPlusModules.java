@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.modules;
 
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.modules.AutoReconnect.AutoReconnect;
 import xyz.Melody.module.Module;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ public class MelodyPlusModules {
 
     if (AntiBug.isBugRemoved()) {
       newModules.add(new Failsafe());
+      newModules.add(new AutoReconnect());
       newModules.add(new AutoFilet());
       newModules.add(new AutoGold());
     }
