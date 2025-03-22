@@ -10,7 +10,6 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.StringUtils;
-import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,6 +40,8 @@ public class AutoRubyMixin {
 
   private final Numbers<Double> melodySkyPlus$heatLimit = new Numbers<>("HeatLimit", 95.0, 1.0, 100.0, 1.0);
   @Shadow
+  public boolean started;
+  @Shadow
   private TimerUtil ewTimer;
   @Shadow
   private boolean etherWarped;
@@ -54,6 +55,8 @@ public class AutoRubyMixin {
 
   @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
+    reactingTick = -1;
+
     melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
       if (AutoRuby.getINSTANCE() != null) {
         melodySkyPlus$heatLimit.setEnabled(val);
@@ -68,6 +71,11 @@ public class AutoRubyMixin {
     return returnValues;
   }
 
+  @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
+  public void onEnable(CallbackInfo ci) {
+    reactingTick = -1;
+  }
+
 
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
   private void idk(EventTick event, CallbackInfo ci) {
@@ -77,26 +85,24 @@ public class AutoRubyMixin {
       Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
     } else {
       // 如果没有在进行TP
-      if (melodySkyPlus$autoHeat.getValue() && AutoRubyTimer.timer.hasReached(500)) {
-        // 主要部分 处理AutoHeat
-        List<String> scoreBoard = ScoreboardUtils.getScoreboard();
-
-        int heat = 0;
-        for (String line : scoreBoard) {
-          if (line.toLowerCase().contains("heat:")) {
-            heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
-            break;
-          }
-        }
-
+      if (melodySkyPlus$autoHeat.getValue()) {
         if (AutoRuby.getINSTANCE().started) {
+          // 主要部分 处理AutoHeat
+          List<String> scoreBoard = ScoreboardUtils.getScoreboard();
+
+          int heat = 0;
+          for (String line : scoreBoard) {
+            if (line.toLowerCase().contains("heat:")) {
+              heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+              break;
+            }
+          }
+
           if (heat >= melodySkyPlus$heatLimit.getValue() && reactingTick == -1) {
-            if (mc.thePlayer.posY <= 64 && mc.thePlayer.posY >= 64 - 6) {
-              Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
-              if (AutoRuby.getINSTANCE().started) {
-                reactingTick = 0;
-                AutoRuby.getINSTANCE().started = false;
-              }
+            Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
+            if (AutoRuby.getINSTANCE().started) {
+              reactingTick = 0;
+              AutoRuby.getINSTANCE().started = false;
             }
           }
         }
@@ -106,26 +112,35 @@ public class AutoRubyMixin {
     if (reactingTick > -1) {
       reactingTick++;
 
-      if (reactingTick == 10) {
+      if (reactingTick == 5) {
         for (int i = 0; i < 9; ++i) {
           ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-          if (item.getDisplayName().equalsIgnoreCase("water bottle")) {
+          if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
             prevItem = mc.thePlayer.inventory.currentItem;
             mc.thePlayer.inventory.currentItem = i;
           }
         }
-      } else if (reactingTick == 20) {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-      } else if (reactingTick == 140) {
+      } else if (reactingTick == 15) {
+        ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+
+        if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+        } else {
+          Helper.sendMessage("Missing Water Bottle in hotbar.");
+          reactingTick = -1;
+          AutoRuby.getINSTANCE().started = true;
+        }
+      } else if (reactingTick == 160) {
+
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-      } else if (reactingTick == 150) {
+      } else if (reactingTick == 170) {
         for (int i = 0; i < 9; ++i) {
           ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
           if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
             mc.thePlayer.inventory.currentItem = i;
           }
         }
-      } else if (reactingTick == 160) {
+      } else if (reactingTick == 180) {
         ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
         if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
           mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
@@ -134,7 +149,7 @@ public class AutoRubyMixin {
           reactingTick = -1;
           AutoRuby.getINSTANCE().started = true;
         }
-      } else if (reactingTick == 170) {
+      } else if (reactingTick == 190) {
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
           Container container = ((GuiChest) gui).inventorySlots;
@@ -152,9 +167,9 @@ public class AutoRubyMixin {
             }
           }
         } else {
-          reactingTick = 149; // 重新返回上一步 打开电话
+          reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 290) {
+      } else if (reactingTick == 450) {
         // 卖水
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
@@ -162,22 +177,19 @@ public class AutoRubyMixin {
           if (container instanceof ContainerChest) {
             String chestName = this.melodySkyPlus$getGuiName(gui);
             if (chestName.startsWith("Alchemist")) {
-
               for (int i = 0; i < 9; ++i) {
-                // 卖水
                 ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-                if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Glass Bottle")) {
-                  melodySkyPlus$clickSlot(i, 0, 0);
-                  break;
+                if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
+                  melodySkyPlus$clickSlot(i + 81, 0, 0);
                 }
               }
             }
           }
         } else {
           mc.thePlayer.closeScreen();
-          reactingTick = 149; // 重新返回上一步 打开电话
+          reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 300) {
+      } else if (reactingTick == 470) {
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
           Container container = ((GuiChest) gui).inventorySlots;
@@ -187,7 +199,7 @@ public class AutoRubyMixin {
               for (Slot slot : container.inventorySlots) {
                 // 买水
                 ItemStack item = slot.getStack(); // 获取item
-                if (StringUtils.stripControlCodes(item.getDisplayName()).equals("Water Bottle")) {
+                if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
                   melodySkyPlus$clickSlot(slot.getSlotIndex(), 0, 0);
                   // 买水
                   break;
@@ -197,12 +209,13 @@ public class AutoRubyMixin {
           }
         } else {
           mc.thePlayer.closeScreen();
-          reactingTick = 149; // 重新返回上一步 打开电话
+          reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 310) {
+      } else if (reactingTick == 490) {
         mc.thePlayer.closeScreen();
         Helper.sendMessage("Bought water and drank successfully");
-      } else if (reactingTick == 320) {
+      } else if (reactingTick == 510) {
+        mc.thePlayer.inventory.currentItem = prevItem;
         reactingTick = -1;
         AutoRuby.getINSTANCE().started = true;
       }
