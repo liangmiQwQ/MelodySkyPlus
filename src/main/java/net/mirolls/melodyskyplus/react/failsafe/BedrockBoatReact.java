@@ -43,7 +43,7 @@ public class BedrockBoatReact extends React {
         if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
             && currentArea != Areas.In_Dungeon) {
           if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
-            mc.thePlayer.sendChatMessage(messages[random.nextInt(messages.length)].trim());
+            mc.thePlayer.sendChatMessage("/ac " + messages[random.nextInt(messages.length)].trim());
           }
         }
 
