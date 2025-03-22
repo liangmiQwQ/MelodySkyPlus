@@ -78,12 +78,12 @@ processResources {
 }
 
 sourceSets {
-//    main {
-//        ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
-//    }
-    mixin {
-        add("main", "refmap.name.json")
+    main {
+        ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
     }
+//    mixin {
+//        add("main", "refmap.melodyskyplus.json")
+//    }
 }
 
 jar {
