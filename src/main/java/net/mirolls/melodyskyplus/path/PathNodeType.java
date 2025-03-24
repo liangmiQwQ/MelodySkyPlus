@@ -5,7 +5,7 @@ public class PathNodeType {
   public static final int MINE = 1;
   public static final int ABILITY = 2;
   public static final int JUMP_END = 3;
-  public static final int ABILITY_ETHER_WARP = 4;
-  public static final int ABILITY_TELEPORT = 5;
+  public static final int ABILITY_START = 4;
+  public static final int ABILITY_END = 5;
 
 }

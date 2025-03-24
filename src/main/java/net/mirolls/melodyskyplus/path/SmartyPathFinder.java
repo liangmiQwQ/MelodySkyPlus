@@ -13,6 +13,11 @@ import xyz.Melody.Utils.Vec3d;
 import java.util.*;
 
 public class SmartyPathFinder {
+  // * => SmartyPantFinder: 利用A*算法 返回 BlockPos List 包含需要经过的BlockPos List
+  // => PathTransferor: (客户端: 做好路径的转角平滑 让其更像真人) (服务端: 解析剩余的BlockPos 返回计算机可读的自定义指令 参见 Path.md)
+  // => PathExec: 执行自定义指令 (算法层面: 需要自行判断如何进行Ability实用 自行处理拐弯的圆滑 适当实用aotv加速)
+
+
   private final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左
@@ -71,24 +76,6 @@ public class SmartyPathFinder {
     MelodySkyPlus.LOGGER.info("Start to find path. player pos:" + posPlayer + " targetPos:" + target);
     do {
       PathNode nodeToClose = openedBlocks.poll();
-      /*for (PathNode openedBlock : openedBlocks) {
-        if (nodeToClose == null) {
-          nodeToClose = openedBlock;
-        } else {
-          if (Math.abs(openedBlock.fCost() - nodeToClose.fCost()) < 0.1D) {
-            double mathDistanceToTargetOpenedBlocks = Math.hypot(Math.hypot(openedBlock.pos.getX(), openedBlock.pos.getY()), openedBlock.pos.getZ());
-            double mathDistanceToTargetNodeToClose = Math.hypot(Math.hypot(nodeToClose.pos.getX(), nodeToClose.pos.getY()), nodeToClose.pos.getZ());
-
-            if (mathDistanceToTargetOpenedBlocks < mathDistanceToTargetNodeToClose) {
-              // 如果说还是opened更小 那还是进行一个替换比较好 (这是直线距离 不采用曼哈顿距离)
-              nodeToClose = openedBlock;
-            }
-          } else if (openedBlock.fCost() < nodeToClose.fCost()) {
-            // 如果这个东西比现在的玩意更实惠 我们选更好的
-            nodeToClose = openedBlock;
-          }
-        }
-      }*/
 
       if (nodeToClose == null) {
         return null; // 找不到路径
@@ -103,7 +90,7 @@ public class SmartyPathFinder {
     } while (true);
 
 
-    return buildPath(targetPathNode); // TODO: 增加返回 优化节点 剔除冗余等
+    return buildPath(targetPathNode); // 关于节点的优化 这里省这部分逻辑 移动到 PathTransferor 和 PathExec 间接运行
   }
 
   private List<PathPos> buildPath(PathNode endNode) {
@@ -120,39 +107,25 @@ public class SmartyPathFinder {
       paths.addFirst(node.nodeParent);
     }
 
-    PathPos startAbilityNode = null;
-    List<PathPos> savedPathPos = new ArrayList<>();
+    BlockPos abilityStartPos = null;
     for (PathNode node : paths) {
       if (node.type == PathNodeType.ABILITY) {
-        // 如果需要用技能
-        if (startAbilityNode == null) {
-          // 并且没有存储过释放技能钱的点
-          startAbilityNode = returnPaths.get(returnPaths.size() - 1); // 就存储这个点 在这个点释放技能
+        // 如果该点的类型是技能
+        if (abilityStartPos == null) {
+          // 这是第一个技能点
+          abilityStartPos = returnPaths.get(returnPaths.size() - 1).getPos(); // 要在这个点释放技能 记录这个点
         }
-        savedPathPos.add(new PathPos(node.type, node.pos));
-        // 放入缓存数组
       } else {
-        if (startAbilityNode == null) {
-          // 正常的跑 就让它跑
+        if (abilityStartPos == null) {
+          // 正常节点 继续
           returnPaths.add(new PathPos(node.type, node.pos));
         } else {
           // 找到终点了
-          if (rayTrace(startAbilityNode.getPos(), node.pos.down() /*看这个方块下面这个 落脚点*/)
-              && getBlockState(node.pos.down()).getBlock().getMaterial().isSolid()) {
-            // 如果是可以直接看到的
-            startAbilityNode = null;
-            savedPathPos = new ArrayList<>();
-            returnPaths.add(new PathPos(PathNodeType.ABILITY_ETHER_WARP, node.pos));
-          } else {
-            // 如果是不能看到的 留给普通的aotv吧
-            // TODO: 优化普通aotv节点
-            returnPaths.addAll(savedPathPos);
-            startAbilityNode = null;
-            savedPathPos = new ArrayList<>();
-          }
+          returnPaths.add(new PathPos(PathNodeType.ABILITY_START, abilityStartPos));
+          returnPaths.add(new PathPos(PathNodeType.ABILITY_END, node.pos));
+          abilityStartPos = null;
         }
       }
-//      returnPaths.add(new PathPos(node.type, node.pos));
     }
 
     return returnPaths;
