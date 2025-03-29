@@ -171,9 +171,9 @@ public class Failsafe extends Module {
 
         // 先进行基岩部分的检查
         // 如果基岩部分检查出来有问题就不进行下一部分的检查了
-        int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1);
-        int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
-        int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1);
+        int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
+        int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1 - 1);
+        int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
         BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
         BlockPos blockPosDown = posPlayer.down();
         Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
