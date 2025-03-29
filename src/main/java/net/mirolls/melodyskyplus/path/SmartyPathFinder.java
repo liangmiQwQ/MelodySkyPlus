@@ -121,7 +121,7 @@ public class SmartyPathFinder {
           // 非技能情况
           if (node.type == PathNodeType.JUMP_END && node.pos.getY() <= node.posParent.getY() + 1) {
             // 台阶支持
-            IBlockState blockState = getBlockState(node.pos);
+            IBlockState blockState = getBlockState(node.pos.down());
             if (blockState.getBlock().getRegistryName().contains("slab")) {
               if (blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
                 node.type = PathNodeType.WALK;
@@ -158,8 +158,7 @@ public class SmartyPathFinder {
         if (node != null) return node;
       }
 
-      // 跳跃部分
-      if (distance(parent.pos.up(), target) < distance(parent.pos, target) && parent.type == PathNodeType.WALK || parent.type == PathNodeType.JUMP_END) {
+      if (parent.type == PathNodeType.WALK || parent.type == PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 6; i++) {
             BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
