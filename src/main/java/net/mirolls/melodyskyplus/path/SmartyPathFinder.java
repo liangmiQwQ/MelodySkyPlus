@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.path;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
@@ -21,9 +22,9 @@ public class SmartyPathFinder {
   private final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左
-      new BlockPos(0, -1, 0), // 下
       new BlockPos(0, 0, 1),  // 前
-      new BlockPos(0, 0, -1)  // 后
+      new BlockPos(0, 0, -1),  // 后
+      new BlockPos(0, -1, 0)
   };
 
   private final Set<BlockPos> specialUnbreakableBlocks;
@@ -59,7 +60,7 @@ public class SmartyPathFinder {
 
   public List<PathPos> findPath(BlockPos target) {
     int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
-    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1 - 1);
+    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
     int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
     BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
     PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathNodeType.WALK);
@@ -117,7 +118,16 @@ public class SmartyPathFinder {
         }
       } else {
         if (abilityStartPos == null) {
-          // 正常节点 继续
+          // 非技能情况
+          if (node.type == PathNodeType.JUMP_END && node.pos.getY() <= node.posParent.getY() + 1) {
+            // 台阶支持
+            IBlockState blockState = getBlockState(node.pos);
+            if (blockState.getBlock().getRegistryName().contains("slab")) {
+              if (blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
+                node.type = PathNodeType.WALK;
+              }
+            }
+          }
           returnPaths.add(new PathPos(node.type, node.pos));
         } else {
           // 找到终点了
@@ -159,13 +169,13 @@ public class SmartyPathFinder {
               break;
             }
 
-            for (BlockPos offset : getOffsets(i + 1)) {
+            for (BlockPos offset : getJumpOffsets(i + 1)) {
               PathNode node = openBlock(parent, target, offset, true, true, true);
               if (node != null) return node;
             }
           }
         } else {
-          for (BlockPos offset : getOffsets(1)) {
+          for (BlockPos offset : getJumpOffsets(1)) {
             BlockPos posFoot = mc.thePlayer.getPosition().add(0, 1, 0);
             BlockPos posHead = mc.thePlayer.getPosition().add(0, 2, 0);
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
@@ -180,7 +190,7 @@ public class SmartyPathFinder {
     return null;
   }
 
-  private BlockPos[] getOffsets(int layer) {
+  private BlockPos[] getJumpOffsets(int layer) {
     return new BlockPos[]{
         new BlockPos(1, layer, 0),
         new BlockPos(0, layer, 1),
