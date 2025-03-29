@@ -58,9 +58,9 @@ public class SmartyPathFinder {
   }
 
   public List<PathPos> findPath(BlockPos target) {
-    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1);
-    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
-    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1);
+    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
+    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1 - 1);
+    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
     BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
     PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathNodeType.WALK);
 
@@ -213,9 +213,10 @@ public class SmartyPathFinder {
           return node;
         }
       } else if (walkType == 2 && !disableMining) {
-        if (isBreakable(pos) && parent.type != PathNodeType.ABILITY) {
+        int breakable = getBreakable(pos);
+        if (breakable != -1 && parent.type != PathNodeType.ABILITY) {
           int distance = distance(pos, target);
-          PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathNodeType.MINE);
+          PathNode node = new PathNode(parent.gCost + 1 + breakable, distance, parent, pos, PathNodeType.MINE);
           openedBlocks.add(node);
           visitedPositions.add(node.pos);
           if (distance == 0) {
@@ -278,9 +279,9 @@ public class SmartyPathFinder {
     return height < 0.2D ? 0 : 2;
   }
 
-  public boolean isBreakable(BlockPos pos) {
+  public int getBreakable(BlockPos pos) {
     if (!canMineBlocks) {// 如果不能挖掘方块
-      return false;
+      return -1;
     }
     Block footBlock = getBlockState(pos).getBlock();
     Block headBlock = getBlockState(pos).getBlock();
@@ -290,22 +291,36 @@ public class SmartyPathFinder {
         Blocks.bedrock
     );
 
-    boolean footBlockBreakable = true;
-    boolean headBlockBreakable = true;
+    int returnValue = 0;
 
     if (unbreakableBlocks.contains(footBlock)) {
-      footBlockBreakable = false;
+      return -1;
     } else if (specialUnbreakableBlocks.contains(pos)) {
-      footBlockBreakable = false;
+      return -1;
     }
 
     if (unbreakableBlocks.contains(headBlock)) {
-      headBlockBreakable = false;
+      return -1;
     } else if (specialUnbreakableBlocks.contains(pos)) {
-      headBlockBreakable = false;
+      return -1;
     }
 
-    return footBlockBreakable && headBlockBreakable;
+    if (footBlock == Blocks.stone) {
+      returnValue += 1;
+    } else if (footBlock == Blocks.dirt || footBlock == Blocks.grass) {
+      returnValue += 6;
+    } else {
+      returnValue += 20;
+    }
+
+    if (headBlock == Blocks.stone) {
+      returnValue += 1;
+    } else if (footBlock == Blocks.dirt || footBlock == Blocks.grass) {
+      returnValue += 6;
+    } else {
+      returnValue += 20;
+    }
+    return returnValue;
   }
 
   private IBlockState getBlockState(BlockPos pos) {
