@@ -24,7 +24,7 @@ public class PathPos {
   }
 
   public Vec3d toVec3d() {
-    return new Vec3d(this.pos.getX() + 0.5, this.pos.getY() + 0.5, this.pos.getZ() + 0.5);
+    return Vec3d.ofCenter(pos);
   }
 
   public BlockPos getPos() {

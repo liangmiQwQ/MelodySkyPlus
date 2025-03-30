@@ -5,15 +5,15 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import xyz.Melody.Utils.Vec3d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PathExec {
   public final List<PathPos> importantNodes = new ArrayList<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
+  private ArrayList<Vec3d> routeVec = new ArrayList<>();
 
 
   private IBlockState getBlockState(BlockPos pos) {
@@ -57,7 +57,7 @@ public class PathExec {
 
   private boolean canGo(BlockPos startPos, BlockPos target) {
     int yPos = startPos.getY();
-    for (BlockPos pos : getBlocksBetween(startPos, target)) {
+    for (BlockPos pos : calculate(startPos, target)) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
       IBlockState blockState = getBlockState(bp);
       if (blockState.getBlock() != Blocks.air) {
@@ -84,45 +84,78 @@ public class PathExec {
     return true;
   }
 
-  private List<BlockPos> getBlocksBetween(BlockPos start, BlockPos end) {
-    List<BlockPos> blocks = new ArrayList<>();
+  private ArrayList<BlockPos> calculate(BlockPos start, BlockPos end) {
+    routeVec = updateVec(start, end);
+    if (!routeVec.isEmpty()) {
 
-    int x0 = start.getX();
-    int z0 = start.getZ();
-    int x1 = end.getX();
-    int z1 = end.getZ();
+      int minX = Math.min(start.getX(), end.getX()) - 5;
+      int maxX = Math.max(start.getX(), end.getX()) + 5;
+      int minZ = Math.min(start.getZ(), end.getZ()) - 5;
+      int maxZ = Math.max(start.getZ(), end.getZ()) + 5;
+      ArrayList<Vec3d> blocks = new ArrayList<>();
 
-    int dx = Math.abs(x1 - x0);
-    int dz = Math.abs(z1 - z0);
-
-    int sx = x0 < x1 ? 1 : -1;
-    int sz = z0 < z1 ? 1 : -1;
-
-    int err = dx - dz;
-    int e2;
-
-    while (true) {
-      blocks.add(new BlockPos(x0, start.getY(), z0));
-
-      if (x0 == x1 && z0 == z1) {
-        break;
+      for (int x = minX; x <= maxX; ++x) {
+        for (int z = minZ; z <= maxZ; ++z) {
+          BlockPos blockPos = new BlockPos(x, start.getY(), z);
+          blocks.add(Vec3d.ofCenter(blockPos));
+        }
       }
 
-      e2 = 2 * err;
+      blocks.removeIf(this::checkDistance);
 
-      if (e2 > -dz) {
-        err -= dz;
-        x0 += sx;
+      ArrayList<BlockPos> poses = new ArrayList<>();
+
+      for (Vec3d v3d : blocks) {
+        poses.add(new BlockPos(v3d.getX(), v3d.getY(), v3d.getZ()));
       }
 
-      if (e2 < dx) {
-        err += dx;
-        z0 += sz;
-      }
+      return poses.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
     }
 
-    return blocks;
+    return new ArrayList<>();
   }
 
+  private ArrayList<Vec3d> updateVec(BlockPos start, BlockPos end) {
+    ArrayList<Vec3d> vecPoses = new ArrayList<>();
 
+    double deltaX = end.getX() - start.getX();
+    // double deltaY = end.getY() - start.getY();
+    double deltaZ = end.getZ() - start.getZ();
+    double maxDist = Math.max(Math.abs(deltaX), /*Math.abs(deltaY),*/ Math.abs(deltaZ)) * 25.0;
+    double incX = deltaX / maxDist;
+    // double incY = deltaY / maxDist;
+    double incZ = deltaZ / maxDist;
+    double xPos = start.getX();
+    // double yPos = start.getY();
+    double zPos = start.getZ();
+
+    for (int huh = 1; (double) huh <= maxDist; ++huh) {
+      xPos += incX;
+      // yPos += incY;
+      zPos += incZ;
+      vecPoses.add(new Vec3d(xPos, /* yPos */ start.getY(), zPos));
+    }
+
+    return vecPoses;
+  }
+
+  private boolean checkDistance(Vec3d vec) {
+    Iterator<Vec3d> var2 = routeVec.iterator();
+
+    boolean x;
+    boolean y;
+    boolean z;
+    do {
+      if (!var2.hasNext()) {
+        return true;
+      }
+
+      Vec3d v = var2.next();
+      x = Math.abs(v.getX() - vec.getX()) <= 0.6;
+      y = Math.abs(v.getY() - vec.getY()) <= 1.0;
+      z = Math.abs(v.getZ() - vec.getZ()) <= 0.6;
+    } while (!x || !y || !z);
+
+    return false;
+  }
 }
