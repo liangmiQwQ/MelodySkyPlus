@@ -14,11 +14,6 @@ import xyz.Melody.Utils.Vec3d;
 import java.util.*;
 
 public class SmartyPathFinder {
-  // * => SmartyPantFinder: 利用A*算法 返回 BlockPos List 包含需要经过的BlockPos List
-  // => PathTransferor: (客户端: 做好路径的转角平滑 让其更像真人) (服务端: 解析剩余的BlockPos 返回计算机可读的自定义指令 参见 Path.md)
-  // => PathExec: 执行自定义指令 (算法层面: 需要自行判断如何进行Ability实用 自行处理拐弯的圆滑 适当实用aotv加速)
-
-
   private final BlockPos[] BASIC_OFFSETS = {
       new BlockPos(1, 0, 0),  // 右
       new BlockPos(-1, 0, 0), // 左

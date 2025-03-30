@@ -25,7 +25,7 @@ public class CrystalHollowGoTo extends Command {
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
       if (path != null) {
-        MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+        MelodySkyPlus.pathRenderer.startRender(path);
       } else {
         Helper.sendMessage("Sorry, Cant find path.");
       }
@@ -38,7 +38,7 @@ public class CrystalHollowGoTo extends Command {
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
       if (path != null) {
-        MelodySkyPlus.pathRenderer.startRender(targetBP, path);
+        MelodySkyPlus.pathRenderer.startRender(path);
       } else {
         Helper.sendMessage("Sorry, Cant find path.");
       }
