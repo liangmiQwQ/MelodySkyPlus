@@ -23,7 +23,7 @@ public class PathRenderer {
   @EventHandler
   public void onRender(EventRender3D event) {
     if (path != null && !path.isEmpty() && shortPath != null && !shortPath.isEmpty()) {
-      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 2.0F, event.getPartialTicks());
+      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 1.0F, event.getPartialTicks());
       for (PathPos pathPos : path) {
         if (pathPos.getType() == PathNodeType.WALK) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());

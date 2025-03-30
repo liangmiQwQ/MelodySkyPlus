@@ -7,10 +7,25 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PathExec {
   public final List<PathPos> importantNodes = new ArrayList<>();
+  private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
+
+
+  private IBlockState getBlockState(BlockPos pos) {
+    Minecraft mc = Minecraft.getMinecraft();
+    IBlockState state = blockStateMap.get(pos);
+    if (state == null) {
+      state = mc.theWorld.getBlockState(pos);
+      blockStateMap.put(pos, state);
+    }
+
+    return state;
+  }
 
   public void go(List<PathPos> path) {
     // Minecraft mc = Minecraft.getMinecraft();
@@ -41,13 +56,10 @@ public class PathExec {
   }
 
   private boolean canGo(BlockPos startPos, BlockPos target) {
-    Minecraft mc = Minecraft.getMinecraft();
-
-
     int yPos = startPos.getY();
     for (BlockPos pos : getBlocksBetween(startPos, target)) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
-      IBlockState blockState = mc.theWorld.getBlockState(bp);
+      IBlockState blockState = getBlockState(bp);
       if (blockState.getBlock() != Blocks.air) {
         // 如果不是空气的
         if (blockState.getBlock().getRegistryName().contains("slab") && blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
@@ -60,8 +72,12 @@ public class PathExec {
         }
       }
 
+      if (getBlockState(bp).getBlock() != Blocks.air || getBlockState(bp.up()).getBlock() != Blocks.air) {
+        return false;
+      }
+
       // 检测脚底下能不能走的
-      if (!mc.theWorld.getBlockState(bp.down()).getBlock().getMaterial().isSolid()) {
+      if (!getBlockState(bp.down()).getBlock().getMaterial().isSolid()) {
         return false;
       }
     }

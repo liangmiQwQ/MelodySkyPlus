@@ -53,6 +53,77 @@ public class SmartyPathFinder {
     this(true, true);
   }
 
+  public static boolean rayTrace(BlockPos from, BlockPos to) {
+    Minecraft mc = Minecraft.getMinecraft();
+
+    Vec3d target = null;
+    Vec3d[] var2 = Vec3d.points(to);
+    int var3 = var2.length;
+    int var4 = 0;
+
+    while (var4 < var3) {
+      Vec3d vec = var2[var4];
+      Vec3 playerVec = new Vec3(from.getX(), from.getY() + 0.6, from.getZ());
+      MovingObjectPosition trajectory = mc.theWorld.rayTraceBlocks(playerVec, vec.toVec3(), false, true, true);
+      if (trajectory == null) {
+        target = vec;
+        break;
+      }
+
+      label69:
+      {
+        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
+          if (trajectory.getBlockPos() == null) {
+            break label69;
+          }
+
+          boolean sameX = trajectory.getBlockPos().getX() == to.getX();
+          boolean sameY = trajectory.getBlockPos().getY() == to.getY();
+          boolean sameZ = trajectory.getBlockPos().getZ() == to.getZ();
+          if (sameX && sameY && sameZ) {
+            break label69;
+          }
+        }
+
+        ++var4;
+        continue;
+      }
+
+      target = vec;
+      break;
+    }
+
+    return target != null;
+  }
+
+  /**
+   * @param pos 要检查的blockPos
+   * @return 返回0则代表可以走 返回1则代表因为没有支撑点无法走路 返回2则达标高度不够无法走路
+   */
+  public int getWalkType(BlockPos pos) {
+    Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
+    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
+      Block blockFoot = getBlockState(pos).getBlock();
+      Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
+      if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
+        return 3; // 无敌情况 舍去
+      } else {
+        return 1;
+      }
+    }
+
+    double height = 0.0D;
+    Block blockFoot = getBlockState(pos).getBlock();
+    Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
+    if (blockFoot != Blocks.air) {
+      height += blockFoot.getBlockBoundsMaxY();
+    }
+    if (blockHead != Blocks.air) {
+      height += blockHead.getBlockBoundsMaxY();
+    }
+    return height < 0.2D ? 0 : 2;
+  }
+
   public List<PathPos> findPath(BlockPos target) {
     int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
     int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
@@ -135,7 +206,6 @@ public class SmartyPathFinder {
 
     return returnPaths;
   }
-
 
   /**
    * 作用就是找到一个点周围的方块 然后添加到数组里头
@@ -254,35 +324,6 @@ public class SmartyPathFinder {
     return cost;
   }
 
-
-  /**
-   * @param pos 要检查的blockPos
-   * @return 返回0则代表可以走 返回1则代表因为没有支撑点无法走路 返回2则达标高度不够无法走路
-   */
-  public int getWalkType(BlockPos pos) {
-    Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
-    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
-      Block blockFoot = getBlockState(pos).getBlock();
-      Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
-      if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
-        return 3; // 无敌情况 舍去
-      } else {
-        return 1;
-      }
-    }
-
-    double height = 0.0D;
-    Block blockFoot = getBlockState(pos).getBlock();
-    Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
-    if (blockFoot != Blocks.air) {
-      height += blockFoot.getBlockBoundsMaxY();
-    }
-    if (blockHead != Blocks.air) {
-      height += blockHead.getBlockBoundsMaxY();
-    }
-    return height < 0.2D ? 0 : 2;
-  }
-
   public int getBreakable(BlockPos pos) {
     if (!canMineBlocks) {// 如果不能挖掘方块
       return -1;
@@ -335,46 +376,5 @@ public class SmartyPathFinder {
     }
 
     return state;
-  }
-
-  private boolean rayTrace(BlockPos from, BlockPos to) {
-    Vec3d target = null;
-    Vec3d[] var2 = Vec3d.points(to);
-    int var3 = var2.length;
-    int var4 = 0;
-
-    while (var4 < var3) {
-      Vec3d vec = var2[var4];
-      Vec3 playerVec = new Vec3(from.getX(), from.getY() + 0.6, from.getZ());
-      MovingObjectPosition trajectory = mc.theWorld.rayTraceBlocks(playerVec, vec.toVec3(), false, true, true);
-      if (trajectory == null) {
-        target = vec;
-        break;
-      }
-
-      label69:
-      {
-        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
-          if (trajectory.getBlockPos() == null) {
-            break label69;
-          }
-
-          boolean sameX = trajectory.getBlockPos().getX() == to.getX();
-          boolean sameY = trajectory.getBlockPos().getY() == to.getY();
-          boolean sameZ = trajectory.getBlockPos().getZ() == to.getZ();
-          if (sameX && sameY && sameZ) {
-            break label69;
-          }
-        }
-
-        ++var4;
-        continue;
-      }
-
-      target = vec;
-      break;
-    }
-
-    return target != null;
   }
 }
