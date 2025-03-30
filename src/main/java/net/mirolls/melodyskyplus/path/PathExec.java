@@ -53,6 +53,8 @@ public class PathExec {
         importantNodes.add(pos); // 其他的是全要的
       }
     }
+
+    importantNodes.add(path.get(path.size() - 1));
   }
 
   private boolean canGo(BlockPos startPos, BlockPos target) {
@@ -143,7 +145,7 @@ public class PathExec {
     Iterator<Vec3d> var2 = routeVec.iterator();
 
     boolean x;
-    boolean y;
+//    boolean y;
     boolean z;
     do {
       if (!var2.hasNext()) {
@@ -152,9 +154,9 @@ public class PathExec {
 
       Vec3d v = var2.next();
       x = Math.abs(v.getX() - vec.getX()) <= 0.6;
-      y = Math.abs(v.getY() - vec.getY()) <= 1.0;
+//      y = Math.abs(v.getY() - vec.getY()) <= 1.0;
       z = Math.abs(v.getZ() - vec.getZ()) <= 0.6;
-    } while (!x || !y || !z);
+    } while (!x || /*!y ||*/ !z);
 
     return false;
   }
