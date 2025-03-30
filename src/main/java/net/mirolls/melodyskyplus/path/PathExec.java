@@ -13,7 +13,7 @@ public class PathExec {
   public final List<PathPos> importantNodes = new ArrayList<>();
 
   public void go(List<PathPos> path) {
-    Minecraft mc = Minecraft.getMinecraft();
+    // Minecraft mc = Minecraft.getMinecraft();
 
     importantNodes.add(path.get(0));
     PathPos lastPathPos = null;
@@ -30,6 +30,11 @@ public class PathExec {
           }
         }
       } else {
+        if (lastPathPos != null) {
+          // 把最后的一个点添进去
+          importantNodes.add(lastPathPos);
+          lastPathPos = null;
+        }
         importantNodes.add(pos); // 其他的是全要的
       }
     }
@@ -48,10 +53,16 @@ public class PathExec {
         if (blockState.getBlock().getRegistryName().contains("slab") && blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
           // 如果是下半砖的
           yPos += 1; // 提升一下y的value 依然是个好汉
+          bp = new BlockPos(pos.getX(), yPos, pos.getZ());
         } else {
           // 如果遇到墙了
           return false;
         }
+      }
+
+      // 检测脚底下能不能走的
+      if (!mc.theWorld.getBlockState(bp.down()).getBlock().getMaterial().isSolid()) {
+        return false;
       }
     }
     return true;
