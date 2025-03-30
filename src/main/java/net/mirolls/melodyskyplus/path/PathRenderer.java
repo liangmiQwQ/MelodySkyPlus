@@ -1,18 +1,19 @@
 package net.mirolls.melodyskyplus.path;
 
-import net.minecraft.util.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
+import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.render.RenderUtil;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PathRenderer {
-  private BlockPos target = null;
   private List<PathPos> path = null;
+  private List<PathPos> shortPath = null;
 
   public PathRenderer() {
     EventBus.getInstance().register(this);
@@ -21,7 +22,8 @@ public class PathRenderer {
 
   @EventHandler
   public void onRender(EventRender3D event) {
-    if (target != null && path != null && !path.isEmpty()) {
+    if (path != null && !path.isEmpty() && shortPath != null && !shortPath.isEmpty()) {
+      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 1.0F, event.getPartialTicks());
       for (PathPos pathPos : path) {
         if (pathPos.getType() == PathNodeType.WALK) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());
@@ -35,18 +37,18 @@ public class PathRenderer {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(255, 166, 0, 100), event.getPartialTicks());
         }
       }
-
-      RenderUtil.drawSolidBlockESP(target, Color.BLUE.getBlue(), event.getPartialTicks());
     }
   }
 
-  public void startRender(BlockPos target, List<PathPos> path) {
-    this.target = target;
+  public void startRender(List<PathPos> path) {
     this.path = path;
+    PathExec pathExec = new PathExec();
+    pathExec.go(path);
+    this.shortPath = pathExec.importantNodes;
   }
 
   public void clear() {
-    this.target = null;
     this.path = null;
+    this.shortPath = null;
   }
 }
