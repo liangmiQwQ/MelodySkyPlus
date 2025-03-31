@@ -5,7 +5,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.path.PathNodeType;
 import net.mirolls.melodyskyplus.path.PathPos;
 import xyz.Melody.Utils.Vec3d;
 
@@ -41,7 +40,7 @@ public class PathOptimizer {
         nodes.add(pos);
       } else {
         // 遍历每一个PathPos 开始研究能不能走到这个PathPos
-        if (pos.getType() == PathNodeType.WALK) {
+        if (pos.getType() == PathPos.PathNodeType.WALK) {
           if (canGo(nodes.get(nodes.size() - 1).getPos(), pos.getPos())) {
             lastNode = pos;
           } else {

@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PathPos {
-  private int type;
+  private PathNodeType type;
   private BlockPos pos;
 
-  public PathPos(int type, BlockPos pos) {
+  public PathPos(PathNodeType type, BlockPos pos) {
     this.type = type;
     this.pos = pos;
   }
@@ -36,11 +36,20 @@ public class PathPos {
     this.pos = pos;
   }
 
-  public int getType() {
+  public PathNodeType getType() {
     return type;
   }
 
-  public void setType(int type) {
+  public void setType(PathNodeType type) {
     this.type = type;
+  }
+
+  public enum PathNodeType {
+    WALK,
+    MINE,
+    ABILITY,
+    JUMP_END,
+    ABILITY_START,
+    ABILITY_END,
   }
 }

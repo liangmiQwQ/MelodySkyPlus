@@ -129,7 +129,7 @@ public class SmartyPathFinder {
     int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
     int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
     BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
-    PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathNodeType.WALK);
+    PathNode root = new PathNode(0, distance(posPlayer, target), null, posPlayer, PathPos.PathNodeType.WALK);
 
     if (posPlayer.equals(target)) {
       return new ArrayList<>();
@@ -176,7 +176,7 @@ public class SmartyPathFinder {
 
     BlockPos abilityStartPos = null;
     for (PathNode node : paths) {
-      if (node.type == PathNodeType.ABILITY) {
+      if (node.type == PathPos.PathNodeType.ABILITY) {
         // 如果该点的类型是技能
         if (abilityStartPos == null) {
           // 这是第一个技能点
@@ -185,20 +185,20 @@ public class SmartyPathFinder {
       } else {
         if (abilityStartPos == null) {
           // 非技能情况
-          if (node.type == PathNodeType.JUMP_END && node.pos.getY() <= node.posParent.getY() + 1) {
+          if (node.type == PathPos.PathNodeType.JUMP_END && node.pos.getY() <= node.posParent.getY() + 1) {
             // 台阶支持
             IBlockState blockState = getBlockState(node.pos.down());
             if (blockState.getBlock().getRegistryName().contains("slab")) {
               if (blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
-                node.type = PathNodeType.WALK;
+                node.type = PathPos.PathNodeType.WALK;
               }
             }
           }
           returnPaths.add(new PathPos(node.type, node.pos));
         } else {
           // 找到终点了
-          returnPaths.add(new PathPos(PathNodeType.ABILITY_START, abilityStartPos));
-          returnPaths.add(new PathPos(PathNodeType.ABILITY_END, node.pos));
+          returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_START, abilityStartPos));
+          returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, node.pos));
           abilityStartPos = null;
         }
       }
@@ -223,7 +223,7 @@ public class SmartyPathFinder {
         if (node != null) return node;
       }
 
-      if (parent.type == PathNodeType.WALK || parent.type == PathNodeType.JUMP_END) {
+      if (parent.type == PathPos.PathNodeType.WALK || parent.type == PathPos.PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 6; i++) {
             BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
@@ -272,7 +272,7 @@ public class SmartyPathFinder {
       int walkType = getWalkType(pos);
       if (walkType == 0) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, jumpEnd ? PathNodeType.JUMP_END : PathNodeType.WALK);
+        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, jumpEnd ? PathPos.PathNodeType.JUMP_END : PathPos.PathNodeType.WALK);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
@@ -280,7 +280,7 @@ public class SmartyPathFinder {
         }
       } else if (walkType == 1 && !disableAbility) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathNodeType.ABILITY);
+        PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathPos.PathNodeType.ABILITY);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
@@ -288,9 +288,9 @@ public class SmartyPathFinder {
         }
       } else if (walkType == 2 && !disableMining) {
         int breakable = getBreakable(pos);
-        if (breakable != -1 && parent.type != PathNodeType.ABILITY) {
+        if (breakable != -1 && parent.type != PathPos.PathNodeType.ABILITY) {
           int distance = distance(pos, target);
-          PathNode node = new PathNode(parent.gCost + 1 + breakable, distance, parent, pos, PathNodeType.MINE);
+          PathNode node = new PathNode(parent.gCost + 1 + breakable, distance, parent, pos, PathPos.PathNodeType.MINE);
           openedBlocks.add(node);
           visitedPositions.add(node.pos);
           if (distance == 0) {
