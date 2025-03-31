@@ -11,9 +11,9 @@ public class PathNode {
 
   public double hCost;
   public PathNode nodeParent;
-  public int type;
+  public PathPos.PathNodeType type;
 
-  public PathNode(double g, double h, PathNode parent, BlockPos pos, int type) {
+  public PathNode(double g, double h, PathNode parent, BlockPos pos, PathPos.PathNodeType type) {
     this.gCost = g;
     this.hCost = h;
     this.nodeParent = parent;
