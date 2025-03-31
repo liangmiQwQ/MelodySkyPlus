@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.path;
 
 import net.minecraftforge.common.MinecraftForge;
+import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
@@ -44,8 +45,8 @@ public class PathRenderer {
   public void startRender(List<PathPos> path) {
     this.path = path;
     PathOptimizer pathOptimaze = new PathOptimizer();
-    pathOptimaze.go(path);
-    this.shortPath = pathOptimaze.importantNodes;
+    pathOptimaze.optimize(path);
+    this.shortPath = pathOptimaze.nodes;
   }
 
   public void clear() {

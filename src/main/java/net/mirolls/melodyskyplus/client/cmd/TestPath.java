@@ -1,7 +1,7 @@
 package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.path.PathOptimizer;
+import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
 import net.mirolls.melodyskyplus.path.test.CanGoRenderer;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
