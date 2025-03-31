@@ -174,13 +174,13 @@ public class SmartyPathFinder {
       paths.addFirst(node.nodeParent);
     }
 
-    BlockPos abilityStartPos = null;
+    PathPos abilityStartPos = null;
     for (PathNode node : paths) {
       if (node.type == PathPos.PathNodeType.ABILITY) {
         // 如果该点的类型是技能
         if (abilityStartPos == null) {
           // 这是第一个技能点
-          abilityStartPos = returnPaths.get(returnPaths.size() - 1).getPos(); // 要在这个点释放技能 记录这个点
+          abilityStartPos = returnPaths.get(returnPaths.size() - 1); // 要在这个点释放技能 记录这个点
         }
       } else {
         if (abilityStartPos == null) {
@@ -197,7 +197,7 @@ public class SmartyPathFinder {
           returnPaths.add(new PathPos(node.type, node.pos));
         } else {
           // 找到终点了
-          returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_START, abilityStartPos));
+          returnPaths.add(abilityStartPos);
           returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, node.pos));
           abilityStartPos = null;
         }

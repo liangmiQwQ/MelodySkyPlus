@@ -2,19 +2,18 @@ package net.mirolls.melodyskyplus.path;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
+import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
-import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.render.RenderUtil;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PathRenderer {
   private List<PathPos> path = null;
-  private List<PathPos> shortPath = null;
+  private List<Node> shortPath = null;
 
   public PathRenderer() {
     EventBus.getInstance().register(this);
@@ -38,15 +37,14 @@ public class PathRenderer {
         }
       }
 
-      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 5.0F, event.getPartialTicks());
+//      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 5.0F, event.getPartialTicks());
     }
   }
 
   public void startRender(List<PathPos> path) {
     this.path = path;
-    PathOptimizer pathOptimaze = new PathOptimizer();
-    pathOptimaze.optimize(path);
-    this.shortPath = pathOptimaze.nodes;
+    PathOptimizer pathOptimize = new PathOptimizer();
+    this.shortPath = pathOptimize.optimize(path);
   }
 
   public void clear() {
