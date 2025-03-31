@@ -43,9 +43,9 @@ public class PathRenderer {
 
   public void startRender(List<PathPos> path) {
     this.path = path;
-    PathExec pathExec = new PathExec();
-    pathExec.go(path);
-    this.shortPath = pathExec.importantNodes;
+    PathOptimizer pathOptimaze = new PathOptimizer();
+    pathOptimaze.go(path);
+    this.shortPath = pathOptimaze.importantNodes;
   }
 
   public void clear() {

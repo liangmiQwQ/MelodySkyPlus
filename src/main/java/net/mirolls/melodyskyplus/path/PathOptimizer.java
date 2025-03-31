@@ -10,7 +10,7 @@ import xyz.Melody.Utils.Vec3d;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PathExec {
+public class PathOptimizer {
   public final List<PathPos> importantNodes = new ArrayList<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
   public ArrayList<Vec3d> routeVec = new ArrayList<>();
@@ -27,7 +27,7 @@ public class PathExec {
     return state;
   }
 
-  public void go(List<PathPos> path) {
+  public void optimize(List<PathPos> path) {
     // Minecraft mc = Minecraft.getMinecraft();
 
     importantNodes.add(path.get(0));
