@@ -1,17 +1,19 @@
-package net.mirolls.melodyskyplus.path;
+package net.mirolls.melodyskyplus.path.optimization;
 
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.path.PathNodeType;
+import net.mirolls.melodyskyplus.path.PathPos;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PathOptimizer {
-  public final List<PathPos> importantNodes = new ArrayList<>();
+  public final List<PathPos> nodes = new ArrayList<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
   public ArrayList<Vec3d> routeVec = new ArrayList<>();
 
@@ -28,35 +30,41 @@ public class PathOptimizer {
   }
 
   public void optimize(List<PathPos> path) {
-    // Minecraft mc = Minecraft.getMinecraft();
+    if (path.size() < 2) return;
 
-    importantNodes.add(path.get(0));
-    PathPos lastPathPos = null;
+    PathPos lastNode = null;
 
-    for (PathPos pos : path) {
-      if (pos.getType() == PathNodeType.WALK) {
-        if (canGo(importantNodes.get(importantNodes.size() - 1).getPos(), pos.getPos())) {
-          // 可以直接的走过去
-          lastPathPos = pos;
-        } else {
-          if (lastPathPos != null) {
-            importantNodes.add(lastPathPos);
-            lastPathPos = null;
-          }
-        }
+    for (int i = 0; i < path.size(); i++) {
+      PathPos pos = path.get(i);
+      if (i == 0) {
+        // 如果是第一个节点
+        nodes.add(pos);
       } else {
-        if (lastPathPos != null) {
-          // 把最后的一个点添进去
-          importantNodes.add(lastPathPos);
-          lastPathPos = null;
+        // 遍历每一个PathPos 开始研究能不能走到这个PathPos
+        if (pos.getType() == PathNodeType.WALK) {
+          if (canGo(nodes.get(nodes.size() - 1).getPos(), pos.getPos())) {
+            lastNode = pos;
+          } else {
+            // 如果出现了无法走到该pos的情况
+            // 则需要添加该pos的前一个可以走的pos
+            if (lastNode != null) {
+              nodes.add(lastNode);
+              lastNode = null;
+            }
+          }
+        } else {
+          // 如果该节点的类型不是走路 则需要添加(并且一并添加好走路前的节点)
+          if (lastNode != null) {
+            // 添加好特殊节点前的一个节点(理论上来说是走路节点)
+            nodes.add(lastNode);
+            lastNode = null;
+          }
+          nodes.add(pos);
         }
-        importantNodes.add(pos); // 其他的是全要的
       }
     }
 
-    if (lastPathPos != null) {
-      importantNodes.add(lastPathPos);
-    }
+    nodes.removeIf(Objects::isNull); // 移除空的
   }
 
   public boolean canGo(BlockPos startPos, BlockPos target) {
