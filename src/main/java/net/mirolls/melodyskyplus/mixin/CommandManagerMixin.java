@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.mirolls.melodyskyplus.client.cmd.CanGo;
 import net.mirolls.melodyskyplus.client.cmd.CrystalHollowGoTo;
 import net.mirolls.melodyskyplus.client.cmd.TestPath;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,5 +24,7 @@ public class CommandManagerMixin {
   public void init(CallbackInfo ci) {
     this.commands.add(new CrystalHollowGoTo());
     this.commands.add(new TestPath());
+    this.commands.add(new CanGo());
+
   }
 }
