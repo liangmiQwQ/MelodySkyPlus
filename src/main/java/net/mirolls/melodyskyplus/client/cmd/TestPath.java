@@ -1,6 +1,8 @@
 package net.mirolls.melodyskyplus.client.cmd;
 
-import net.mirolls.melodyskyplus.path.test.TryTest;
+import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.path.PathExec;
+import net.mirolls.melodyskyplus.path.test.CanGoRenderer;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
@@ -11,11 +13,13 @@ public class TestPath extends Command {
 
   @Override
   public String execute(String[] strings) {
-    TryTest test = new TryTest();
-    Helper.sendMessage("Start to test");
-    test.tick = 0;
+    PathExec exec = new PathExec();
+
+    Helper.sendMessage("CanGo: " + exec.canGo(new BlockPos(-372, 4, -1244),
+        new BlockPos(-370, 4, -1256)));
 
 
+    new CanGoRenderer().startRender(exec.routeVec);
     return null;
   }
 }

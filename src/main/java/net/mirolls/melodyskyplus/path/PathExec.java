@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class PathExec {
   public final List<PathPos> importantNodes = new ArrayList<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
-  private ArrayList<Vec3d> routeVec = new ArrayList<>();
+  public ArrayList<Vec3d> routeVec = new ArrayList<>();
 
 
   private IBlockState getBlockState(BlockPos pos) {
@@ -54,10 +54,12 @@ public class PathExec {
       }
     }
 
-    importantNodes.add(path.get(path.size() - 1));
+    if (lastPathPos != null) {
+      importantNodes.add(lastPathPos);
+    }
   }
 
-  private boolean canGo(BlockPos startPos, BlockPos target) {
+  public boolean canGo(BlockPos startPos, BlockPos target) {
     int yPos = startPos.getY();
     for (BlockPos pos : calculate(startPos, target)) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
@@ -145,7 +147,7 @@ public class PathExec {
     Iterator<Vec3d> var2 = routeVec.iterator();
 
     boolean x;
-//    boolean y;
+    // boolean y;
     boolean z;
     do {
       if (!var2.hasNext()) {
@@ -153,9 +155,9 @@ public class PathExec {
       }
 
       Vec3d v = var2.next();
-      x = Math.abs(v.getX() - vec.getX()) <= 0.6;
-//      y = Math.abs(v.getY() - vec.getY()) <= 1.0;
-      z = Math.abs(v.getZ() - vec.getZ()) <= 0.6;
+      x = Math.abs(v.getX() - vec.getX()) <= 1.6;
+      // y = Math.abs(v.getY() - vec.getY()) <= 1.0;
+      z = Math.abs(v.getZ() - vec.getZ()) <= 1.6;
     } while (!x || /*!y ||*/ !z);
 
     return false;

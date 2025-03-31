@@ -16,6 +16,7 @@ public class PathPos {
   }
 
   public static List<Vec3d> toVec3dArray(List<PathPos> pathPoses) {
+
     List<Vec3d> returnValue = new ArrayList<>();
     for (PathPos pos : pathPoses) {
       returnValue.add(pos.toVec3d());
