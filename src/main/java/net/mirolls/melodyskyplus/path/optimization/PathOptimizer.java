@@ -6,13 +6,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.path.PathPos;
+import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PathOptimizer {
-  public final List<PathPos> nodes = new ArrayList<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
   public ArrayList<Vec3d> routeVec = new ArrayList<>();
 
@@ -28,8 +28,10 @@ public class PathOptimizer {
     return state;
   }
 
-  public void optimize(List<PathPos> path) {
-    if (path.size() < 2) return;
+  public List<Node> optimize(List<PathPos> path) {
+    List<PathPos> nodes = new ArrayList<>();
+
+    if (path.size() < 2) return Node.fromPathPosList(path);
 
     PathPos lastNode = null;
 
@@ -64,6 +66,8 @@ public class PathOptimizer {
     }
 
     nodes.removeIf(Objects::isNull); // 移除空的
+
+    return Node.fromPathPosList(nodes);
   }
 
   public boolean canGo(BlockPos startPos, BlockPos target) {
