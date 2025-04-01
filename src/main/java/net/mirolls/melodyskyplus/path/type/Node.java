@@ -31,9 +31,14 @@ public class Node {
 
     for (int i = 0; i < path.size(); i++) {
       PathPos pos = path.get(i);
-      PathPos nextPos = path.get(i + 1);
 
-      Rotation rotation = Node.calculateAngles(pos.getPos(), nextPos.getPos());
+      Rotation rotation = null;
+      if (i != path.size() - 1) {
+        PathPos nextPos = path.get(i + 1);
+        rotation = Node.calculateAngles(pos.getPos(), nextPos.getPos());
+
+      }
+
 
       if (pos.getType() == PathPos.PathNodeType.WALK) {
         values.add(new Walk(pos.getPos(), rotation));
