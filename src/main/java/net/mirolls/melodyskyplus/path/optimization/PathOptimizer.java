@@ -65,12 +65,28 @@ public class PathOptimizer {
       }
     }
 
+    if (!nodes.contains(lastNode) && lastNode != null) nodes.add(lastNode);
+
     nodes.removeIf(Objects::isNull); // 移除空的
 
     return Node.fromPathPosList(nodes);
   }
 
   public boolean canGo(BlockPos startPos, BlockPos target) {
+    if (startPos.getY() == target.getY()) {
+      if (startPos.getX() == target.getX()) {
+        // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
+        if (Math.abs(startPos.getZ() - target.getZ()) == 1) {
+          return true;
+        }
+      } else if (startPos.getZ() == target.getZ()) {
+        // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
+        if (Math.abs(startPos.getX() - target.getX()) == 1) {
+          return true;
+        }
+      }
+    }
+
     int yPos = startPos.getY();
     for (BlockPos pos : calculate(startPos, target)) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
@@ -103,10 +119,10 @@ public class PathOptimizer {
     routeVec = updateVec(start, end);
     if (!routeVec.isEmpty()) {
 
-      int minX = Math.min(start.getX(), end.getX()) - 5;
-      int maxX = Math.max(start.getX(), end.getX()) + 5;
-      int minZ = Math.min(start.getZ(), end.getZ()) - 5;
-      int maxZ = Math.max(start.getZ(), end.getZ()) + 5;
+      int minX = Math.min(start.getX(), end.getX());
+      int maxX = Math.max(start.getX(), end.getX());
+      int minZ = Math.min(start.getZ(), end.getZ());
+      int maxZ = Math.max(start.getZ(), end.getZ());
       ArrayList<Vec3d> blocks = new ArrayList<>();
 
       for (int x = minX; x <= maxX; ++x) {
@@ -166,9 +182,9 @@ public class PathOptimizer {
       }
 
       Vec3d v = var2.next();
-      x = Math.abs(v.getX() - vec.getX()) <= 1.6;
+      x = Math.abs(v.getX() - vec.getX()) <= 1.0;
       // y = Math.abs(v.getY() - vec.getY()) <= 1.0;
-      z = Math.abs(v.getZ() - vec.getZ()) <= 1.6;
+      z = Math.abs(v.getZ() - vec.getZ()) <= 1.0;
     } while (!x || /*!y ||*/ !z);
 
     return false;
