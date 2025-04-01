@@ -1,20 +1,19 @@
 package net.mirolls.melodyskyplus.path;
 
 import net.minecraftforge.common.MinecraftForge;
-import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
+import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.render.RenderUtil;
 
 import java.awt.*;
-import java.util.List;
+import java.util.ArrayList;
 
 public class PathRenderer {
-  private List<PathPos> path = null;
-  private List<Node> shortPath = null;
-
   public PathRenderer() {
     EventBus.getInstance().register(this);
     MinecraftForge.EVENT_BUS.register(this);
@@ -22,8 +21,8 @@ public class PathRenderer {
 
   @EventHandler
   public void onRender(EventRender3D event) {
-    if (path != null && !path.isEmpty() && shortPath != null && !shortPath.isEmpty()) {
-      for (PathPos pathPos : path) {
+    if (!MelodySkyPlus.smartyPathFinder.path.isEmpty() && !MelodySkyPlus.smartyPathFinder.aStarPath.isEmpty()) {
+      for (PathPos pathPos : MelodySkyPlus.smartyPathFinder.aStarPath) {
         if (pathPos.getType() == PathPos.PathNodeType.WALK) {
           RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());
         } else if (pathPos.getType() == PathPos.PathNodeType.MINE) {
@@ -37,18 +36,7 @@ public class PathRenderer {
         }
       }
 
-//      RenderUtil.drawLines((ArrayList<Vec3d>) PathPos.toVec3dArray(shortPath), 5.0F, event.getPartialTicks());
+      RenderUtil.drawLines((ArrayList<Vec3d>) Node.toVec3dArray(MelodySkyPlus.smartyPathFinder.path), 5.0F, event.getPartialTicks());
     }
-  }
-
-  public void startRender(List<PathPos> path) {
-    this.path = path;
-    PathOptimizer pathOptimize = new PathOptimizer();
-    this.shortPath = pathOptimize.optimize(path);
-  }
-
-  public void clear() {
-    this.path = null;
-    this.shortPath = null;
   }
 }

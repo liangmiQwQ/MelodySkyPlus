@@ -5,7 +5,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.path.PathPos;
+import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Utils.Vec3d;
 
