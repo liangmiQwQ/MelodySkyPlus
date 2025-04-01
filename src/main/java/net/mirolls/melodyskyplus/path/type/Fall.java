@@ -6,9 +6,8 @@ import xyz.Melody.Utils.math.Rotation;
 public class Fall extends Node {
   public int fallDistance = 0;
 
-  public Fall(BlockPos pos, Rotation nextRotation, int fallDistance) {
-    super(pos, nextRotation);
+  public Fall(BlockPos pos, Rotation nextRotation, double distance, int fallDistance) {
+    super(pos, nextRotation, distance);
     this.fallDistance = fallDistance;
   }
-
 }

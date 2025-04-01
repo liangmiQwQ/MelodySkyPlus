@@ -4,7 +4,8 @@ import net.minecraft.util.BlockPos;
 import xyz.Melody.Utils.math.Rotation;
 
 public class Walk extends Node {
-  public Walk(BlockPos pos, Rotation nextRotation) {
-    super(pos, nextRotation);
+
+  public Walk(BlockPos pos, Rotation nextRotation, double distance) {
+    super(pos, nextRotation, distance);
   }
 }
