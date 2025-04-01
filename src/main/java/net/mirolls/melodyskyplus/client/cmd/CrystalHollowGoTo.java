@@ -2,12 +2,8 @@ package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
-import net.mirolls.melodyskyplus.path.PathPos;
-import net.mirolls.melodyskyplus.path.SmartyPathFinder;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
-
-import java.util.List;
 
 public class CrystalHollowGoTo extends Command {
   public CrystalHollowGoTo() {
@@ -17,35 +13,39 @@ public class CrystalHollowGoTo extends Command {
   @Override
   public String execute(String[] args) {
     if (args.length == 3) {
+      // 寻路命令系统
       Helper.sendMessage("Start to find path");
-      long startTime = System.currentTimeMillis();
-      BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-      List<PathPos> path = new SmartyPathFinder().findPath(targetBP);
-      long finishTime = System.currentTimeMillis();
-      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
-      if (path != null) {
-        MelodySkyPlus.pathRenderer.startRender(path);
-      } else {
+      long startTime = System.currentTimeMillis();
+
+      try {
+        BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        MelodySkyPlus.smartyPathFinder.go(targetBP);
+      } catch (IllegalStateException e) {
         Helper.sendMessage("Sorry, Cant find path.");
       }
+
+      long finishTime = System.currentTimeMillis();
+      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
     } else if (args.length == 4) {
+      // 寻路命令系统
       Helper.sendMessage("Start to find path without break ability and jumpBoost");
-      long startTime = System.currentTimeMillis();
-      BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-      List<PathPos> path = new SmartyPathFinder(false, false).findPath(targetBP);
-      long finishTime = System.currentTimeMillis();
-      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
 
-      if (path != null) {
-        MelodySkyPlus.pathRenderer.startRender(path);
-      } else {
+      long startTime = System.currentTimeMillis();
+
+      try {
+        BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        MelodySkyPlus.smartyPathFinder.go(targetBP);
+      } catch (IllegalStateException e) {
         Helper.sendMessage("Sorry, Cant find path.");
       }
+
+      long finishTime = System.currentTimeMillis();
+      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
     } else if (args.length == 1) {
       Helper.sendMessage("Renderer cleared");
 
-      MelodySkyPlus.pathRenderer.clear();
+      MelodySkyPlus.smartyPathFinder.clear();
     }
     return null;
   }

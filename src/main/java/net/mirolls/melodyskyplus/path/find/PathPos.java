@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.path;
+package net.mirolls.melodyskyplus.path.find;
 
 import net.minecraft.util.BlockPos;
 import xyz.Melody.Utils.Vec3d;

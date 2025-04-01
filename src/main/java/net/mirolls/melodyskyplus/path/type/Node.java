@@ -1,7 +1,7 @@
 package net.mirolls.melodyskyplus.path.type;
 
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.path.PathPos;
+import net.mirolls.melodyskyplus.path.find.PathPos;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 
@@ -15,6 +15,15 @@ public class Node {
   public Node(BlockPos pos, Rotation nextRotation) {
     this.pos = pos;
     this.nextRotation = nextRotation;
+  }
+
+  public static List<Vec3d> toVec3dArray(List<Node> pathPoses) {
+
+    List<Vec3d> returnValue = new ArrayList<>();
+    for (Node node : pathPoses) {
+      returnValue.add(node.toVec3d());
+    }
+    return returnValue;
   }
 
   public static List<Node> fromPathPosList(List<PathPos> path) {
@@ -84,6 +93,10 @@ public class Node {
 
     return new Rotation((float) yaw, (float) pitch);
 
+  }
+
+  public Vec3d toVec3d() {
+    return Vec3d.ofCenter(pos);
   }
 
   public Rotation getNextRotation() {
