@@ -6,8 +6,8 @@ import xyz.Melody.Utils.math.Rotation;
 public class Jump extends Node {
   public int jumpDistance = 0;
 
-  public Jump(BlockPos pos, Rotation nextRotation, int jumpDistance) {
-    super(pos, nextRotation);
+  public Jump(BlockPos pos, Rotation nextRotation, double distance, int jumpDistance) {
+    super(pos, nextRotation, distance);
     this.jumpDistance = jumpDistance;
   }
 }

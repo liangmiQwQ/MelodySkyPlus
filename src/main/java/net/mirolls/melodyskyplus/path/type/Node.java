@@ -11,10 +11,12 @@ import java.util.List;
 public class Node {
   public BlockPos pos;
   public Rotation nextRotation;
+  public double distance;
 
-  public Node(BlockPos pos, Rotation nextRotation) {
+  public Node(BlockPos pos, Rotation nextRotation, double distance) {
     this.pos = pos;
     this.nextRotation = nextRotation;
+    this.distance = distance;
   }
 
   public static List<Vec3d> toVec3dArray(List<Node> pathPoses) {
@@ -33,17 +35,18 @@ public class Node {
       PathPos pos = path.get(i);
 
       Rotation rotation = null;
+      double distance = -1;
       if (i != path.size() - 1) {
         PathPos nextPos = path.get(i + 1);
         rotation = Node.calculateAngles(pos.getPos(), nextPos.getPos());
-
+        distance = Math.hypot(nextPos.getPos().getX() - pos.getPos().getX(), nextPos.getPos().getZ() - pos.getPos().getZ());
       }
 
 
       if (pos.getType() == PathPos.PathNodeType.WALK) {
-        values.add(new Walk(pos.getPos(), rotation));
+        values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.JUMP_END) {
-        values.add(new Jump(pos.getPos(), rotation, -1));
+        values.add(new Jump(pos.getPos(), rotation, distance, -1));
       } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
         // 这里再细分一下到底是fall还是JumpEnd
         PathPos prevPos = path.get(i - 1);
@@ -51,21 +54,21 @@ public class Node {
           if (prevPos.getPos().getX() == pos.getPos().getX()) {
             // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
             if (Math.abs(prevPos.getPos().getZ() - pos.getPos().getZ()) == 1) {
-              values.add(new Fall(pos.getPos(), rotation, 0));
+              values.add(new Fall(pos.getPos(), rotation, distance, 0));
               continue;
             }
           } else if (prevPos.getPos().getZ() == pos.getPos().getZ()) {
             // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
             if (Math.abs(prevPos.getPos().getX() - pos.getPos().getX()) == 1) {
-              values.add(new Fall(pos.getPos(), rotation, 0));
+              values.add(new Fall(pos.getPos(), rotation, distance, 0));
               continue;
             }
           }
         }
 
-        values.add(new Ability(pos.getPos(), rotation));
+        values.add(new Ability(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.MINE) {
-        values.add(new Mine(pos.getPos(), rotation));
+        values.add(new Mine(pos.getPos(), rotation, distance));
       }
     }
 
