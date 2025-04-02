@@ -85,22 +85,66 @@ public class Node {
     double dy = endVec.getY() - startVec.getY();
     double dz = endVec.getZ() - startVec.getZ();
 
-    // 计算Yaw
-    double yaw = Math.toDegrees(Math.atan2(dx, dz));
-    yaw = (yaw + 360) % 360; // 转换为0-360范围
-    if (yaw > 180) yaw -= 360; // 规范到-180到180
+    // 使用反正切函数进行计算 x/z(对边/邻边)
+    double rawYaw = Math.toDegrees(Math.atan2(Math.abs(dx), Math.abs(dz)));
 
-    // 计算Pitch
-    double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-    double pitch;
-    if (horizontalDistance == 0) {
-      pitch = (dy > 0) ? -90 : (dy < 0) ? 90 : 0; // 处理垂直情况
+    // 确定象限 找到真raw
+    double yaw = 0;
+    // rawYaw处理 将它从角度规范化
+    if (dx < 0) {
+      // 在开始点的西边
+      if (dz < 0) {
+        // 在开始点的西北侧
+        yaw = 180 - rawYaw;
+      } else if (dz > 0) {
+        // 在开始点的西南侧
+        yaw = 0 + rawYaw;
+      } else {
+        // 在开始点的正西
+        yaw = 90;
+      }
+    } else if (dx > 0) {
+      // 在开始点的东边
+      if (dz < 0) {
+        // 在开始点的东北侧
+        yaw = -(180 - rawYaw);
+      } else if (dz > 0) {
+        // 在开始点的东南侧
+        yaw = -(0 + rawYaw);
+      } else {
+        // 在开始点的正东
+        yaw = -90;
+      }
     } else {
-      pitch = -Math.toDegrees(Math.atan2(dy, horizontalDistance));
+      // 在正北或者正南
+      if (dz < 0) {
+        // 在开始点的正北
+        yaw = 180;
+      } else if (dz > 0) {
+        // 在开始点的正南
+        yaw = -180;
+      }
+    }
+
+
+    // 再次使用反正切函数进行计算  y/直线距离(对边/邻边)
+    double rawPitch = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(Math.hypot(dx, dz))));
+
+    // rawPitch处理 将它从角度规范化
+    double pitch = 0;
+
+    if (dy > 0) {
+      // 抬头
+      pitch = -rawPitch;
+    } else if (dy < 0) {
+      // 低头
+      pitch = rawPitch;
+    } else {
+      // 平视
+      pitch = 0;
     }
 
     return new Rotation((float) yaw, (float) pitch);
-
   }
 
   public Vec3d toVec3d() {
