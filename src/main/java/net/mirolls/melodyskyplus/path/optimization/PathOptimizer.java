@@ -182,9 +182,9 @@ public class PathOptimizer {
       }
 
       Vec3d v = var2.next();
-      x = Math.abs(v.getX() - vec.getX()) <= 1.0;
+      x = Math.abs(v.getX() - vec.getX()) <= 2.0;
       // y = Math.abs(v.getY() - vec.getY()) <= 1.0;
-      z = Math.abs(v.getZ() - vec.getZ()) <= 1.0;
+      z = Math.abs(v.getZ() - vec.getZ()) <= 2.0;
     } while (!x || /*!y ||*/ !z);
 
     return false;
