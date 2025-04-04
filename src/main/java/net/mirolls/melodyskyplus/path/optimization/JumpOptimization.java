@@ -41,10 +41,14 @@ public class JumpOptimization {
         Node prevNode = nodes.get(i - 1);
 
         int height = endNode.getPos().getY() - node.getPos().getY();
-        if (isInAir(node.getPos(), prevNode.getPos(), height)) {
-          ((Jump) node).jumpDistance = JUMP_DISTANCE.get(height);
 
-          nodes.set(i, node);
+        if (Math.hypot(endNode.getPos().getX() - endNode.getPos().getX(), endNode.getPos().getZ() - endNode.getPos().getZ()) > JUMP_DISTANCE.get(height) + 1) {
+          // 首先要基本先大于
+          if (isInAir(node.getPos(), prevNode.getPos(), height)) {
+            ((Jump) node).jumpDistance = JUMP_DISTANCE.get(height);
+
+            nodes.set(i, node);
+          }
         }
       }
     }
