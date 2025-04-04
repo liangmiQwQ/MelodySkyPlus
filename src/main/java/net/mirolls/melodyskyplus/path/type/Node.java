@@ -46,7 +46,15 @@ public class Node {
       if (pos.getType() == PathPos.PathNodeType.WALK) {
         values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.JUMP_END) {
-        values.add(new Jump(pos.getPos(), rotation, distance, -1));
+        // 对于技能类型节点 (包括Jump, Fall, Ability) 需要修改A*返回的End模式变为start模式 下面是一个例子
+        
+        // 读取上一个节点并且删除
+        Node prevNode = values.get(values.size() - 1);
+        values.remove(values.size() - 1);
+
+        // 修改上一个节点为跳跃节点 并且添加end节点
+        values.add(new Jump(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
+        values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
         // 这里再细分一下到底是fall还是JumpEnd
         PathPos prevPos = path.get(i - 1);
@@ -54,20 +62,39 @@ public class Node {
           if (prevPos.getPos().getX() == pos.getPos().getX()) {
             // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
             if (Math.abs(prevPos.getPos().getZ() - pos.getPos().getZ()) == 1) {
-              values.add(new Fall(pos.getPos(), rotation, distance, 0));
+              // 读取上一个节点并且删除
+              Node prevNode = values.get(values.size() - 1);
+              values.remove(values.size() - 1);
+
+              // 修改上一个节点为摔落节点 并且添加end节点
+              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
+              values.add(new Walk(pos.getPos(), rotation, distance));
               continue;
             }
           } else if (prevPos.getPos().getZ() == pos.getPos().getZ()) {
             // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
             if (Math.abs(prevPos.getPos().getX() - pos.getPos().getX()) == 1) {
-              values.add(new Fall(pos.getPos(), rotation, distance, 0));
+              // 读取上一个节点并且删除
+              Node prevNode = values.get(values.size() - 1);
+              values.remove(values.size() - 1);
+
+              // 修改上一个节点为摔落节点 并且添加end节点
+              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
+              values.add(new Walk(pos.getPos(), rotation, distance));
               continue;
             }
           }
         }
 
-        values.add(new Ability(pos.getPos(), rotation, distance));
+        // 读取上一个节点并且删除
+        Node prevNode = values.get(values.size() - 1);
+        values.remove(values.size() - 1);
+
+        // 修改上一个节点为摔落节点 并且添加end节点
+        values.add(new Ability(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance));
+        values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.MINE) {
+        // mine已经是前一个了 不需要进行额外处理
         values.add(new Mine(pos.getPos(), rotation, distance));
       }
     }
@@ -86,6 +113,30 @@ public class Node {
     double dz = endVec.getZ() - startVec.getZ();
 
     // 使用反正切函数进行计算 x/z(对边/邻边)
+    double yaw = getYaw(dx, dz);
+
+
+    // 再次使用反正切函数进行计算  y/直线距离(对边/邻边)
+    double rawPitch = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(Math.hypot(dx, dz))));
+
+    // rawPitch处理 将它从角度规范化
+    double pitch = 0;
+
+    if (dy > 0) {
+      // 抬头
+      pitch = -rawPitch;
+    } else if (dy < 0) {
+      // 低头
+      pitch = rawPitch;
+    } else {
+      // 平视
+      pitch = 0;
+    }
+
+    return new Rotation((float) yaw, (float) pitch);
+  }
+
+  private static double getYaw(double dx, double dz) {
     double rawYaw = Math.toDegrees(Math.atan2(Math.abs(dx), Math.abs(dz)));
 
     // 确定象限 找到真raw
@@ -125,26 +176,7 @@ public class Node {
         yaw = -180;
       }
     }
-
-
-    // 再次使用反正切函数进行计算  y/直线距离(对边/邻边)
-    double rawPitch = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(Math.hypot(dx, dz))));
-
-    // rawPitch处理 将它从角度规范化
-    double pitch = 0;
-
-    if (dy > 0) {
-      // 抬头
-      pitch = -rawPitch;
-    } else if (dy < 0) {
-      // 低头
-      pitch = rawPitch;
-    } else {
-      // 平视
-      pitch = 0;
-    }
-
-    return new Rotation((float) yaw, (float) pitch);
+    return yaw;
   }
 
   public Vec3d toVec3d() {
