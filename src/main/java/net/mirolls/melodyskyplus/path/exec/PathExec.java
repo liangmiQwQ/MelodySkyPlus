@@ -3,9 +3,7 @@ package net.mirolls.melodyskyplus.path.exec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
-import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -107,37 +105,47 @@ public class PathExec {
 
 
         if (mc.theWorld.getBlockState(headBlock).getBlock() != Blocks.air) {
-          // 转头到方块
-          mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), 75F);
-          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 75F);
+          // 停止走路 拒接转圈
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
 
-          // 清除头旁路障
-          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, headBlock, EnumFacing.DOWN));
-          mc.thePlayer.swingItem();
+          // 转头到方块
+          mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, headBlockRotation.getPitch(), 25);
+          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, headBlockRotation.getYaw(), 25);
+
+          // 挖掘路障
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(headBlock));
         } else if (mc.theWorld.getBlockState(footBlock).getBlock() != Blocks.air) {
+          // 停止走路 拒接转圈
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+
           // 转头到方块
-          mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, headBlockRotation.getPitch(), 75F);
-          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, headBlockRotation.getYaw(), 75F);
+          mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), 25);
+          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25);
 
-          // 挖掘
-          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, footBlock, EnumFacing.DOWN));
-          mc.thePlayer.swingItem();
-
-          // ⬆️ 注意这里没有检查rayTrace是因为寻路寻找到的必定是可以直接看到的
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(footBlock));
         } else {
+          // 停止挖掘
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+
           // 通路后 先转头
           mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), new Random().nextFloat() / 5);
-          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 75F);
+          mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25F);
 
           // 转弯头开始走
-          if (Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5) {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5);
 
-            Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-            if (Math.abs(mc.thePlayer.posX - nextVec.getX()) < 1 && Math.abs(mc.thePlayer.posZ - nextVec.getZ()) < 1) {
-              KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-              path.remove(0);
-            }
+          // 处理下一个点
+          int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
+          int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
+          int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
+          BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
+          if (nextNode.getPos().equals(posPlayer)) {
+            path.remove(0);
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
           }
         }
       }
@@ -154,7 +162,7 @@ public class PathExec {
       deltaAngle = -maxIncrement;
     }
 
-    return (current + deltaAngle / 2) % 360;
+    return MathHelper.wrapAngleTo180_float((current + deltaAngle / 2) % 360);
   }
 
 }
