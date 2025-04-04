@@ -125,7 +125,7 @@ public class AStarPathFinder {
   }
 
   public List<PathPos> findPath(BlockPos start, BlockPos target) {
-    
+
     PathNode root = new PathNode(0, distance(start, target), null, start, PathPos.PathNodeType.WALK);
 
     if (start.equals(target)) {
@@ -326,7 +326,7 @@ public class AStarPathFinder {
       return -1;
     }
     Block footBlock = getBlockState(pos).getBlock();
-    Block headBlock = getBlockState(pos).getBlock();
+    Block headBlock = getBlockState(pos.up()).getBlock();
 
     List<Block> unbreakableBlocks = Arrays.asList(
         Blocks.wool, Blocks.sand, Blocks.gravel, Blocks.rail,
