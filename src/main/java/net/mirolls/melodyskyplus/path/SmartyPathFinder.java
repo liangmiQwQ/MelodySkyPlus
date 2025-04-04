@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.path.find.AStarPathFinder;
 import net.mirolls.melodyskyplus.path.find.PathPos;
+import net.mirolls.melodyskyplus.path.optimization.JumpOptimization;
 import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
 import net.mirolls.melodyskyplus.path.type.Node;
 
@@ -27,7 +28,9 @@ public class SmartyPathFinder {
 
   public void go(BlockPos start, BlockPos end) {
     aStarPath = new AStarPathFinder().findPath(start, end);
-    path = new PathOptimizer().optimize(aStarPath);
+    path = new JumpOptimization()
+        .optimize(new PathOptimizer()
+            .optimize(aStarPath));
 
     if (aStarPath == null || path == null) {
       throw new IllegalStateException("Path no Found");

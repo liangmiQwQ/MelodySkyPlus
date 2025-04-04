@@ -156,9 +156,11 @@ public class PathOptimizer {
     double incX = deltaX / maxDist;
     // double incY = deltaY / maxDist;
     double incZ = deltaZ / maxDist;
-    double xPos = start.getX();
-    // double yPos = start.getY();
-    double zPos = start.getZ();
+
+    Vec3d startVec = Vec3d.ofCenter(start);
+    double xPos = startVec.getX();
+    // double yPos = startVec.getY();
+    double zPos = startVec.getZ();
 
     for (int huh = 1; (double) huh <= maxDist; ++huh) {
       xPos += incX;
