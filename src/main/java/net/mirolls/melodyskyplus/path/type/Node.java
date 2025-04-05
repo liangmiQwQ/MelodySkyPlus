@@ -47,13 +47,13 @@ public class Node {
         values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.JUMP_END) {
         // 对于技能类型节点 (包括Jump, Fall, Ability) 需要修改A*返回的End模式变为start模式 下面是一个例子
-        
+
         // 读取上一个节点并且删除
         Node prevNode = values.get(values.size() - 1);
         values.remove(values.size() - 1);
 
         // 修改上一个节点为跳跃节点 并且添加end节点
-        values.add(new Jump(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
+        values.add(new Jump(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 1));
         values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
         // 这里再细分一下到底是fall还是JumpEnd
@@ -67,7 +67,7 @@ public class Node {
               values.remove(values.size() - 1);
 
               // 修改上一个节点为摔落节点 并且添加end节点
-              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
+              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 1));
               values.add(new Walk(pos.getPos(), rotation, distance));
               continue;
             }

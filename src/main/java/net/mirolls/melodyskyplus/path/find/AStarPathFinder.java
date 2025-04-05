@@ -12,6 +12,7 @@ import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AStarPathFinder {
   private final BlockPos[] BASIC_OFFSETS = {
@@ -201,7 +202,9 @@ public class AStarPathFinder {
       }
     }
 
-    return returnPaths;
+    return returnPaths.stream()
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   /**
