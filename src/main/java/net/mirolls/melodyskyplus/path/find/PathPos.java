@@ -5,6 +5,7 @@ import xyz.Melody.Utils.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class PathPos {
   private PathNodeType type;
@@ -42,6 +43,27 @@ public class PathPos {
 
   public void setType(PathNodeType type) {
     this.type = type;
+  }
+
+  @Override
+  public String toString() {
+    return "PathPos{" +
+        "type=" + type +
+        ", pos=" + pos +
+        '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof PathPos)) return false;
+    PathPos pathPos = (PathPos) o;
+    return getType() == pathPos.getType() && Objects.equals(getPos(), pathPos.getPos());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getType(), getPos());
   }
 
   public enum PathNodeType {
