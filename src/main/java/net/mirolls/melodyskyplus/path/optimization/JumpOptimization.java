@@ -18,19 +18,21 @@ public class JumpOptimization {
   // 优化跳跃
   // 原理: 检查每一个跳跃节点
 
-  public static final HashMap<Integer, Integer> JUMP_DISTANCE = new HashMap<>();
-
-  static {
-    JUMP_DISTANCE.put(1, 4);
-    JUMP_DISTANCE.put(2, 4);
-    JUMP_DISTANCE.put(3, 4);
-    JUMP_DISTANCE.put(4, 3);
-    JUMP_DISTANCE.put(5, 3);
-    JUMP_DISTANCE.put(6, 2);
-
-  }
-
+  public final HashMap<Integer, Integer> JUMP_DISTANCE = new HashMap<>();
   public ArrayList<Vec3d> routeVec = new ArrayList<>();
+
+  public JumpOptimization(boolean isJumpBoost) {
+    if (isJumpBoost) {
+      JUMP_DISTANCE.put(1, 4);
+      JUMP_DISTANCE.put(2, 4);
+      JUMP_DISTANCE.put(3, 4);
+      JUMP_DISTANCE.put(4, 3);
+      JUMP_DISTANCE.put(5, 3);
+      JUMP_DISTANCE.put(6, 2);
+    } else {
+      JUMP_DISTANCE.put(1, 1);
+    }
+  }
 
   public List<Node> optimize(List<Node> nodes) {
     for (int i = 0; i < nodes.size(); i++) {

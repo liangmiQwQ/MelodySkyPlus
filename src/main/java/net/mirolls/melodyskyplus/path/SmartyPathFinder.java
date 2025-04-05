@@ -28,7 +28,7 @@ public class SmartyPathFinder {
 
   public void go(BlockPos start, BlockPos end) {
     aStarPath = new AStarPathFinder().findPath(start, end);
-    path = new JumpOptimization()
+    path = new JumpOptimization(true)
         .optimize(new PathOptimizer()
             .optimize(aStarPath));
 
