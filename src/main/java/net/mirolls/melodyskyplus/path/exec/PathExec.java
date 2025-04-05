@@ -70,7 +70,7 @@ public class PathExec {
 
     int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
     int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
-    
+
     if (mc.thePlayer.onGround) {
       // 如果在陆地上 则有2个情况
       if (x == endNode.getPos().getX() && z == endNode.getPos().getZ()) {
@@ -89,7 +89,9 @@ public class PathExec {
       }
     } else {
       // 如果玩家没有到位的
-      if (x != endNode.getPos().getX() || z != endNode.getPos().getZ()) {
+      if (x == endNode.getPos().getX() && z == endNode.getPos().getZ()) {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+      } else {
         // 转换到角度
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(nextNode.pos));
 
@@ -98,8 +100,6 @@ public class PathExec {
         mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
 
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
-      } else {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       }
     }
   }
