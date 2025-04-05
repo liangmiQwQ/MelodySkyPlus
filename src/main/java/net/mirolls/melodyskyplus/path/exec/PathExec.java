@@ -127,7 +127,7 @@ public class PathExec {
 
       // 如果 now - should是正的 则偏左 则需要往右移动
       if ((yawNow - yawShould) > 2) {
-        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right.");
+        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
       } else {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
@@ -135,7 +135,7 @@ public class PathExec {
 
       // 反之亦然
       if ((yawNow - yawShould) < -2) {
-        MelodySkyPlus.LOGGER.info("Found Player offset to the right, start to go to the left.");
+        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), true);
       } else {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);

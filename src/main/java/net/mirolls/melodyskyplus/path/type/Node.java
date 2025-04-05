@@ -120,7 +120,7 @@ public class Node {
     double rawPitch = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(Math.hypot(dx, dz))));
 
     // rawPitch处理 将它从角度规范化
-    double pitch = 0;
+    double pitch;
 
     if (dy > 0) {
       // 抬头
@@ -173,7 +173,7 @@ public class Node {
         yaw = 180;
       } else if (dz > 0) {
         // 在开始点的正南
-        yaw = -180;
+        yaw = 0;
       }
     }
     return yaw;
