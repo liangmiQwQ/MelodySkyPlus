@@ -68,18 +68,27 @@ public class PathExec {
     Node endNode = path.get(2);
 
 
+    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
+    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
+    
     if (mc.thePlayer.onGround) {
-      Vec3d jumpVec = Vec3d.ofCenter(jumpNode.getPos());
-      if (Math.hypot(mc.thePlayer.posX - jumpVec.getX(), mc.thePlayer.posZ - jumpVec.getZ()) < jumpNode.jumpDistance) {
-        // 到达跳跃范围
-        mc.thePlayer.jump();
+      // 如果在陆地上 则有2个情况
+      if (x == endNode.getPos().getX() && z == endNode.getPos().getZ()) {
+        // 落地了 到达位置了 删除跳跃节点
+        path.remove(1);
+        path.remove(0);
       } else {
-        walkExec(jumpNode, mc, node);
+        // 情况2就是还没有起跳 先准备起跳
+        Vec3d jumpVec = Vec3d.ofCenter(jumpNode.getPos());
+        if (Math.hypot(mc.thePlayer.posX - jumpVec.getX(), mc.thePlayer.posZ - jumpVec.getZ()) < jumpNode.jumpDistance) {
+          // 到达跳跃范围
+          mc.thePlayer.jump();
+        } else {
+          walkExec(jumpNode, mc, node);
+        }
       }
     } else {
       // 如果玩家没有到位的
-      int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
-      int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
       if (x != endNode.getPos().getX() || z != endNode.getPos().getZ()) {
         // 转换到角度
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(nextNode.pos));
@@ -91,11 +100,6 @@ public class PathExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
       } else {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-        if (mc.thePlayer.onGround) {
-          // 落地了 到达位置了 删除跳跃节点
-          path.remove(1);
-          path.remove(0);
-        }
       }
     }
   }
