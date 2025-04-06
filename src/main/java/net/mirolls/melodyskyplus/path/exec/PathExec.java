@@ -173,8 +173,10 @@ public class PathExec {
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, headBlockRotation.getPitch(), 25);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, headBlockRotation.getYaw(), 25);
 
-      // 挖掘路障
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(headBlock));
+      boolean canGo = RotationUtil.isLookingAtBlock(headBlock)
+          || (Math.abs(mc.thePlayer.rotationPitch - headBlockRotation.getPitch()) < 1
+          && Math.abs(mc.thePlayer.rotationYaw - headBlockRotation.getYaw()) < 1);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
     } else if (mc.theWorld.getBlockState(footBlock).getBlock() != Blocks.air) {
       // 停止走路 拒接转圈
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
@@ -185,7 +187,10 @@ public class PathExec {
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), 25);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25);
 
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(footBlock));
+      boolean canGo = RotationUtil.isLookingAtBlock(footBlock)
+          || (Math.abs(mc.thePlayer.rotationPitch - footBlockRotation.getPitch()) < 1
+          && Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 1);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
     } else if (doubleNextNode instanceof Mine && doubleNextNode.getPos().getY() - 1 == nextNode.getPos().getY() && mc.theWorld.getBlockState(topBlock).getBlock() != Blocks.air) {
       Rotation topBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(topBlock));
 
@@ -198,8 +203,10 @@ public class PathExec {
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, topBlockRotation.getPitch(), 25);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, topBlockRotation.getYaw(), 25);
 
-      // 挖掘路障
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(topBlock));
+      boolean canGo = RotationUtil.isLookingAtBlock(topBlock)
+          || (Math.abs(mc.thePlayer.rotationPitch - topBlockRotation.getPitch()) < 1
+          && Math.abs(mc.thePlayer.rotationYaw - topBlockRotation.getYaw()) < 1);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
     } else {
       // 停止挖掘
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
