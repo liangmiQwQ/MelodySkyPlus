@@ -52,8 +52,7 @@ public class PathExec {
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
-        Node doubleNextNode = path.get(2);
-        mineExec(nextNode, doubleNextNode, mc, path);
+        mineExec(nextNode, mc, path);
       } else if (nextNode instanceof Jump) {
         jumpExec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
@@ -152,11 +151,10 @@ public class PathExec {
 
   }
 
-  private void mineExec(Node nextNode, Node doubleNextNode, Minecraft mc, List<Node> path) {
+  private void mineExec(Node nextNode, Minecraft mc, List<Node> path) {
     // 先挖掘对应的方块
     BlockPos footBlock = nextNode.getPos();
     BlockPos headBlock = nextNode.getPos().up();
-    BlockPos topBlock = nextNode.getPos().up().up();
 
 
     Rotation footBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(footBlock));
@@ -190,22 +188,6 @@ public class PathExec {
       boolean canGo = RotationUtil.isLookingAtBlock(footBlock)
           || (Math.abs(mc.thePlayer.rotationPitch - footBlockRotation.getPitch()) < 1
           && Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 1);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
-    } else if (doubleNextNode instanceof Mine && doubleNextNode.getPos().getY() - 1 == nextNode.getPos().getY() && mc.theWorld.getBlockState(topBlock).getBlock() != Blocks.air) {
-      Rotation topBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(topBlock));
-
-      // 如果下一个点是要跳跃的 则需要再挖掘头顶的方块
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
-
-      // 转头到方块
-      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, topBlockRotation.getPitch(), 25);
-      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, topBlockRotation.getYaw(), 25);
-
-      boolean canGo = RotationUtil.isLookingAtBlock(topBlock)
-          || (Math.abs(mc.thePlayer.rotationPitch - topBlockRotation.getPitch()) < 1
-          && Math.abs(mc.thePlayer.rotationYaw - topBlockRotation.getYaw()) < 1);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
     } else {
       // 停止挖掘
