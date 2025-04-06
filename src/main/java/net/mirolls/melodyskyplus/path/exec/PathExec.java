@@ -7,10 +7,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
-import net.mirolls.melodyskyplus.path.type.Jump;
-import net.mirolls.melodyskyplus.path.type.Mine;
-import net.mirolls.melodyskyplus.path.type.Node;
-import net.mirolls.melodyskyplus.path.type.Walk;
+import net.mirolls.melodyskyplus.path.type.*;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
@@ -55,9 +52,12 @@ public class PathExec {
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
-        mineExec(nextNode, mc, path);
+        Node doubleNextNode = path.get(2);
+        mineExec(nextNode, doubleNextNode, mc, path);
       } else if (nextNode instanceof Jump) {
         jumpExec(nextNode, path, mc, node);
+      } else if (nextNode instanceof Ability) {
+
       }
     }
   }
@@ -152,10 +152,12 @@ public class PathExec {
 
   }
 
-  private void mineExec(Node nextNode, Minecraft mc, List<Node> path) {
+  private void mineExec(Node nextNode, Node doubleNextNode, Minecraft mc, List<Node> path) {
     // 先挖掘对应的方块
     BlockPos footBlock = nextNode.getPos();
     BlockPos headBlock = nextNode.getPos().up();
+    BlockPos topBlock = nextNode.getPos().up().up();
+
 
     Rotation footBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(footBlock));
     Rotation headBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(headBlock));
@@ -184,6 +186,20 @@ public class PathExec {
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25);
 
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(footBlock));
+    } else if (doubleNextNode instanceof Mine && doubleNextNode.getPos().getY() - 1 == nextNode.getPos().getY() && mc.theWorld.getBlockState(topBlock).getBlock() != Blocks.air) {
+      Rotation topBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(topBlock));
+
+      // 如果下一个点是要跳跃的 则需要再挖掘头顶的方块
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+
+      // 转头到方块
+      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, topBlockRotation.getPitch(), 25);
+      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, topBlockRotation.getYaw(), 25);
+
+      // 挖掘路障
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), RotationUtil.isLookingAtBlock(topBlock));
     } else {
       // 停止挖掘
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
