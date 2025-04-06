@@ -223,22 +223,6 @@ public class AStarPathFinder {
         if (node != null) return node;
       }
 
-      if (parent.type == PathPos.PathNodeType.MINE) {
-        // 如果是挖掘类型节点 允许一格跳
-        BlockPos posFoot = mc.thePlayer.getPosition().add(0, 1, 0);
-        BlockPos posHead = mc.thePlayer.getPosition().add(0, 2, 0);
-
-        if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
-          return null;
-        }
-
-        // 添加节点
-        for (BlockPos offset : getJumpOffsets(1)) {
-          PathNode node = openBlock(parent, target, offset, false, true, false, true);
-          if (node != null) return node;
-        }
-      }
-      
       if (parent.type == PathPos.PathNodeType.ABILITY) {
         // 如果是技能类节点 允许垂直向上
         BlockPos posUp = mc.thePlayer.getPosition().add(0, 1, 0);
