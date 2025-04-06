@@ -219,22 +219,46 @@ public class AStarPathFinder {
       openedBlocks.remove(parent);
 
       for (BlockPos offset : BASIC_OFFSETS) {
-        PathNode node = openBlock(parent, target, offset, false, false, false);
+        PathNode node = openBlock(parent, target, offset, false, false, false, false);
+        if (node != null) return node;
+      }
+
+      if (parent.type == PathPos.PathNodeType.MINE) {
+        // 如果是挖掘类型节点 允许一格跳
+        BlockPos posFoot = mc.thePlayer.getPosition().add(0, 1, 0);
+        BlockPos posHead = mc.thePlayer.getPosition().add(0, 2, 0);
+
+        if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
+          return null;
+        }
+
+        // 添加节点
+        for (BlockPos offset : getJumpOffsets(1)) {
+          PathNode node = openBlock(parent, target, offset, false, true, false, true);
+          if (node != null) return node;
+        }
+      }
+      
+      if (parent.type == PathPos.PathNodeType.ABILITY) {
+        // 如果是技能类节点 允许垂直向上
+        BlockPos posUp = mc.thePlayer.getPosition().add(0, 1, 0);
+
+        PathNode node = openBlock(parent, target, posUp, false, true, true, false);
         if (node != null) return node;
       }
 
       if (parent.type == PathPos.PathNodeType.WALK || parent.type == PathPos.PathNodeType.JUMP_END) {
         if (jumpBoost) {
-          for (int i = 0; i < 6; i++) {
-            BlockPos posFoot = mc.thePlayer.getPosition().add(0, i, 0);
-            BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 1, 0);
+          for (int i = 0; i < 5; i++) {
+            BlockPos posFoot = mc.thePlayer.getPosition().add(0, i + 1, 0);
+            BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 2, 0);
 
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
 
             for (BlockPos offset : getJumpOffsets(i + 1)) {
-              PathNode node = openBlock(parent, target, offset, true, true, true);
+              PathNode node = openBlock(parent, target, offset, true, false, true, true);
               if (node != null) return node;
             }
           }
@@ -245,7 +269,7 @@ public class AStarPathFinder {
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
-            PathNode node = openBlock(parent, target, offset, true, false, true);
+            PathNode node = openBlock(parent, target, offset, true, false, false, true);
             if (node != null) return node;
           }
         }
@@ -263,12 +287,12 @@ public class AStarPathFinder {
     };
   }
 
-  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean jumpEnd, boolean disableMining, boolean disableAbility) {
+  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean jumpEnd, boolean disableWalk, boolean disableMining, boolean disableAbility) {
     BlockPos pos = parent.pos.add(offset);
 
     boolean posChecked = isPosChecked(pos);
 
-    if (!posChecked) {
+    if (!posChecked && !disableWalk) {
       int walkType = getWalkType(pos);
       if (walkType == 0) {
         int distance = distance(pos, target);
