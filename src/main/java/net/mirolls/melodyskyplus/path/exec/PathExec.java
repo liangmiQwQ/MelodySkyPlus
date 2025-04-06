@@ -67,12 +67,14 @@ public class PathExec {
     Node endNode = path.get(2);
 
 
-    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
-    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
+    Vec3d center = Vec3d.ofCenter(endNode.getPos());
+    boolean isInBlock = Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8;
+
 
     if (mc.thePlayer.onGround) {
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
       // 如果在陆地上 则有2个情况
-      if (x == endNode.getPos().getX() && z == endNode.getPos().getZ()) {
+      if (isInBlock) {
         // 落地了 到达位置了 删除跳跃节点
         path.remove(1);
         path.remove(0);
@@ -88,17 +90,22 @@ public class PathExec {
       }
     } else {
       // 如果玩家没有到位的
-      if (x == endNode.getPos().getX() && z == endNode.getPos().getZ()) {
+      if (isInBlock) {
+        // BUG 由于MOJANG设置的无脑惯性 需要按S抵消一下惯性(maybe)
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+        // 这里什么时候松 要不要按 依然有问题
+        // TODO 根据motion确定 是否要按下s
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), true);
       } else {
         // 转换到角度
-        Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(nextNode.pos));
+        Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.getPos()));
 
         // 移动玩家视角
         mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
         mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
 
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
       }
     }
   }
