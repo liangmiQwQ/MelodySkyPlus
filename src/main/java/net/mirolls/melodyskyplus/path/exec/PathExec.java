@@ -11,6 +11,7 @@ import net.mirolls.melodyskyplus.path.type.*;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -93,9 +94,14 @@ public class PathExec {
       if (isInBlock) {
         // BUG 由于MOJANG设置的无脑惯性 需要按S抵消一下惯性(maybe)
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+
         // 这里什么时候松 要不要按 依然有问题
-        // TODO 根据motion确定 是否要按下s
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), true);
+        boolean isInBlockNext = Math.abs(mc.thePlayer.posX + mc.thePlayer.motionX * tickToGround(endNode.getPos().getY()) - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ + mc.thePlayer.motionZ * tickToGround(endNode.getPos().getY()) - center.getZ()) <= 0.8;
+        if (!isInBlockNext) {
+          Helper.sendMessage("mx: " + mc.thePlayer.motionX + "; mz:" + mc.thePlayer.motionZ);
+          Helper.sendMessage("rx: " + (mc.thePlayer.posX - mc.thePlayer.lastTickPosX) + "; rz:" + (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ));
+        }
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), !isInBlockNext);
       } else {
         // 转换到角度
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.getPos()));
@@ -128,15 +134,19 @@ public class PathExec {
       float yawShould = node.nextRotation.getYaw();
       float yawNow = rotation.getYaw();
 
-      // 经过研究 发现如果正负号不统一的 并且角度小于-90度的 则需要将负号改为正号
-      if (yawNow < -90 && yawShould > 90) {
-        yawNow = -1 * yawNow;
-      } else if (yawNow > 90 && yawShould < -90) {
-        yawShould = -1 * yawShould;
+
+      float diff = yawNow - yawShould;
+      if (diff > 180) {
+        // 如果差value大于180的 可能是遇到了错误情况 (-90 ~ -180) 需要把这些坐标变成正确合理的坐标 (270 ~ 180)
+        yawShould = (yawShould - (-180) + 180);
+        diff = yawNow - yawShould;
+      } else if (diff < -180) {
+        yawNow = (yawNow - (-180) + 180);
+        diff = yawNow - yawShould;
       }
 
       // 如果 now - should是正的 则偏左 则需要往右移动
-      if ((yawNow - yawShould) > 2) {
+      if (diff > 2) {
         MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
       } else {
@@ -144,8 +154,8 @@ public class PathExec {
       }
 
       // 反之亦然
-      if ((yawNow - yawShould) < -2) {
-        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
+      if (diff < -2) {
+        MelodySkyPlus.LOGGER.info("Found Player offset to the right, start to go to the left. (" + yawNow + " - " + yawShould + ")");
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), true);
       } else {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
@@ -232,4 +242,26 @@ public class PathExec {
     return MathHelper.wrapAngleTo180_float((current + deltaAngle / 2) % 360);
   }
 
+  private int tickToGround(int y) {
+    Minecraft mc = Minecraft.getMinecraft();
+    // 通过精准的计算 获得从最高点下降到现在的tick
+    // 通过公式 3.92 * (1 - Math.pow(0.98, fallTick)) 精准求出顺时下落速度
+
+    if (mc.thePlayer.motionY >= 3.91) {
+      // 速度最大值 直接返回除数
+      return (int) Math.round(mc.thePlayer.posY - y / 3.92);
+    } else {
+      int tickNow = (int) Math.round(Math.log(1 - mc.thePlayer.motionY / 3.92) / Math.log(0.98));
+      // 这是现在的tick 根据玩家的y坐标 逐渐减去测算出来的速度 直到小于y后返回
+      double playerY = mc.thePlayer.posY;
+      int tickNeed = 0;
+      
+      while (playerY < y) {
+        tickNeed++;
+        playerY -= 3.92 * (1 - Math.pow(0.98, tickNeed + tickNow));
+      }
+
+      return tickNeed;
+    }
+  }
 }
