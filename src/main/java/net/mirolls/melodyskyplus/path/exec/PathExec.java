@@ -247,16 +247,17 @@ public class PathExec {
     // 通过精准的计算 获得从最高点下降到现在的tick
     // 通过公式 3.92 * (1 - Math.pow(0.98, fallTick)) 精准求出顺时下落速度
 
-    if (mc.thePlayer.motionY >= 3.91) {
+    double absMotionY = Math.abs(mc.thePlayer.motionY);
+    if (absMotionY >= 3.91) {
       // 速度最大值 直接返回除数
-      return (int) Math.round(mc.thePlayer.posY - y / 3.92);
+      return (int) Math.round((mc.thePlayer.posY - y) / 3.92);
     } else {
-      int tickNow = (int) Math.round(Math.log(1 - mc.thePlayer.motionY / 3.92) / Math.log(0.98));
+      int tickNow = (int) Math.round(Math.log(1 - absMotionY / 3.92) / Math.log(0.98));
       // 这是现在的tick 根据玩家的y坐标 逐渐减去测算出来的速度 直到小于y后返回
       double playerY = mc.thePlayer.posY;
       int tickNeed = 0;
-      
-      while (playerY < y) {
+
+      while (playerY > y) {
         tickNeed++;
         playerY -= 3.92 * (1 - Math.pow(0.98, tickNeed + tickNow));
       }
