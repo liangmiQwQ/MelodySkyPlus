@@ -11,7 +11,6 @@ import net.mirolls.melodyskyplus.path.type.*;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
-import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -84,7 +83,12 @@ public class PathExec {
         Vec3d jumpVec = Vec3d.ofCenter(jumpNode.getPos());
         if (Math.hypot(mc.thePlayer.posX - jumpVec.getX(), mc.thePlayer.posZ - jumpVec.getZ()) < jumpNode.jumpDistance) {
           // 到达跳跃范围
-          mc.thePlayer.jump();
+          // 先停止按下w然后再跳
+          if (mc.gameSettings.keyBindForward.isKeyDown()) {
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+          } else {
+            mc.thePlayer.jump();
+          }
         } else {
           walkExec(jumpNode, mc, node);
         }
@@ -95,12 +99,9 @@ public class PathExec {
         // BUG 由于MOJANG设置的无脑惯性 需要按S抵消一下惯性(maybe)
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
 
-        // 这里什么时候松 要不要按 依然有问题
-        boolean isInBlockNext = Math.abs(mc.thePlayer.posX + mc.thePlayer.motionX * tickToGround(endNode.getPos().getY()) - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ + mc.thePlayer.motionZ * tickToGround(endNode.getPos().getY()) - center.getZ()) <= 0.8;
-        if (!isInBlockNext) {
-          Helper.sendMessage("mx: " + mc.thePlayer.motionX + "; mz:" + mc.thePlayer.motionZ);
-          Helper.sendMessage("rx: " + (mc.thePlayer.posX - mc.thePlayer.lastTickPosX) + "; rz:" + (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ));
-        }
+        int tick = tickToGround(endNode.getPos().getY());
+        MelodySkyPlus.LOGGER.info(tick + " " + mc.thePlayer.motionX + " " + mc.thePlayer.motionZ); // 最保险的方法 除了略小误差 保证能精准计算到落地时间
+        boolean isInBlockNext = Math.abs(mc.thePlayer.posX + mc.thePlayer.motionX * tick - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ + mc.thePlayer.motionZ * tick - center.getZ()) <= 0.8;
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), !isInBlockNext);
       } else {
         // 转换到角度
