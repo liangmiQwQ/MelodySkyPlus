@@ -7,6 +7,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import net.mirolls.melodyskyplus.path.type.*;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
@@ -16,6 +17,7 @@ import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class PathExec {
@@ -27,15 +29,16 @@ public class PathExec {
 
   @EventHandler
   public void onTick(EventPreUpdate event) {
+    SmartyPathFinder smartyPathFinder = Objects.requireNonNull(SmartyPathFinder.getINSTANCE());
     Minecraft mc = Minecraft.getMinecraft();
 
-    List<Node> path = MelodySkyPlus.smartyPathFinder.path;
+    List<Node> path = smartyPathFinder.path;
 
     if (path != null && !path.isEmpty()) {
       if (path.size() == 1) {
         // 走到终点自动停止
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-        MelodySkyPlus.smartyPathFinder.clear();
+        smartyPathFinder.clear();
         return;
       }
 
@@ -52,7 +55,7 @@ public class PathExec {
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
-        mineExec(nextNode, mc, path);
+        mineExec(nextNode, mc, path, smartyPathFinder);
       } else if (nextNode instanceof Jump) {
         jumpExec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
@@ -169,7 +172,10 @@ public class PathExec {
 
   }
 
-  private void mineExec(Node nextNode, Minecraft mc, List<Node> path) {
+  private void mineExec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder) {
+    // 先切换到稿子
+    mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue();
+
     // 先挖掘对应的方块
     BlockPos footBlock = nextNode.getPos();
     BlockPos headBlock = nextNode.getPos().up();
