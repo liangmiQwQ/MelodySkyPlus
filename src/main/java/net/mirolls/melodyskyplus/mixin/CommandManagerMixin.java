@@ -23,7 +23,5 @@ public class CommandManagerMixin {
   public void init(CallbackInfo ci) {
     this.commands.add(new CrystalHollowGoTo());
     this.commands.add(new TestPath());
-    this.commands.add(new CanGo());
-
   }
 }
