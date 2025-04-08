@@ -16,6 +16,7 @@ import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -26,7 +27,7 @@ import java.util.Random;
 
 public class PathExec {
 
-  SkyblockArea area = null;
+  public SkyblockArea area = null;
 
   public PathExec() {
     EventBus.getInstance().register(this);
@@ -40,11 +41,6 @@ public class PathExec {
 
     List<Node> path = smartyPathFinder.path;
 
-    if (area == null) {
-      area = new SkyblockArea();
-      area.updateCurrentArea();
-    }
-
     if (path != null && !path.isEmpty()) {
       if (path.size() == 1) {
         // 走到终点自动停止
@@ -52,6 +48,12 @@ public class PathExec {
         smartyPathFinder.clear();
         area = null;
         return;
+      }
+
+      if (area == null) {
+        area = new SkyblockArea();
+        area.updateCurrentArea();
+        Helper.sendMessage(area.isIn(Areas.Crystal_Hollows));
       }
 
       // 执行器核心 运行path
@@ -256,12 +258,10 @@ public class PathExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5);
 
       // 处理下一个点
-      int x = (int) (Math.floor(mc.thePlayer.posX) - 1);
+      int x = (int) Math.floor(mc.thePlayer.posX);
       int y = (int) Math.floor(mc.thePlayer.posY);
-      int z = (int) (Math.floor(mc.thePlayer.posZ) - 1);
+      int z = (int) Math.floor(mc.thePlayer.posZ);
       BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
-      MelodySkyPlus.LOGGER.info("NextPos " + nextNode.getPos().toString());
-      MelodySkyPlus.LOGGER.info("PosPlayer " + posPlayer.toString());
 
       if (nextNode.getPos().equals(posPlayer)) {
         path.remove(0);

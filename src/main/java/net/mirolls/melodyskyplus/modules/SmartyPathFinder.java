@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.path.find.AStarPathFinder;
 import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.optimization.JumpOptimization;
@@ -56,15 +57,17 @@ public class SmartyPathFinder extends Module {
   }
 
   public void go(BlockPos end) {
-    int x = (int) (Math.floor(mc.thePlayer.posX) - 1);
+    int x = (int) Math.floor(mc.thePlayer.posX);
     int y = (int) Math.floor(mc.thePlayer.posY);
-    int z = (int) (Math.floor(mc.thePlayer.posZ) - 1);
+    int z = (int) Math.floor(mc.thePlayer.posZ);
     BlockPos start = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
 
     go(start, end);
   }
 
   public void go(BlockPos start, BlockPos end) {
+    MelodySkyPlus.pathExec.area = null;
+
     if (segmentation.getValue()) {
       aStarPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(start, end, length.getValue().intValue());
     } else {
@@ -74,6 +77,7 @@ public class SmartyPathFinder extends Module {
     path = new JumpOptimization(true)
         .optimize(new PathOptimizer()
             .optimize(aStarPath));
+
 
     if (aStarPath == null || path == null) {
       throw new IllegalStateException("Path no Found");
