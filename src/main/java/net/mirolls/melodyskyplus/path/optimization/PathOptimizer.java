@@ -93,7 +93,7 @@ public class PathOptimizer {
       IBlockState blockState = getBlockState(bp);
       if (blockState.getBlock() != Blocks.air) {
         // 如果不是空气的
-        if (blockState.getBlock().getRegistryName().contains("slab") && blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
+        if (blockState.getBlock().getRegistryName().contains("slab") && !blockState.getBlock().getRegistryName().contains("double") && blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
           // 如果是下半砖的
           yPos += 1; // 提升一下y的value 依然是个好汉
           bp = new BlockPos(pos.getX(), yPos, pos.getZ());

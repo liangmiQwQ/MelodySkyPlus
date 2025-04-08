@@ -56,9 +56,9 @@ public class SmartyPathFinder extends Module {
   }
 
   public void go(BlockPos end) {
-    int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
-    int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
-    int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
+    int x = (int) (Math.floor(mc.thePlayer.posX) - 1);
+    int y = (int) Math.floor(mc.thePlayer.posY);
+    int z = (int) (Math.floor(mc.thePlayer.posZ) - 1);
     BlockPos start = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
 
     go(start, end);

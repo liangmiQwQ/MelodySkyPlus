@@ -3,7 +3,9 @@ package net.mirolls.melodyskyplus.path.exec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -12,6 +14,8 @@ import net.mirolls.melodyskyplus.path.type.*;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
+import xyz.Melody.System.Managers.Skyblock.Area.Areas;
+import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -21,6 +25,8 @@ import java.util.Objects;
 import java.util.Random;
 
 public class PathExec {
+
+  SkyblockArea area = null;
 
   public PathExec() {
     EventBus.getInstance().register(this);
@@ -34,11 +40,17 @@ public class PathExec {
 
     List<Node> path = smartyPathFinder.path;
 
+    if (area == null) {
+      area = new SkyblockArea();
+      area.updateCurrentArea();
+    }
+
     if (path != null && !path.isEmpty()) {
       if (path.size() == 1) {
         // 走到终点自动停止
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
         smartyPathFinder.clear();
+        area = null;
         return;
       }
 
@@ -47,11 +59,10 @@ public class PathExec {
       Node nextNode = path.get(1);
 
       if (nextNode instanceof Walk) {
-        walkExec(nextNode, mc, node);
 
         // 这里给停止部分单独拉出来 是为了让Jump的代码复用
         Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 1.5) {
+        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
@@ -59,7 +70,13 @@ public class PathExec {
       } else if (nextNode instanceof Jump) {
         jumpExec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
-
+        Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
+        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
+          path.remove(0);
+        } else {
+          // 如果还没走到这个节点 需要先走到
+          walkExec(nextNode, mc, node);
+        }
       }
     }
   }
@@ -168,8 +185,6 @@ public class PathExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
     }
-
-
   }
 
   private void mineExec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder) {
@@ -198,7 +213,15 @@ public class PathExec {
       boolean canGo = RotationUtil.isLookingAtBlock(headBlock)
           || (Math.abs(mc.thePlayer.rotationPitch - headBlockRotation.getPitch()) < 1
           && Math.abs(mc.thePlayer.rotationYaw - headBlockRotation.getYaw()) < 1);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
+
+      if (area.isIn(Areas.Crystal_Hollows)) {
+        if (canGo) {
+          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, headBlock, EnumFacing.DOWN));
+          mc.thePlayer.swingItem();
+        }
+      } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
+      }
     } else if (mc.theWorld.getBlockState(footBlock).getBlock() != Blocks.air) {
       // 停止走路 拒接转圈
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
@@ -212,7 +235,15 @@ public class PathExec {
       boolean canGo = RotationUtil.isLookingAtBlock(footBlock)
           || (Math.abs(mc.thePlayer.rotationPitch - footBlockRotation.getPitch()) < 1
           && Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 1);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
+
+      if (area.isIn(Areas.Crystal_Hollows)) {
+        if (canGo) {
+          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, footBlock, EnumFacing.DOWN));
+          mc.thePlayer.swingItem();
+        }
+      } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
+      }
     } else {
       // 停止挖掘
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
@@ -225,10 +256,13 @@ public class PathExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5);
 
       // 处理下一个点
-      int x = (int) (mc.thePlayer.posX - mc.thePlayer.posX % 1 - 1);
-      int y = (int) (mc.thePlayer.posY - mc.thePlayer.posY % 1);
-      int z = (int) (mc.thePlayer.posZ - mc.thePlayer.posZ % 1 - 1);
+      int x = (int) (Math.floor(mc.thePlayer.posX) - 1);
+      int y = (int) Math.floor(mc.thePlayer.posY);
+      int z = (int) (Math.floor(mc.thePlayer.posZ) - 1);
       BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
+      MelodySkyPlus.LOGGER.info("NextPos " + nextNode.getPos().toString());
+      MelodySkyPlus.LOGGER.info("PosPlayer " + posPlayer.toString());
+
       if (nextNode.getPos().equals(posPlayer)) {
         path.remove(0);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
