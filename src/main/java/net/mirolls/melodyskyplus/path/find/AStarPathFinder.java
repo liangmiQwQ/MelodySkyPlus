@@ -126,6 +126,10 @@ public class AStarPathFinder {
   }
 
   public List<PathPos> findPath(BlockPos start, BlockPos target) {
+    return findPath(start, target, -1);
+  }
+
+  public List<PathPos> findPath(BlockPos start, BlockPos target, int length) {
 
     PathNode root = new PathNode(0, distance(start, target), null, start, PathPos.PathNodeType.WALK);
 
@@ -138,12 +142,18 @@ public class AStarPathFinder {
 
     PathNode targetPathNode;
 
-    MelodySkyPlus.LOGGER.info("Start to find path. player pos:" + start + " targetPos:" + target);
+    MelodySkyPlus.LOGGER.info("Start to find path. player pos: " + start + " targetPos: " + target);
     do {
       PathNode nodeToClose = openedBlocks.poll();
 
       if (nodeToClose == null) {
         return null; // 找不到路径
+      }
+
+      if (nodeToClose.gCost > length && length > -1) {
+        // 实现分段查询
+        targetPathNode = nodeToClose;
+        break;
       }
 
       PathNode block = closeBlock(nodeToClose, target);
@@ -152,6 +162,7 @@ public class AStarPathFinder {
         targetPathNode = block;
         break;
       }
+
     } while (true);
 
 

@@ -1,6 +1,5 @@
 package net.mirolls.melodyskyplus.mixin;
 
-import net.mirolls.melodyskyplus.client.cmd.CanGo;
 import net.mirolls.melodyskyplus.client.cmd.CrystalHollowGoTo;
 import net.mirolls.melodyskyplus.client.cmd.TestPath;
 import org.spongepowered.asm.mixin.Mixin;
