@@ -53,7 +53,7 @@ public class PathExec {
       if (area == null) {
         area = new SkyblockArea();
         area.updateCurrentArea();
-        Helper.sendMessage(area.isIn(Areas.Crystal_Hollows));
+        Helper.sendMessage(area.isIn(Areas.Crystal_Hollows) ? "Since you're in Crystal Hollows, you will use C07Packet to mine" : "Since you're not in Crystal Hollows, you will use left click to mine");
       }
 
       // 执行器核心 运行path
