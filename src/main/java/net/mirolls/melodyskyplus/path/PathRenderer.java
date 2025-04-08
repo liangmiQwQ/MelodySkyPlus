@@ -1,7 +1,7 @@
 package net.mirolls.melodyskyplus.path;
 
 import net.minecraftforge.common.MinecraftForge;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Event.EventBus;
@@ -12,6 +12,7 @@ import xyz.Melody.Utils.render.RenderUtil;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PathRenderer {
   public PathRenderer() {
@@ -21,9 +22,10 @@ public class PathRenderer {
 
   @EventHandler
   public void onRender(EventRender3D event) {
-    if (MelodySkyPlus.smartyPathFinder.path != null && MelodySkyPlus.smartyPathFinder.aStarPath != null) {
-      if (!MelodySkyPlus.smartyPathFinder.path.isEmpty() && !MelodySkyPlus.smartyPathFinder.aStarPath.isEmpty()) {
-        for (PathPos pathPos : MelodySkyPlus.smartyPathFinder.aStarPath) {
+    SmartyPathFinder smartyPathFinder = Objects.requireNonNull(SmartyPathFinder.getINSTANCE());
+    if (smartyPathFinder.path != null && smartyPathFinder.aStarPath != null) {
+      if (!smartyPathFinder.path.isEmpty() && !smartyPathFinder.aStarPath.isEmpty()) {
+        for (PathPos pathPos : smartyPathFinder.aStarPath) {
           if (pathPos.getType() == PathPos.PathNodeType.WALK) {
             RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(8, 125, 13, 100), event.getPartialTicks());
           } else if (pathPos.getType() == PathPos.PathNodeType.MINE) {
@@ -37,7 +39,7 @@ public class PathRenderer {
           }
         }
 
-        RenderUtil.drawLines((ArrayList<Vec3d>) Node.toVec3dArray(MelodySkyPlus.smartyPathFinder.path), 5.0F, event.getPartialTicks());
+        RenderUtil.drawLines((ArrayList<Vec3d>) Node.toVec3dArray(smartyPathFinder.path), 5.0F, event.getPartialTicks());
       }
     }
   }
