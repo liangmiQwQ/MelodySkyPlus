@@ -104,7 +104,7 @@ public class AStarPathFinder {
         return null; // 找不到路径
       }
 
-      if (nodeToClose.gCost > length && length > -1) {
+      if (nodeToClose.gCost > length && length > -1 && nodeToClose.type != PathPos.PathNodeType.ABILITY) {
         // 实现分段查询
         targetPathNode = nodeToClose;
         break;
@@ -170,6 +170,14 @@ public class AStarPathFinder {
           abilityStartPos = null;
         }
       }
+    }
+
+    // 如果到终点了 abilityStartPos 还在的
+    if (abilityStartPos != null) {
+      PathPos lastNode = returnPaths.get(returnPaths.size() - 1);
+      returnPaths.remove(returnPaths.size() - 1);
+
+      returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, lastNode.getPos()));
     }
 
     return returnPaths.stream()
