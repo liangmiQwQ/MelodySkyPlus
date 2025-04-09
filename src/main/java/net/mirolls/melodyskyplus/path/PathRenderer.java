@@ -34,8 +34,10 @@ public class PathRenderer {
             RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(37, 200, 255, 100), event.getPartialTicks());
           } else if (pathPos.getType() == PathPos.PathNodeType.ABILITY_END) {
             RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(140, 3, 255, 100), event.getPartialTicks());
-          } else { // Jump
+          } else if (pathPos.getType() == PathPos.PathNodeType.JUMP_END) {
             RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(255, 166, 0, 100), event.getPartialTicks());
+          } else if (pathPos.getType() == PathPos.PathNodeType.ABILITY_BETWEEN) {
+            RenderUtil.drawFullBlockESP(pathPos.getPos(), new Color(14, 107, 210, 10), event.getPartialTicks());
           }
         }
 
