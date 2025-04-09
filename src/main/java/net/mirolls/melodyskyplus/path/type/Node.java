@@ -55,43 +55,30 @@ public class Node {
         // 修改上一个节点为跳跃节点 并且添加end节点
         values.add(new Jump(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 1));
         values.add(new Walk(pos.getPos(), rotation, distance));
-      } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
-        // 这里再细分一下到底是fall还是JumpEnd
-        PathPos prevPos = path.get(i - 1);
-        if (prevPos != null && prevPos.getPos().getY() > pos.getPos().getY()) { // 上一个的高度要比这个高
-          if (prevPos.getPos().getX() == pos.getPos().getX()) {
-            // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
-            if (Math.abs(prevPos.getPos().getZ() - pos.getPos().getZ()) == 1) {
-              // 读取上一个节点并且删除
-              Node prevNode = values.get(values.size() - 1);
-              values.remove(values.size() - 1);
-
-              // 修改上一个节点为摔落节点 并且添加end节点
-              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 1));
-              values.add(new Walk(pos.getPos(), rotation, distance));
-              continue;
-            }
-          } else if (prevPos.getPos().getZ() == pos.getPos().getZ()) {
-            // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
-            if (Math.abs(prevPos.getPos().getX() - pos.getPos().getX()) == 1) {
-              // 读取上一个节点并且删除
-              Node prevNode = values.get(values.size() - 1);
-              values.remove(values.size() - 1);
-
-              // 修改上一个节点为摔落节点 并且添加end节点
-              values.add(new Fall(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, 0));
-              values.add(new Walk(pos.getPos(), rotation, distance));
-              continue;
-            }
-          }
-        }
-
-        // 读取上一个节点并且删除
+      } else if (pos.getType() == PathPos.PathNodeType.ABILITY_BETWEEN) {
+        // 意味着上一个点是Ability开始点 需要读取上一个节点并且删除
         Node prevNode = values.get(values.size() - 1);
         values.remove(values.size() - 1);
 
-        // 修改上一个节点为摔落节点 并且添加end节点
-        values.add(new Ability(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance));
+        // 读取其后的AbilityBetween节点
+        List<PathPos> nodesBetween = new ArrayList<>();
+
+        for (int j = i; j < path.size(); j++) {
+          // 循环 通过该循环获取到后续节点
+          PathPos nodeBetween = path.get(j);
+          if (nodeBetween.getType() == PathPos.PathNodeType.ABILITY_BETWEEN) {
+            nodesBetween.add(nodeBetween);
+          } else {
+            // 相当于直接走过了这些路程 i也不用重新跑了
+            // i = j 因为这个点是结束点 要走一遍下一个循环里点ABILITY_END 所以这里不是 j + 1
+            i = j;
+            break;
+          }
+        }
+
+        // 把上一个点补回去
+        values.add(new Ability(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, nodesBetween));
+      } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
         values.add(new Walk(pos.getPos(), rotation, distance));
       } else if (pos.getType() == PathPos.PathNodeType.MINE) {
         // mine已经是前一个了 不需要进行额外处理
