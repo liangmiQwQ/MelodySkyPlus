@@ -6,10 +6,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
-import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,49 +49,6 @@ public class AStarPathFinder {
 
   public AStarPathFinder() {
     this(true, true);
-  }
-
-  public static boolean rayTrace(BlockPos from, BlockPos to) {
-    Minecraft mc = Minecraft.getMinecraft();
-
-    Vec3d target = null;
-    Vec3d[] var2 = Vec3d.points(to);
-    int var3 = var2.length;
-    int var4 = 0;
-
-    while (var4 < var3) {
-      Vec3d vec = var2[var4];
-      Vec3 playerVec = new Vec3(from.getX(), from.getY() + 0.6, from.getZ());
-      MovingObjectPosition trajectory = mc.theWorld.rayTraceBlocks(playerVec, vec.toVec3(), false, true, true);
-      if (trajectory == null) {
-        target = vec;
-        break;
-      }
-
-      label69:
-      {
-        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
-          if (trajectory.getBlockPos() == null) {
-            break label69;
-          }
-
-          boolean sameX = trajectory.getBlockPos().getX() == to.getX();
-          boolean sameY = trajectory.getBlockPos().getY() == to.getY();
-          boolean sameZ = trajectory.getBlockPos().getZ() == to.getZ();
-          if (sameX && sameY && sameZ) {
-            break label69;
-          }
-        }
-
-        ++var4;
-        continue;
-      }
-
-      target = vec;
-      break;
-    }
-
-    return target != null;
   }
 
   /**
