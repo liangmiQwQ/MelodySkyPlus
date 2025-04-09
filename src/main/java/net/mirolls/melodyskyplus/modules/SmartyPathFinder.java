@@ -7,6 +7,7 @@ import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.optimization.JumpOptimization;
 import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
 import net.mirolls.melodyskyplus.path.type.Node;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
@@ -57,12 +58,7 @@ public class SmartyPathFinder extends Module {
   }
 
   public void go(BlockPos end) {
-    int x = (int) Math.floor(mc.thePlayer.posX);
-    int y = (int) Math.floor(mc.thePlayer.posY);
-    int z = (int) Math.floor(mc.thePlayer.posZ);
-    BlockPos start = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
-
-    go(start, end);
+    go(PlayerUtils.getPlayerLocation(), end);
   }
 
   public void go(BlockPos start, BlockPos end) {
