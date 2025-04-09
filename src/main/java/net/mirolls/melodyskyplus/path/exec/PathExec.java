@@ -10,6 +10,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import net.mirolls.melodyskyplus.path.type.*;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
@@ -73,9 +74,18 @@ public class PathExec {
       } else if (nextNode instanceof Jump) {
         jumpExec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
+        // 同样 也是让后面代码更加轻松
+        Ability nextAbility = (Ability) nextNode;
         Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
-          path.remove(0);
+
+        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 1) {
+          // 执行操作 先换物品到aotv
+          Helper.sendMessage("Good");
+        } else if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
+          // 如果距离这个点比较近了 要避免冲出去
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+          // 同时准备换物品到aotv
+          mc.thePlayer.inventory.currentItem = smartyPathFinder.aotvSlot.getValue().intValue();
         } else {
           // 如果还没走到这个节点 需要先走到
           walkExec(nextNode, mc, node);
@@ -259,12 +269,9 @@ public class PathExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5);
 
       // 处理下一个点
-      int x = (int) Math.floor(mc.thePlayer.posX);
-      int y = (int) Math.floor(mc.thePlayer.posY);
-      int z = (int) Math.floor(mc.thePlayer.posZ);
-      BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
 
-      if (nextNode.getPos().equals(posPlayer)) {
+
+      if (nextNode.getPos().equals(PlayerUtils.getPlayerLocation())) {
         path.remove(0);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       }

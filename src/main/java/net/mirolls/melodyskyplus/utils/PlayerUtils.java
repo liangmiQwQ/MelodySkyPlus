@@ -60,4 +60,12 @@ public class PlayerUtils {
 
     return target != null;
   }
+
+  public static BlockPos getPlayerLocation() {
+    Minecraft mc = Minecraft.getMinecraft();
+    int x = (int) Math.floor(mc.thePlayer.posX);
+    int y = (int) Math.floor(mc.thePlayer.posY);
+    int z = (int) Math.floor(mc.thePlayer.posZ);
+    return new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
+  }
 }

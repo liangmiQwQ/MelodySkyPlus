@@ -20,6 +20,7 @@ import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.react.failsafe.TPCheckReact;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
@@ -171,11 +172,7 @@ public class Failsafe extends Module {
 
         // 先进行基岩部分的检查
         // 如果基岩部分检查出来有问题就不进行下一部分的检查了
-        int x = (int) Math.floor(mc.thePlayer.posX);
-        int y = (int) Math.floor(mc.thePlayer.posY);
-        int z = (int) Math.floor(mc.thePlayer.posZ);
-        BlockPos posPlayer = new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
-        BlockPos blockPosDown = posPlayer.down();
+        BlockPos blockPosDown = PlayerUtils.getPlayerLocation().down();
         Block blockDown = mc.theWorld.getBlockState(blockPosDown).getBlock();
         if (Objects.equals(blockDown.getRegistryName(), Blocks.bedrock.getRegistryName())) {
           // 如果脚底下的方块是基岩
