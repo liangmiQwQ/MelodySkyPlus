@@ -73,5 +73,6 @@ public class PathPos {
     JUMP_END,
     ABILITY_START,
     ABILITY_END,
+    ABILITY_BETWEEN,
   }
 }

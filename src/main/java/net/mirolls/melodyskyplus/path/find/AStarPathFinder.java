@@ -138,12 +138,15 @@ public class AStarPathFinder {
     }
 
     PathPos abilityStartPos = null;
+    List<PathPos> posBetween = new ArrayList<>();
     for (PathNode node : paths) {
       if (node.type == PathPos.PathNodeType.ABILITY) {
         // 如果该点的类型是技能
         if (abilityStartPos == null) {
           // 这是第一个技能点
           abilityStartPos = returnPaths.get(returnPaths.size() - 1); // 要在这个点释放技能 记录这个点
+        } else {
+          posBetween.add(new PathPos(PathPos.PathNodeType.ABILITY_BETWEEN, node.pos));
         }
       } else {
         if (abilityStartPos == null) {
@@ -161,6 +164,8 @@ public class AStarPathFinder {
         } else {
           // 找到终点了
           returnPaths.add(abilityStartPos);
+          returnPaths.addAll(posBetween);
+          posBetween = new ArrayList<>();
           returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, node.pos));
           abilityStartPos = null;
         }
