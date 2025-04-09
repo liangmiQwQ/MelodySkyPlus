@@ -6,7 +6,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
@@ -24,6 +23,8 @@ import xyz.Melody.Utils.math.RotationUtil;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+
+import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class PathExec {
 
@@ -270,18 +271,6 @@ public class PathExec {
     }
   }
 
-  private float smoothRotation(float current, float target, float maxIncrement) {
-    float deltaAngle = MathHelper.wrapAngleTo180_float(target - current);
-    if (deltaAngle > maxIncrement) {
-      deltaAngle = maxIncrement;
-    }
-
-    if (deltaAngle < -maxIncrement) {
-      deltaAngle = -maxIncrement;
-    }
-
-    return MathHelper.wrapAngleTo180_float((current + deltaAngle / 2) % 360);
-  }
 
   private int tickToGround(int y) {
     Minecraft mc = Minecraft.getMinecraft();

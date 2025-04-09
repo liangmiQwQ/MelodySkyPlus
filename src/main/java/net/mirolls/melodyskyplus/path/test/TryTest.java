@@ -2,8 +2,8 @@ package net.mirolls.melodyskyplus.path.test;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
@@ -56,7 +56,7 @@ public class TryTest {
 
       if (tick > 60 && mc.thePlayer.rotationYaw > 90) {
 //        mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, 90F, 180 - (float) angle);
-        mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, 90F, 360);
+        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, 90F, 360);
       }
 
       if (tick == 320) {
@@ -69,16 +69,4 @@ public class TryTest {
     }
   }
 
-  private float smoothRotation(float current, float target, float maxIncrement) {
-    float deltaAngle = MathHelper.wrapAngleTo180_float(target - current);
-    if (deltaAngle > maxIncrement) {
-      deltaAngle = maxIncrement;
-    }
-
-    if (deltaAngle < -maxIncrement) {
-      deltaAngle = -maxIncrement;
-    }
-
-    return (current + deltaAngle / 2.0F) % 360;
-  }
 }

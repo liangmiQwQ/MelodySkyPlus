@@ -5,7 +5,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -18,7 +17,6 @@ import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -32,6 +30,8 @@ import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.*;
+
+import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
 
 public class AutoGold extends Module {
   private static AutoGold INSTANCE;
@@ -471,45 +471,7 @@ public class AutoGold extends Module {
     walkTimer.reset();
   }
 
-  private boolean rayTrace(BlockPos blockPos) {
-    Vec3d target = null;
-    Vec3d[] var2 = Vec3d.points(blockPos);
-    int var3 = var2.length;
-    int var4 = 0;
 
-    while (var4 < var3) {
-      Vec3d vec = var2[var4];
-      MovingObjectPosition trajectory = RotationUtil.rayTrace(vec);
-      if (trajectory == null) {
-        target = vec;
-        break;
-      }
-
-      label69:
-      {
-        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
-          if (trajectory.getBlockPos() == null) {
-            break label69;
-          }
-
-          boolean sameX = trajectory.getBlockPos().getX() == blockPos.getX();
-          boolean sameY = trajectory.getBlockPos().getY() == blockPos.getY();
-          boolean sameZ = trajectory.getBlockPos().getZ() == blockPos.getZ();
-          if (sameX && sameY && sameZ) {
-            break label69;
-          }
-        }
-
-        ++var4;
-        continue;
-      }
-
-      target = vec;
-      break;
-    }
-
-    return target != null;
-  }
 }
 
 class SidesAroundPlayer {
