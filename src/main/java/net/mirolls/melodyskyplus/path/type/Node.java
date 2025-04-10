@@ -70,8 +70,8 @@ public class Node {
             nodesBetween.add(nodeBetween);
           } else {
             // 相当于直接走过了这些路程 i也不用重新跑了
-            // i = j 因为这个点是结束点 要走一遍下一个循环里点ABILITY_END 所以这里不是 j + 1
-            i = j;
+            // i = j - 1 因为这个点是结束点 要走一遍下一个循环里点ABILITY_END 更不可能是 j 或者 j - 1
+            i = j - 1;
             break;
           }
         }

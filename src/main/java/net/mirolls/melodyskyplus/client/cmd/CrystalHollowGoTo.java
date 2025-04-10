@@ -3,6 +3,8 @@ package net.mirolls.melodyskyplus.client.cmd;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
+import net.mirolls.melodyskyplus.path.exec.AbilityExec;
+import net.mirolls.melodyskyplus.path.exec.PathExec;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
@@ -51,7 +53,8 @@ public class CrystalHollowGoTo extends Command {
       Helper.sendMessage("Renderer cleared");
 
       smartyPathFinder.clear();
-      MelodySkyPlus.pathExec.area = null;
+      PathExec.area = null;
+      MelodySkyPlus.pathExec.abilityExec = new AbilityExec();
     }
     return null;
   }

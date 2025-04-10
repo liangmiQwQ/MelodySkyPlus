@@ -258,6 +258,7 @@ public class PathExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
         smartyPathFinder.clear();
         area = null;
+        abilityExec = new AbilityExec();
         return;
       }
 
@@ -271,7 +272,12 @@ public class PathExec {
       Node node = path.get(0);
       Node nextNode = path.get(1);
 
+      if (abilityExec.rubbish) {
+        abilityExec = new AbilityExec();
+      }
+
       if (nextNode instanceof Walk) {
+        walkExec(nextNode, mc, node);
 
         // 这里给停止部分单独拉出来 是为了让Jump的代码复用
         Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());

@@ -2,6 +2,8 @@ package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.path.exec.AbilityExec;
+import net.mirolls.melodyskyplus.path.exec.PathExec;
 import net.mirolls.melodyskyplus.path.find.AStarPathFinder;
 import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.optimization.JumpOptimization;
@@ -62,7 +64,9 @@ public class SmartyPathFinder extends Module {
   }
 
   public void go(BlockPos start, BlockPos end) {
-    MelodySkyPlus.pathExec.area = null;
+    PathExec.area = null;
+    MelodySkyPlus.pathExec.abilityExec = new AbilityExec();
+
 
     if (segmentation.getValue()) {
       aStarPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(start, end, length.getValue().intValue());
