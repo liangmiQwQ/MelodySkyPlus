@@ -19,7 +19,6 @@ import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 public class AbilityExec {
   public boolean rubbish = false;
   private Stage stage = Stage.WALK_TO_ABILITY_START;
-  private double lastMotion;
   private int goEndTicks = 0;
 
   public void exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
@@ -36,18 +35,17 @@ public class AbilityExec {
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
 
-      if (lastMotion * 0.8 < Math.hypot(mc.thePlayer.motionX, mc.thePlayer.motionZ) && goEndTicks < 60) {
-        // 每一步要走的至少比last motion大 否则有可能就碰壁了
-        goEndTicks++;
+      goEndTicks++;
+
+      if (goEndTicks < 50) {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-      } else {
+      } else if (goEndTicks < 53) {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-
+      } else {
         stage = Stage.DECIDE_HOW_TO_WARP;
       }
 
-      lastMotion = Math.hypot(mc.thePlayer.motionX, mc.thePlayer.motionZ);
     } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
       // New Thing
     } else if (stage == Stage.WALK_TO_ABILITY_START_SLOWLY) {
@@ -56,9 +54,6 @@ public class AbilityExec {
 
       // 执行操作 先换物品到aotv
       mc.thePlayer.inventory.currentItem = smartyPathFinder.aotvSlot.getValue().intValue();
-
-      // 记录lastMotion 有利于到点内后的判断
-      lastMotion = Math.hypot(mc.thePlayer.motionX, mc.thePlayer.motionZ);
 
       // 如果到位则切换到下一个阶段
       if (Objects.equals(nextAbility.getPos(), PlayerUtils.getPlayerLocation())) {
