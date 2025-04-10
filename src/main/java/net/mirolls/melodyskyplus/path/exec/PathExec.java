@@ -29,72 +29,65 @@ import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class PathExec {
 
-  public SkyblockArea area = null;
+  public static SkyblockArea area = null;
+  public AbilityExec abilityExec = new AbilityExec();
 
   public PathExec() {
     EventBus.getInstance().register(this);
     MinecraftForge.EVENT_BUS.register(this);
   }
 
-  @EventHandler
-  public void onTick(EventPreUpdate event) {
-    SmartyPathFinder smartyPathFinder = Objects.requireNonNull(SmartyPathFinder.getINSTANCE());
-    Minecraft mc = Minecraft.getMinecraft();
+  public static void walkExec(Node nextNode, Minecraft mc, Node node) {
+    // 转换到角度
+    Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(nextNode.pos));
 
-    List<Node> path = smartyPathFinder.path;
+    // 移动玩家视角
+    mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
+    mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
 
-    if (path != null && !path.isEmpty()) {
-      if (path.size() == 1) {
-        // 走到终点自动停止
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-        smartyPathFinder.clear();
-        area = null;
-        return;
+    // 控制行走
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+
+    // 利用node中记录的rotation与实际rotation的差值 通过a和d修正玩家位置
+    if (Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.5) {
+      // 开始纠正位置
+      float yawShould = node.nextRotation.getYaw();
+      float yawNow = rotation.getYaw();
+
+
+      float diff = yawNow - yawShould;
+      if (diff > 180) {
+        // 如果差value大于180的 可能是遇到了错误情况 (-90 ~ -180) 需要把这些坐标变成正确合理的坐标 (270 ~ 180)
+        yawShould = (yawShould - (-180) + 180);
+        diff = yawNow - yawShould;
+      } else if (diff < -180) {
+        yawNow = (yawNow - (-180) + 180);
+        diff = yawNow - yawShould;
       }
 
-      if (area == null) {
-        area = new SkyblockArea();
-        area.updateCurrentArea();
-        Helper.sendMessage(area.isIn(Areas.Crystal_Hollows) ? "Since you're in Crystal Hollows, you will use C07Packet to mine" : "Since you're not in Crystal Hollows, you will use left click to mine");
+      // 如果 now - should是正的 则偏左 则需要往右移动
+      if (diff > 2) {
+        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
+      } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
       }
 
-      // 执行器核心 运行path
-      Node node = path.get(0);
-      Node nextNode = path.get(1);
-
-      if (nextNode instanceof Walk) {
-
-        // 这里给停止部分单独拉出来 是为了让Jump的代码复用
-        Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
-          path.remove(0);
-        }
-      } else if (nextNode instanceof Mine) {
-        mineExec(nextNode, mc, path, smartyPathFinder);
-      } else if (nextNode instanceof Jump) {
-        jumpExec(nextNode, path, mc, node);
-      } else if (nextNode instanceof Ability) {
-        // 同样 也是让后面代码更加轻松
-        Ability nextAbility = (Ability) nextNode;
-        Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-
-        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 1) {
-          // 执行操作 先换物品到aotv
-          Helper.sendMessage("Good");
-        } else if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
-          // 如果距离这个点比较近了 要避免冲出去
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-          // 同时准备换物品到aotv
-          mc.thePlayer.inventory.currentItem = smartyPathFinder.aotvSlot.getValue().intValue();
-        } else {
-          // 如果还没走到这个节点 需要先走到
-          walkExec(nextNode, mc, node);
-        }
+      // 反之亦然
+      if (diff < -2) {
+        MelodySkyPlus.LOGGER.info("Found Player offset to the right, start to go to the left. (" + yawNow + " - " + yawShould + ")");
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), true);
+      } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
       }
+    } else {
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
     }
   }
 
-  private void jumpExec(Node nextNode, List<Node> path, Minecraft mc, Node node) {
+  private static void jumpExec(Node nextNode, List<Node> path, Minecraft mc, Node node) {
     // 提前先转化成Jump类型 为了事后做用方便
     Jump jumpNode = (Jump) nextNode;
     Node endNode = path.get(2);
@@ -150,57 +143,31 @@ public class PathExec {
     }
   }
 
-  private void walkExec(Node nextNode, Minecraft mc, Node node) {
-    // 转换到角度
-    Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(nextNode.pos));
+  private static int tickToGround(int y) {
+    Minecraft mc = Minecraft.getMinecraft();
+    // 通过精准的计算 获得从最高点下降到现在的tick
+    // 通过公式 3.92 * (1 - Math.pow(0.98, fallTick)) 精准求出顺时下落速度
 
-    // 移动玩家视角
-    mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
-    mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
-
-    // 控制行走
-    KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
-    KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-
-    // 利用node中记录的rotation与实际rotation的差值 通过a和d修正玩家位置
-    if (Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.5) {
-      // 开始纠正位置
-      float yawShould = node.nextRotation.getYaw();
-      float yawNow = rotation.getYaw();
-
-
-      float diff = yawNow - yawShould;
-      if (diff > 180) {
-        // 如果差value大于180的 可能是遇到了错误情况 (-90 ~ -180) 需要把这些坐标变成正确合理的坐标 (270 ~ 180)
-        yawShould = (yawShould - (-180) + 180);
-        diff = yawNow - yawShould;
-      } else if (diff < -180) {
-        yawNow = (yawNow - (-180) + 180);
-        diff = yawNow - yawShould;
-      }
-
-      // 如果 now - should是正的 则偏左 则需要往右移动
-      if (diff > 2) {
-        MelodySkyPlus.LOGGER.info("Found Player offset to the left, start to go to the right. (" + yawNow + " - " + yawShould + ")");
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
-      } else {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
-      }
-
-      // 反之亦然
-      if (diff < -2) {
-        MelodySkyPlus.LOGGER.info("Found Player offset to the right, start to go to the left. (" + yawNow + " - " + yawShould + ")");
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), true);
-      } else {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
-      }
+    double absMotionY = Math.abs(mc.thePlayer.motionY);
+    if (absMotionY >= 3.91) {
+      // 速度最大值 直接返回除数
+      return (int) Math.round((mc.thePlayer.posY - y) / 3.92);
     } else {
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
+      int tickNow = (int) Math.round(Math.log(1 - absMotionY / 3.92) / Math.log(0.98));
+      // 这是现在的tick 根据玩家的y坐标 逐渐减去测算出来的速度 直到小于y后返回
+      double playerY = mc.thePlayer.posY;
+      int tickNeed = 0;
+
+      while (playerY > y) {
+        tickNeed++;
+        playerY -= 3.92 * (1 - Math.pow(0.98, tickNeed + tickNow));
+      }
+
+      return tickNeed;
     }
   }
 
-  private void mineExec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder) {
+  public static void mineExec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder) {
     // 先切换到稿子
     mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue();
 
@@ -278,28 +245,46 @@ public class PathExec {
     }
   }
 
-
-  private int tickToGround(int y) {
+  @EventHandler
+  public void onTick(EventPreUpdate event) {
+    SmartyPathFinder smartyPathFinder = Objects.requireNonNull(SmartyPathFinder.getINSTANCE());
     Minecraft mc = Minecraft.getMinecraft();
-    // 通过精准的计算 获得从最高点下降到现在的tick
-    // 通过公式 3.92 * (1 - Math.pow(0.98, fallTick)) 精准求出顺时下落速度
 
-    double absMotionY = Math.abs(mc.thePlayer.motionY);
-    if (absMotionY >= 3.91) {
-      // 速度最大值 直接返回除数
-      return (int) Math.round((mc.thePlayer.posY - y) / 3.92);
-    } else {
-      int tickNow = (int) Math.round(Math.log(1 - absMotionY / 3.92) / Math.log(0.98));
-      // 这是现在的tick 根据玩家的y坐标 逐渐减去测算出来的速度 直到小于y后返回
-      double playerY = mc.thePlayer.posY;
-      int tickNeed = 0;
+    List<Node> path = smartyPathFinder.path;
 
-      while (playerY > y) {
-        tickNeed++;
-        playerY -= 3.92 * (1 - Math.pow(0.98, tickNeed + tickNow));
+    if (path != null && !path.isEmpty()) {
+      if (path.size() == 1) {
+        // 走到终点自动停止
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+        smartyPathFinder.clear();
+        area = null;
+        return;
       }
 
-      return tickNeed;
+      if (area == null) {
+        area = new SkyblockArea();
+        area.updateCurrentArea();
+        Helper.sendMessage(area.isIn(Areas.Crystal_Hollows) ? "Since you're in Crystal Hollows, you will use C07Packet to mine" : "Since you're not in Crystal Hollows, you will use left click to mine");
+      }
+
+      // 执行器核心 运行path
+      Node node = path.get(0);
+      Node nextNode = path.get(1);
+
+      if (nextNode instanceof Walk) {
+
+        // 这里给停止部分单独拉出来 是为了让Jump的代码复用
+        Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
+        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
+          path.remove(0);
+        }
+      } else if (nextNode instanceof Mine) {
+        mineExec(nextNode, mc, path, smartyPathFinder);
+      } else if (nextNode instanceof Jump) {
+        jumpExec(nextNode, path, mc, node);
+      } else if (nextNode instanceof Ability) {
+        abilityExec.exec(nextNode, path, mc, smartyPathFinder, node);
+      }
     }
   }
 }
