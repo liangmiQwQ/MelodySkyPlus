@@ -17,18 +17,18 @@ import java.util.Random;
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class AbilityExec {
+  public boolean rubbish = false;
   private Stage stage = Stage.WALK_TO_ABILITY_START;
   private double lastMotion;
   private int goEndTicks = 0;
 
   public void exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
-    // 同样 也是让后面代码更加轻松
     Ability nextAbility = (Ability) nextNode;
     Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
     Node endNode = path.get(2);
 
-    // 先处理一些关于条件的事情
-
+    // 主体部分
+    // 这次并非其他exec的条件主导 使用stage主导
     if (stage == Stage.WALK_TO_ABILITY_END) {
       // 此时可能才刚刚和方块搭边 我们要继续转头
       Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos));
@@ -43,10 +43,13 @@ public class AbilityExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
       } else {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
 
         stage = Stage.DECIDE_HOW_TO_WARP;
       }
+
+      lastMotion = Math.hypot(mc.thePlayer.motionX, mc.thePlayer.motionZ);
+    } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
+      // New Thing
     } else if (stage == Stage.WALK_TO_ABILITY_START_SLOWLY) {
       // 如果距离这个点比较近了 要避免冲出去
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);

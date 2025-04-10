@@ -145,9 +145,9 @@ public class AStarPathFinder {
         if (abilityStartPos == null) {
           // 这是第一个技能点
           abilityStartPos = returnPaths.get(returnPaths.size() - 1); // 要在这个点释放技能 记录这个点
-        } else {
-          posBetween.add(new PathPos(PathPos.PathNodeType.ABILITY_BETWEEN, node.pos));
         }
+        
+        posBetween.add(new PathPos(PathPos.PathNodeType.ABILITY_BETWEEN, node.pos));
       } else {
         if (abilityStartPos == null) {
           // 非技能情况
