@@ -35,6 +35,8 @@ public class AbilityExec {
     if (isInBlock) {
       // 如果已经到达了终点 则代表执行到现在一切都很好
       path.remove(0);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       // 不删除1的理由 见JumpExec部分
     }
 
@@ -44,7 +46,7 @@ public class AbilityExec {
         stage = Stage.WALK_TO_ABILITY_START_SLOWLY;
       } else {
         // 如果还没走到这个节点 需要先走到
-        PathExec.walkExec(nextNode, mc, node);
+        WalkExec.exec(nextNode, mc, node);
       }
     } else if (stage == Stage.WALK_TO_ABILITY_START_SLOWLY) {
       // 如果距离这个点比较近了 要避免冲出去
@@ -82,6 +84,9 @@ public class AbilityExec {
         // 情况2 先点一下后再进行etherWarp 不行就继续点
       }
     } else if (stage == Stage.ETHER_WARP) {
+      // 保持下蹲
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+
       // 转头到目标方块
       Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos));
 
