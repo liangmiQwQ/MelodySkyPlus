@@ -6,7 +6,9 @@ import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import net.mirolls.melodyskyplus.path.type.Ability;
 import net.mirolls.melodyskyplus.path.type.Node;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
+import xyz.Melody.Client;
 import xyz.Melody.Utils.Vec3d;
+import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
@@ -73,14 +75,23 @@ public class AbilityExec {
         stage = Stage.DECIDE_HOW_TO_WARP;
       }
     } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
-      if (PlayerUtils.rayTrace(endNode.getPos())) {
+      if (PlayerUtils.rayTrace(endNode.getPos()) && MathUtil.distanceToPos(endNode.getPos(), PlayerUtils.getPlayerLocation()) < 55) {
         // 情况1 可以进行etherWarp
         stage = Stage.ETHER_WARP;
       } else {
-        // 情况2 先tp一下后再进行etherWarp 不行就再instant teleport
+        // 情况2 先点一下后再进行etherWarp 不行就继续点
       }
     } else if (stage == Stage.ETHER_WARP) {
+      // 转头到目标方块
+      Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos));
 
+      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 60F);
+      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 60F);
+
+      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.2 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.2) {
+        // 正在看着这个点
+        Client.rightClick();
+      }
     }
   }
 
