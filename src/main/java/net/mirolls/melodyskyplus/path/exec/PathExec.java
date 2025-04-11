@@ -102,7 +102,7 @@ public class PathExec {
       // 如果在陆地上 则有2个情况
       if (isInBlock) {
         // 落地了 到达位置了 删除跳跃节点
-        path.remove(1);
+        // path.remove(1); 经过研究 发现不能一次性删除2个 否则如果有连续跳跃 将会出现极大的问题 这个节点应该由未来的该节点来亲自删除
         path.remove(0);
       } else {
         // 情况2就是还没有起跳 先准备起跳
