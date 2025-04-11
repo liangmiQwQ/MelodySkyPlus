@@ -22,6 +22,7 @@ public class AbilityExec {
   public boolean rubbish = false;
   private Stage stage = Stage.WALK_TO_ABILITY_START;
   private int goEndTicks = 0;
+  private int lastRightClick = 5;
 
   public void exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
     Ability nextAbility = (Ability) nextNode;
@@ -93,9 +94,13 @@ public class AbilityExec {
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 60F);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 60F);
 
-      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.2 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.2) {
+      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.4 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.4) {
         // 正在看着这个点
-        Client.rightClick();
+        if (lastRightClick > 10) {
+          Client.rightClick();
+          lastRightClick = 0;
+        }
+        lastRightClick++;
       }
     }
   }
