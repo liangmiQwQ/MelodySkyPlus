@@ -31,8 +31,8 @@ public class AbilityExec {
 
     // 这次并非其他exec的条件主导 使用stage主导
     // 同时这里也需要加上一些基本条件
-    Vec3d center = Vec3d.ofCenter(endNode.getPos());
-    boolean isInBlock = Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8 && mc.thePlayer.posY == endNode.getPos().getY();
+    Vec3d centerEnd = Vec3d.ofCenter(endNode.getPos());
+    boolean isInBlock = Math.abs(mc.thePlayer.posX - centerEnd.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - centerEnd.getZ()) <= 0.8 && Math.abs(mc.thePlayer.posY - centerEnd.getY()) <= 1;
     if (isInBlock) {
       // 如果已经到达了终点 则代表执行到现在一切都很好
       path.remove(0);
@@ -53,6 +53,14 @@ public class AbilityExec {
       // 如果距离这个点比较近了 要避免冲出去
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
+      // 依然需要移动玩家视角来避免错误位置
+      Vec3d centerNext = Vec3d.ofCenter(nextNode.pos);
+      Rotation rotation = RotationUtil.vec3ToRotation(centerNext);
+
+      // 移动玩家视角
+      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
+      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
+
       if (Objects.equals(nextAbility.getPos(), PlayerUtils.getPlayerLocation())) {
         // 如果到位则切换到下一个阶段
         stage = Stage.WALK_TO_ABILITY_END;
@@ -69,12 +77,11 @@ public class AbilityExec {
 
       goEndTicks++;
 
-      if (goEndTicks < 50) {
+      if (goEndTicks < 50 || (mc.thePlayer.posX - mc.thePlayer.lastTickPosX == 0 && mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ == 0)) {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-      } else if (goEndTicks < 53) {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
         stage = Stage.DECIDE_HOW_TO_WARP;
       }
     } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
