@@ -22,7 +22,7 @@ public class AbilityExec {
   public boolean rubbish = false;
   private Stage stage = Stage.WALK_TO_ABILITY_START;
   private int goEndTicks = 0;
-  private int lastRightClick = 5;
+  private int lastRightClick = 10;
 
   public void exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
     Ability nextAbility = (Ability) nextNode;
@@ -77,12 +77,12 @@ public class AbilityExec {
 
       goEndTicks++;
 
-      if (goEndTicks < 50 || (mc.thePlayer.posX - mc.thePlayer.lastTickPosX == 0 && mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ == 0)) {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-      } else {
+      if (goEndTicks > 50 || (mc.thePlayer.posX - mc.thePlayer.lastTickPosX == 0 && mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ == 0)) {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
         stage = Stage.DECIDE_HOW_TO_WARP;
+      } else {
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
       }
     } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
       if (PlayerUtils.rayTrace(endNode.getPos()) && MathUtil.distanceToPos(endNode.getPos(), PlayerUtils.getPlayerLocation()) < 55) {
@@ -103,7 +103,7 @@ public class AbilityExec {
 
       if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.4 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.4) {
         // 正在看着这个点
-        if (lastRightClick > 10) {
+        if (lastRightClick > 30) {
           Client.rightClick();
           lastRightClick = 0;
         }

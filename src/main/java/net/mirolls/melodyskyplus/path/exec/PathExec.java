@@ -5,13 +5,13 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import net.mirolls.melodyskyplus.path.type.*;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.Vec3d;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,8 +62,7 @@ public class PathExec {
         WalkExec.exec(nextNode, mc, node);
 
         // 这里给停止部分单独拉出来 是为了让Jump的代码复用
-        Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
-        if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 2.5) {
+        if (Math.abs(PlayerUtils.getPlayerLocation().getX() - nextNode.getPos().getX()) <= 1 && Math.abs(PlayerUtils.getPlayerLocation().getZ() - nextNode.getPos().getZ()) <= 1) {
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
