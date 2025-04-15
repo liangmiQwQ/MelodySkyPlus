@@ -43,7 +43,8 @@ public class PathOptimizer {
       } else {
         // 遍历每一个PathPos 开始研究能不能走到这个PathPos
         if (pos.getType() == PathPos.PathNodeType.WALK) {
-          if (canGo(nodes.get(nodes.size() - 1).getPos(), pos.getPos())) {
+          PathPos prevPos = path.get(i - 1);
+          if (canGo(nodes.get(nodes.size() - 1).getPos(), prevPos.getPos(), pos.getPos())) {
             lastNode = pos;
           } else {
             // 如果出现了无法走到该pos的情况
@@ -72,7 +73,10 @@ public class PathOptimizer {
     return Node.fromPathPosList(nodes);
   }
 
-  public boolean canGo(BlockPos startPos, BlockPos target) {
+  public boolean canGo(BlockPos startPos, BlockPos prevNode, BlockPos target) {
+    if (prevNode.equals(startPos)) {
+      return true;
+    }
     if (startPos.getY() == target.getY()) {
       if (startPos.getX() == target.getX()) {
         // X 或者 Z 中需要至少有一个相同的 不相同的那个应当差1
@@ -103,7 +107,9 @@ public class PathOptimizer {
         }
       }
 
-      if (getBlockState(bp).getBlock() != Blocks.air || getBlockState(bp.up()).getBlock() != Blocks.air) {
+      if (
+          (getBlockState(bp).getBlock() != Blocks.air && getBlockState(bp).getBlock() != Blocks.carpet)
+              || getBlockState(bp.up()).getBlock() != Blocks.air) {
         return false;
       }
 
