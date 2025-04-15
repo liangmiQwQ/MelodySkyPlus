@@ -92,7 +92,9 @@ public class PathOptimizer {
     }
 
     int yPos = startPos.getY();
-    for (BlockPos pos : calculate(startPos, target)) {
+    List<BlockPos> posList = calculate(startPos, target);
+    posList.sort(Comparator.comparing(blockPos -> Math.hypot(blockPos.getX() - startPos.getX(), blockPos.getZ() - startPos.getZ())));
+    for (BlockPos pos : posList) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
       IBlockState blockState = getBlockState(bp);
       if (blockState.getBlock() != Blocks.air) {
@@ -103,9 +105,12 @@ public class PathOptimizer {
           bp = new BlockPos(pos.getX(), yPos, pos.getZ());
         } else {
           // 如果遇到墙了
-          return false;
+          if (blockState.getBlock() != Blocks.carpet) {
+            return false;
+          }
         }
       }
+
 
       if (
           (getBlockState(bp).getBlock() != Blocks.air && getBlockState(bp).getBlock() != Blocks.carpet)
