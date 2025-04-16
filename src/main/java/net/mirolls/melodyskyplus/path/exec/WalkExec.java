@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.path.type.Node;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
@@ -38,15 +39,7 @@ public class WalkExec {
         float yawNow = rotation.getYaw();
 
 
-        float diff = yawNow - yawShould;
-        if (diff > 180) {
-          // 如果差value大于180的 可能是遇到了错误情况 (-90 ~ -180) 需要把这些坐标变成正确合理的坐标 (270 ~ 180)
-          yawShould = (yawShould - (-180) + 180);
-          diff = yawNow - yawShould;
-        } else if (diff < -180) {
-          yawNow = (yawNow - (-180) + 180);
-          diff = yawNow - yawShould;
-        }
+        float diff = PlayerUtils.getYawDiff(yawNow, yawShould);
 
         // 如果 now - should是正的 则偏左 则需要往右移动
         if (diff > 2) {
