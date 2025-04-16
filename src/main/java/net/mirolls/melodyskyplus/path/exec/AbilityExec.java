@@ -85,7 +85,7 @@ public class AbilityExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
       }
     } else if (stage == Stage.DECIDE_HOW_TO_WARP) {
-      if (PlayerUtils.rayTrace(endNode.getPos()) && MathUtil.distanceToPos(endNode.getPos(), PlayerUtils.getPlayerLocation()) < 55) {
+      if (PlayerUtils.rayTrace(endNode.getPos().down()) && MathUtil.distanceToPos(endNode.getPos().down(), PlayerUtils.getPlayerLocation()) < 55) {
         // 情况1 可以进行etherWarp
         stage = Stage.ETHER_WARP;
       } else {
@@ -96,7 +96,7 @@ public class AbilityExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
       // 转头到目标方块
-      Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos));
+      Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos.down()));
 
       mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 60F);
       mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 60F);

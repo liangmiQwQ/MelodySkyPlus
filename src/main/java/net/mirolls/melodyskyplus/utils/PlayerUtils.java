@@ -8,6 +8,8 @@ import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.RotationUtil;
 
 public class PlayerUtils {
+
+
   public static float smoothRotation(float current, float target, float maxIncrement) {
     float deltaAngle = MathHelper.wrapAngleTo180_float(target - current);
     if (deltaAngle > maxIncrement) {
@@ -71,5 +73,19 @@ public class PlayerUtils {
     int y = (int) Math.floor(posY);
     int z = (int) Math.floor(posZ);
     return new BlockPos(x, y, z); // Minecraft提供的.getPosition不好用 返回的位置经常有较大的误差 这样是最保险的
+  }
+
+  public static float getYawDiff(float yaw1, float yaw2) {
+    float diff = yaw1 - yaw2;
+    if (diff > 180) {
+      // 如果差value大于180的 可能是遇到了错误情况 (-90 ~ -180) 需要把这些坐标变成正确合理的坐标 (270 ~ 180)
+      yaw2 = (yaw2 - (-180) + 180);
+      diff = yaw1 - yaw2;
+    } else if (diff < -180) {
+      yaw1 = (yaw1 - (-180) + 180);
+      diff = yaw1 - yaw2;
+    }
+    
+    return diff;
   }
 }

@@ -62,7 +62,9 @@ public class PathExec {
         WalkExec.exec(nextNode, mc, node);
 
         // 这里给停止部分单独拉出来 是为了让Jump的代码复用
-        if (Math.abs(PlayerUtils.getPlayerLocation().getX() - nextNode.getPos().getX()) <= 1 && Math.abs(PlayerUtils.getPlayerLocation().getZ() - nextNode.getPos().getZ()) <= 1) {
+        double distance = Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ());
+        if (distance < PlayerUtils.getYawDiff(node.nextRotation.getYaw(), nextNode.nextRotation.getYaw()) / 30 * 1) {
+          // 根据角度不同 提前的量也不同
           path.remove(0);
         }
       } else if (nextNode instanceof Mine) {
