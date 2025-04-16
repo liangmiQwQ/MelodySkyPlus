@@ -61,15 +61,22 @@ public class PathExec {
       if (nextNode instanceof Walk) {
         WalkExec.exec(nextNode, mc, node);
 
-        // 这里给停止部分单独拉出来 是为了让Jump的代码复用
-        double distance = Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ());
-        if (distance < PlayerUtils.getYawDiff(node.nextRotation.getYaw(), nextNode.nextRotation.getYaw()) / 30 * 1) {
-          // 根据角度不同 提前的量也不同
+        boolean isInBlock = Math.abs(PlayerUtils.getPlayerLocation().getX() - nextNode.getPos().getX()) <= 1 && Math.abs(PlayerUtils.getPlayerLocation().getZ() - nextNode.getPos().getZ()) <= 1;
+        if (isInBlock) {
           path.remove(0);
+          return;
+        }
+
+
+        if (path.size() > 2) {
+          double maxDiff = PlayerUtils.getYawDiff(node.nextRotation.getYaw(), nextNode.nextRotation.getYaw()) / 30 * (mc.thePlayer.getAIMoveSpeed());
+          if (Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ()) < maxDiff) {
+            // 根据角度不同 提前的量也不同
+            path.remove(0);
+          }
         }
       } else if (nextNode instanceof Mine) {
-        MineExec.exec(nextNode, mc, path, smartyPathFinder, area
-        );
+        MineExec.exec(nextNode, mc, path, smartyPathFinder, area);
       } else if (nextNode instanceof Jump) {
         JumpExec.exec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
