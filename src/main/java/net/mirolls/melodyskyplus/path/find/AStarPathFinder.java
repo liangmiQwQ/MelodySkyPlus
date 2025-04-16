@@ -51,34 +51,6 @@ public class AStarPathFinder {
     this(true, true);
   }
 
-  /**
-   * @param pos 要检查的blockPos
-   * @return 返回0则代表可以走 返回1则代表因为没有支撑点无法走路 返回2则达标高度不够无法走路
-   */
-  public int getWalkType(BlockPos pos) {
-    Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
-    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
-      Block blockFoot = getBlockState(pos).getBlock();
-      Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
-      if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
-        return 3; // 无敌情况 舍去
-      } else {
-        return 1;
-      }
-    }
-
-    double height = 0.0D;
-    Block blockFoot = getBlockState(pos).getBlock();
-    Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
-    if (blockFoot != Blocks.air) {
-      height += blockFoot.getBlockBoundsMaxY();
-    }
-    if (blockHead != Blocks.air) {
-      height += blockHead.getBlockBoundsMaxY();
-    }
-    return height < 0.2D ? 0 : 2;
-  }
-
   public List<PathPos> findPath(BlockPos start, BlockPos target) {
     return findPath(start, target, -1);
   }
@@ -120,7 +92,7 @@ public class AStarPathFinder {
     } while (true);
 
 
-    return buildPath(targetPathNode); // 关于节点的优化 这里省这部分逻辑 移动到 PathTransferor 和 PathExec 间接运行
+    return buildPath(targetPathNode);
   }
 
   private List<PathPos> buildPath(PathNode endNode) {
@@ -146,7 +118,7 @@ public class AStarPathFinder {
           // 这是第一个技能点
           abilityStartPos = returnPaths.get(returnPaths.size() - 1); // 要在这个点释放技能 记录这个点
         }
-        
+
         posBetween.add(new PathPos(PathPos.PathNodeType.ABILITY_BETWEEN, node.pos));
       } else {
         if (abilityStartPos == null) {
@@ -164,10 +136,16 @@ public class AStarPathFinder {
         } else {
           // 找到终点了
           returnPaths.add(abilityStartPos);
-          returnPaths.addAll(posBetween);
-          posBetween = new ArrayList<>();
-          returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, node.pos));
-          abilityStartPos = null;
+
+          if (posBetween.size() <= 3 && abilityStartPos.getPos().getY() > node.pos.getY()) {
+            // 面对这种情况 我们可以转换为walk节点 直接走过去
+            returnPaths.add(new PathPos(PathPos.PathNodeType.WALK, node.pos));
+          } else {
+            returnPaths.addAll(posBetween);
+            posBetween = new ArrayList<>();
+            returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, node.pos));
+            abilityStartPos = null;
+          }
         }
       }
     }
@@ -183,6 +161,34 @@ public class AStarPathFinder {
     return returnPaths.stream()
         .distinct()
         .collect(Collectors.toList());
+  }
+
+  /**
+   * @param pos 要检查的blockPos
+   * @return 返回0则代表可以走 返回1则代表因为没有支撑点无法走路 返回2则达标高度不够无法走路
+   */
+  private int getWalkType(BlockPos pos) {
+    Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
+    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
+      Block blockFoot = getBlockState(pos).getBlock();
+      Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
+      if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
+        return 3; // 无敌情况 舍去
+      } else {
+        return 1;
+      }
+    }
+
+    double height = 0.0D;
+    Block blockFoot = getBlockState(pos).getBlock();
+    Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
+    if (blockFoot != Blocks.air) {
+      height += blockFoot.getBlockBoundsMaxY();
+    }
+    if (blockHead != Blocks.air) {
+      height += blockHead.getBlockBoundsMaxY();
+    }
+    return height < 0.2D ? 0 : 2;
   }
 
   /**
