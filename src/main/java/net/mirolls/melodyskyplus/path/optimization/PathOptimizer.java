@@ -52,6 +52,9 @@ public class PathOptimizer {
             if (lastNode != null) {
               nodes.add(lastNode);
               lastNode = null;
+
+              // i不加1 重新从这个点开始算
+              i--;
             }
           }
         } else {
@@ -114,7 +117,10 @@ public class PathOptimizer {
         if (blockStateFoot.getBlock().getRegistryName().contains("slab") && !blockStateFoot.getBlock().getRegistryName().contains("double") && BlockSlab.EnumBlockHalf.BOTTOM == blockStateFoot.getValue(BlockSlab.HALF)) {
           // 如果是下半砖的 检查一下更高头上的能不能跑
           if (getBlockState(bp.add(0, 2, 0)).getBlock() == Blocks.air) {
-            bottomHalfSlabs.add(bp);
+            // 额外检查一下距离
+            if (checkDistance(Vec3d.ofCenter(bp), 0.8)) {
+              bottomHalfSlabs.add(bp);
+            }
           } else {
             // 要求头上至少有2格子宽
             return false;
