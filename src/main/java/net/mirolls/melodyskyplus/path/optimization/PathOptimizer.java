@@ -94,32 +94,56 @@ public class PathOptimizer {
     int yPos = startPos.getY();
     List<BlockPos> posList = calculate(startPos, target);
     posList.sort(Comparator.comparing(blockPos -> Math.hypot(blockPos.getX() - startPos.getX(), blockPos.getZ() - startPos.getZ())));
+
+    // 记录所有的半砖位置
+    Set<BlockPos> bottomHalfSlabs = new HashSet<>();
+
     for (BlockPos pos : posList) {
       BlockPos bp = new BlockPos(pos.getX(), yPos, pos.getZ());
-      IBlockState blockState = getBlockState(bp);
-      if (blockState.getBlock() != Blocks.air) {
-        // 如果不是空气的
-        if (blockState.getBlock().getRegistryName().contains("slab") && !blockState.getBlock().getRegistryName().contains("double") && blockState.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM) {
-          // 如果是下半砖的
-          yPos += 1; // 提升一下y的value 依然是个好汉
-          bp = new BlockPos(pos.getX(), yPos, pos.getZ());
-        } else {
-          // 如果遇到墙了
-          if (blockState.getBlock() != Blocks.carpet) {
+      IBlockState blockStateGround = getBlockState(bp.down());
+      IBlockState blockStateFoot = getBlockState(bp);
+      IBlockState blockStateHead = getBlockState(bp.up());
+
+      // 头上方块被挡住 则毫无办法 直接处理
+      if (blockStateHead.getBlock() != Blocks.air) {
+        return false;
+      }
+
+      // 是否有路径阻拦
+      if (blockStateFoot.getBlock() != Blocks.air && blockStateFoot.getBlock() != Blocks.carpet) {
+        if (blockStateFoot.getBlock().getRegistryName().contains("slab") && !blockStateFoot.getBlock().getRegistryName().contains("double") && BlockSlab.EnumBlockHalf.BOTTOM == blockStateFoot.getValue(BlockSlab.HALF)) {
+          // 如果是下半砖的 检查一下更高头上的能不能跑
+          if (getBlockState(bp.add(0, 2, 0)).getBlock() == Blocks.air) {
+            bottomHalfSlabs.add(bp);
+          } else {
+            // 要求头上至少有2格子宽
             return false;
+          }
+        } else {
+          // 研究 该方块是不是贴着半砖的
+          for (BlockPos slab : bottomHalfSlabs) {
+            if (slab.getY() == bp.getY()) {
+              if (Math.abs(slab.getX() - bp.getX()) <= 1 && Math.abs(slab.getX() - bp.getX()) <= 1) {
+                // 如果是贴着半砖的 则对yPos进行+1处理 并且重新构建
+                yPos += 1;
+                bp = new BlockPos(pos.getX(), yPos, pos.getZ());
+                blockStateGround = getBlockState(bp.down());
+                blockStateHead = getBlockState(bp.up());
+                // Foot不用检查 因为就是上一部的head
+
+                if (blockStateHead.getBlock() != Blocks.air) {
+                  // 依然需要检查 避免升高一格后出现意外情况
+                  return false;
+                }
+              }
+            }
           }
         }
       }
 
-
-      if (
-          (getBlockState(bp).getBlock() != Blocks.air && getBlockState(bp).getBlock() != Blocks.carpet)
-              || getBlockState(bp.up()).getBlock() != Blocks.air) {
-        return false;
-      }
-
       // 检测脚底下能不能走的
-      if (!getBlockState(bp.down()).getBlock().getMaterial().isSolid()) {
+      if (!blockStateGround.getBlock().getMaterial().isSolid()) {
+        // TODO 考虑短途摔落情况
         return false;
       }
     }
@@ -143,7 +167,7 @@ public class PathOptimizer {
         }
       }
 
-      blocks.removeIf(this::checkDistance);
+      blocks.removeIf((vec3d) -> checkDistance(vec3d, 2.0D));
 
       ArrayList<BlockPos> poses = new ArrayList<>();
 
@@ -183,7 +207,7 @@ public class PathOptimizer {
     return vecPoses;
   }
 
-  private boolean checkDistance(Vec3d vec) {
+  private boolean checkDistance(Vec3d vec, double value) {
     Iterator<Vec3d> var2 = routeVec.iterator();
 
     boolean x;
@@ -195,9 +219,9 @@ public class PathOptimizer {
       }
 
       Vec3d v = var2.next();
-      x = Math.abs(v.getX() - vec.getX()) <= 2.0;
+      x = Math.abs(v.getX() - vec.getX()) <= value;
       // y = Math.abs(v.getY() - vec.getY()) <= 1.0;
-      z = Math.abs(v.getZ() - vec.getZ()) <= 2.0;
+      z = Math.abs(v.getZ() - vec.getZ()) <= value;
     } while (!x || /*!y ||*/ !z);
 
     return false;
