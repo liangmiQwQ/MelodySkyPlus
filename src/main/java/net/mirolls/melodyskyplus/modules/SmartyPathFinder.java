@@ -1,7 +1,9 @@
 package net.mirolls.melodyskyplus.modules;
 
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.path.exec.AbilityExec;
 import net.mirolls.melodyskyplus.path.exec.PathExec;
 import net.mirolls.melodyskyplus.path.find.AStarPathFinder;
@@ -10,10 +12,13 @@ import net.mirolls.melodyskyplus.path.optimization.JumpOptimization;
 import net.mirolls.melodyskyplus.path.optimization.PathOptimizer;
 import net.mirolls.melodyskyplus.path.type.Node;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
+import xyz.Melody.Event.EventHandler;
+import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.pathfinding.PathProcessor;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
@@ -29,9 +34,13 @@ public class SmartyPathFinder extends Module {
   private final Option<Boolean> segmentation;
   private final Numbers<Double> length = new Numbers<>("Segment Length", 60.0, 30.0, 1000.0, 1.0);
 
-
   public List<PathPos> aStarPath;
   public List<Node> path;
+  public int retryTimes;
+  public int tick;
+
+  private BlockPos end;
+
 
   public SmartyPathFinder() {
     super("SmartyPathFinder", ModuleType.Others);
@@ -65,9 +74,10 @@ public class SmartyPathFinder extends Module {
   }
 
   public void go(BlockPos start, BlockPos end) {
-    PathExec.area = null;
     clear();
-    MelodySkyPlus.pathExec.abilityExec = new AbilityExec();
+    this.end = end;
+    PathExec.area = null;
+    PathExec.abilityExec = new AbilityExec();
 
 
     if (segmentation.getValue()) {
@@ -87,8 +97,53 @@ public class SmartyPathFinder extends Module {
     }
   }
 
+  @EventHandler
+  public void onTick(EventTick event) {
+    if (tick >= 0) {
+      tick++;
+
+      if (tick == 40 && !path.isEmpty() && !aStarPath.isEmpty()) {
+        // retryTimes处理装置
+        retryTimes--;
+        tick = 0;
+      }
+    }
+
+    if (!path.isEmpty() && !aStarPath.isEmpty()) {
+      // 如果卡住了
+      if (PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 400) {
+        // 如果没有在abilityExec或者说 ability卡死了
+        if (retryTimes < 5) {
+          go(end);
+          retryTimes++;
+        } else {
+          // 出问题了 无法走到节点
+          Helper.sendMessage("Sorry Cannot exec the path");
+          strongClear(false);
+        }
+      }
+    }
+  }
+
+  @SubscribeEvent
+  public void onWorldLoad(WorldEvent.Load event) {
+    if (!this.path.isEmpty() && !this.aStarPath.isEmpty()) {
+      Helper.sendMessage(EnumChatFormatting.YELLOW + "[MacroProtection]" + EnumChatFormatting.GRAY + " Stopped " + EnumChatFormatting.LIGHT_PURPLE + this.getName() + EnumChatFormatting.GRAY + " due to World Change.");
+      strongClear(false);
+    }
+  }
+
+
   public void clear() {
     aStarPath.clear();
     path.clear();
+    end = null;
+    PathProcessor.releaseControls();
+  }
+
+  public void strongClear(boolean start) {
+    clear();
+    retryTimes = 0;
+    tick = start ? 0 : -1;
   }
 }
