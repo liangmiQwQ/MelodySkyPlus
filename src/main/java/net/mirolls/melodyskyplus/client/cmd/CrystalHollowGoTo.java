@@ -1,10 +1,7 @@
 package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
-import net.mirolls.melodyskyplus.path.exec.AbilityExec;
-import net.mirolls.melodyskyplus.path.exec.PathExec;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
@@ -27,6 +24,7 @@ public class CrystalHollowGoTo extends Command {
 
       try {
         BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        smartyPathFinder.strongClear(true);
         smartyPathFinder.go(targetBP);
       } catch (IllegalStateException e) {
         Helper.sendMessage("Sorry, Cant find path.");
@@ -34,28 +32,8 @@ public class CrystalHollowGoTo extends Command {
 
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
-    } else if (args.length == 4) {
-      // 寻路命令系统
-      Helper.sendMessage("Start to find path without break ability and jumpBoost");
-
-      long startTime = System.currentTimeMillis();
-
-      try {
-        BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-        smartyPathFinder.go(targetBP);
-      } catch (IllegalStateException e) {
-        Helper.sendMessage("Sorry, Cant find path.");
-      }
-
-      long finishTime = System.currentTimeMillis();
-      Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
-    } else if (args.length == 1) {
-      Helper.sendMessage("Renderer cleared");
-
-      smartyPathFinder.clear();
-      PathExec.area = null;
-      MelodySkyPlus.pathExec.abilityExec = new AbilityExec();
     }
+
     return null;
   }
 }

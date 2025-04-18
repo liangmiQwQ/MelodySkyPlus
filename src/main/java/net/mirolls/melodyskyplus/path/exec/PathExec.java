@@ -19,7 +19,7 @@ import java.util.Objects;
 public class PathExec {
 
   public static SkyblockArea area = null;
-  public AbilityExec abilityExec = new AbilityExec();
+  public static AbilityExec abilityExec = new AbilityExec();
 
   public PathExec() {
     EventBus.getInstance().register(this);
@@ -38,7 +38,7 @@ public class PathExec {
       if (path.size() == 1) {
         // 走到终点自动停止
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-        smartyPathFinder.clear();
+        smartyPathFinder.strongClear(false);
         area = null;
         abilityExec = new AbilityExec();
         return;

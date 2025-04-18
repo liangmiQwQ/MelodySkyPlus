@@ -21,6 +21,7 @@ import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class AbilityExec {
   public boolean rubbish = false;
+  public int tick = -1;
   private Stage stage = Stage.WALK_TO_ABILITY_START;
   private int goEndTicks = 0;
   private int lastRightClick = 10;
@@ -29,6 +30,7 @@ public class AbilityExec {
     Ability nextAbility = (Ability) nextNode;
     Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
     Node endNode = path.get(2);
+    tick++;
 
     // 这次并非其他exec的条件主导 使用stage主导
     // 同时这里也需要加上一些基本条件
