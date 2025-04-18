@@ -68,7 +68,7 @@ public class PathExec {
         }
 
 
-        if (path.size() > 2) {
+        if (path.size() > 2 && nextNode.nextRotation != null) {
           double maxDiff = PlayerUtils.getYawDiff(node.nextRotation.getYaw(), nextNode.nextRotation.getYaw()) / 30 * (mc.thePlayer.getAIMoveSpeed());
           if (Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ()) < maxDiff) {
             // 根据角度不同 提前的量也不同

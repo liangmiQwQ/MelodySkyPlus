@@ -19,6 +19,7 @@ import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
+import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.pathfinding.PathProcessor;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
@@ -36,13 +37,14 @@ public class SmartyPathFinder extends Module {
   private final Option<Boolean> miningAllowed = new Option<>("Mining Allowed", true);
   private final Option<Boolean> segmentation;
   private final Numbers<Double> length = new Numbers<>("Segment Length", 60.0, 30.0, 1000.0, 1.0);
-  private final TimerUtil stuckTimer = new TimerUtil();
+  private final TimerUtil timer = new TimerUtil();
   public List<PathPos> aStarPath = new ArrayList<>();
   public List<Node> path = new ArrayList<>();
   public int retryTimes;
   public int tick;
   private BlockPos end;
   private Vec3d lastVec = null;
+  private boolean findingPath = false;
 
 
   public SmartyPathFinder() {
@@ -112,7 +114,8 @@ public class SmartyPathFinder extends Module {
       }
     }
 
-    if (!path.isEmpty() && !aStarPath.isEmpty() && stuckTimer.hasReached(500)) {
+
+    if (!path.isEmpty() && !aStarPath.isEmpty() && timer.hasReached(500)) {
       // 如果卡住了
       if (PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 400) {
         // 如果没有在abilityExec或者说 ability卡死了
@@ -128,9 +131,30 @@ public class SmartyPathFinder extends Module {
         }
       }
 
-      stuckTimer.reset();
+      // 分段寻路
+      if (!path.get(path.size() - 1).getPos().equals(end) && segmentation.getValue() && !findingPath) {
+        // 分段查询 添加多段
+        if (path.size() < length.getValue() / 20 || MathUtil.distanceToPos(PlayerUtils.getPlayerLocation(), aStarPath.get(aStarPath.size() - 1).getPos()) < length.getValue() / 3) {
+          findingPath = true;
+          new Thread(() -> {
+            // 异步操作
+            List<PathPos> newPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(path.get(path.size() - 1).getPos(), end, length.getValue().intValue());
+
+            aStarPath.addAll(newPath);
+            path.addAll(new JumpOptimization(true)
+                .optimize(new PathOptimizer()
+                    .optimize(newPath)));
+
+            findingPath = false;
+          }).start();
+        }
+      }
+
+      timer.reset();
       lastVec = new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
     }
+
+
   }
 
   @SubscribeEvent
@@ -153,6 +177,6 @@ public class SmartyPathFinder extends Module {
     clear();
     retryTimes = 0;
     tick = start ? 0 : -1;
-    stuckTimer.reset();
+    timer.reset();
   }
 }
