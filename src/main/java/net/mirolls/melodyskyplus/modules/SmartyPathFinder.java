@@ -18,7 +18,9 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.pathfinding.PathProcessor;
+import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
@@ -40,6 +42,8 @@ public class SmartyPathFinder extends Module {
   public int tick;
 
   private BlockPos end;
+  private Vec3d lastVec;
+  private TimerUtil stuckTimer;
 
 
   public SmartyPathFinder() {
@@ -109,19 +113,25 @@ public class SmartyPathFinder extends Module {
       }
     }
 
-    if (!path.isEmpty() && !aStarPath.isEmpty()) {
+    if (!path.isEmpty() && !aStarPath.isEmpty() && stuckTimer.hasReached(500)) {
       // 如果卡住了
       if (PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 400) {
         // 如果没有在abilityExec或者说 ability卡死了
-        if (retryTimes < 5) {
-          go(end);
-          retryTimes++;
-        } else {
-          // 出问题了 无法走到节点
-          Helper.sendMessage("Sorry Cannot exec the path");
-          strongClear(false);
+
+        if (mc.thePlayer.onGround && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
+          if (retryTimes < 5) {
+            go(end);
+            retryTimes++;
+          } else {
+            // 出问题了 无法走到节点
+            Helper.sendMessage("Sorry Cannot exec the path");
+            strongClear(false);
+          }
         }
       }
+
+      stuckTimer.reset();
+      lastVec = new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
     }
   }
 
