@@ -24,6 +24,7 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,15 +36,13 @@ public class SmartyPathFinder extends Module {
   private final Option<Boolean> miningAllowed = new Option<>("Mining Allowed", true);
   private final Option<Boolean> segmentation;
   private final Numbers<Double> length = new Numbers<>("Segment Length", 60.0, 30.0, 1000.0, 1.0);
-
-  public List<PathPos> aStarPath;
-  public List<Node> path;
+  private final TimerUtil stuckTimer = new TimerUtil();
+  public List<PathPos> aStarPath = new ArrayList<>();
+  public List<Node> path = new ArrayList<>();
   public int retryTimes;
   public int tick;
-
   private BlockPos end;
-  private Vec3d lastVec;
-  private TimerUtil stuckTimer;
+  private Vec3d lastVec = null;
 
 
   public SmartyPathFinder() {
@@ -117,8 +116,7 @@ public class SmartyPathFinder extends Module {
       // 如果卡住了
       if (PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 400) {
         // 如果没有在abilityExec或者说 ability卡死了
-
-        if (mc.thePlayer.onGround && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
+        if (mc.thePlayer.onGround && lastVec != null && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
           if (retryTimes < 5) {
             go(end);
             retryTimes++;
@@ -155,5 +153,6 @@ public class SmartyPathFinder extends Module {
     clear();
     retryTimes = 0;
     tick = start ? 0 : -1;
+    stuckTimer.reset();
   }
 }

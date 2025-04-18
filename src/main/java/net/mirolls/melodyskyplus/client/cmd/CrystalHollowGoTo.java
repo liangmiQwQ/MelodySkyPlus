@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
+import net.mirolls.melodyskyplus.path.exec.PathExec;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
@@ -32,6 +33,11 @@ public class CrystalHollowGoTo extends Command {
 
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
+    } else if (args.length == 1) {
+      Helper.sendMessage("Renderer cleared");
+
+      smartyPathFinder.clear();
+      PathExec.area = null;
     }
 
     return null;
