@@ -23,7 +23,7 @@ import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 public class MineExec {
   public static void exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
     // 先切换到稿子
-    mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue();
+    mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue() - 1;
 
     // 先挖掘对应的方块
     BlockPos footBlock = nextNode.getPos();

@@ -7,6 +7,7 @@ import net.mirolls.melodyskyplus.path.type.Ability;
 import net.mirolls.melodyskyplus.path.type.Node;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
@@ -66,7 +67,7 @@ public class AbilityExec {
         stage = Stage.WALK_TO_ABILITY_END;
       } else {
         // 执行操作 先换物品到aotv
-        mc.thePlayer.inventory.currentItem = smartyPathFinder.aotvSlot.getValue().intValue();
+        mc.thePlayer.inventory.currentItem = smartyPathFinder.aotvSlot.getValue().intValue() - 1;
       }
     } else if (stage == Stage.WALK_TO_ABILITY_END) {
       // 此时可能才刚刚和方块搭边 我们要继续转头
@@ -90,6 +91,7 @@ public class AbilityExec {
         stage = Stage.ETHER_WARP;
       } else {
         // 情况2 先点一下后再进行etherWarp 不行就继续点
+        Helper.sendMessage("Sorry Cannot warp to this pos now.");
       }
     } else if (stage == Stage.ETHER_WARP) {
       // 保持下蹲

@@ -149,7 +149,7 @@ public class PathOptimizer {
 
       // 检测脚底下能不能走的
       if (!blockStateGround.getBlock().getMaterial().isSolid()) {
-        // TODO 考虑短途摔落情况
+        // 这种情况自行处理
         return false;
       }
     }

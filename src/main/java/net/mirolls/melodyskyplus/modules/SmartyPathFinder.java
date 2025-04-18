@@ -13,6 +13,7 @@ import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
+import xyz.Melody.Utils.Helper;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
@@ -65,6 +66,7 @@ public class SmartyPathFinder extends Module {
 
   public void go(BlockPos start, BlockPos end) {
     PathExec.area = null;
+    clear();
     MelodySkyPlus.pathExec.abilityExec = new AbilityExec();
 
 
@@ -80,6 +82,7 @@ public class SmartyPathFinder extends Module {
 
 
     if (aStarPath == null || path == null) {
+      Helper.sendMessage("Cannot found path");
       throw new IllegalStateException("Path no Found");
     }
   }
