@@ -35,7 +35,7 @@ public class JumpOptimization {
   }
 
   public List<Node> optimize(List<Node> nodes) {
-    for (int i = 0; i < nodes.size(); i++) {
+    for (int i = 1 /*从1开始跑 不会遇到0的问题*/; i < nodes.size(); i++) {
       Node node = nodes.get(i);
       if (node instanceof Jump) {
         // 是跳跃类型节点
