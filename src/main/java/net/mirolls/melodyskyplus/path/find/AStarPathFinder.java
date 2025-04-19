@@ -209,17 +209,15 @@ public class AStarPathFinder {
 
       if (parent.type == PathPos.PathNodeType.ABILITY) {
         // 如果是技能类节点 允许垂直向上
-        BlockPos posUp = mc.thePlayer.getPosition().add(0, 1, 0);
-
-        PathNode node = openBlock(parent, target, posUp, false, true, true, false);
+        PathNode node = openBlock(parent, target, new BlockPos(0, 1, 0), false, true, true, false);
         if (node != null) return node;
       }
 
       if (parent.type == PathPos.PathNodeType.WALK || parent.type == PathPos.PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 5; i++) {
-            BlockPos posFoot = mc.thePlayer.getPosition().add(0, i + 1, 0);
-            BlockPos posHead = mc.thePlayer.getPosition().add(0, i + 2, 0);
+            BlockPos posFoot = parent.pos.add(0, i + 1, 0);
+            BlockPos posHead = parent.pos.add(0, i + 2, 0);
 
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
@@ -232,8 +230,8 @@ public class AStarPathFinder {
           }
         } else {
           for (BlockPos offset : getJumpOffsets(1)) {
-            BlockPos posFoot = mc.thePlayer.getPosition().add(0, 1, 0);
-            BlockPos posHead = mc.thePlayer.getPosition().add(0, 2, 0);
+            BlockPos posFoot = parent.pos.add(0, 1, 0);
+            BlockPos posHead = parent.pos.add(0, 2, 0);
             if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
