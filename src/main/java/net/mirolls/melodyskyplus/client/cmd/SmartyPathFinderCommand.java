@@ -2,15 +2,14 @@ package net.mirolls.melodyskyplus.client.cmd;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
-import net.mirolls.melodyskyplus.path.exec.PathExec;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
 import java.util.Objects;
 
-public class CrystalHollowGoTo extends Command {
-  public CrystalHollowGoTo() {
-    super(".crystalhollowgoto", new String[]{"crystalgoto", "chgoto", "cgoto", "cgo"}, "", "sketit");
+public class SmartyPathFinderCommand extends Command {
+  public SmartyPathFinderCommand() {
+    super(".smartypathfinder", new String[]{"spf", "sgoto", "pf", "sgo"}, "", "sketit");
   }
 
   @Override
@@ -34,12 +33,27 @@ public class CrystalHollowGoTo extends Command {
       long finishTime = System.currentTimeMillis();
       Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms");
     } else if (args.length == 1) {
-      Helper.sendMessage("Renderer cleared");
-
-      smartyPathFinder.clear();
-      PathExec.area = null;
+      if (args[0].toLowerCase().contains("clear")) {
+        Helper.sendMessage("Successfully cleared");
+        smartyPathFinder.strongClear(false);
+      } else {
+        printUsage();
+      }
+    } else {
+      printUsage();
     }
 
     return null;
+  }
+
+
+  private void printUsage() {
+    Helper.sendMessageWithoutPrefix("==================== SmartyPathFinder ====================");
+    Helper.sendMessageWithoutPrefix("Edit config in module SmartyPathFinder.");
+    Helper.sendMessageWithoutPrefix("Currently unstable and under developing. Might cause some errors.");
+    Helper.sendMessageWithoutPrefix("");
+    Helper.sendMessageWithoutPrefix(".spf [x] [y] [z] - Go to a block pos.");
+    Helper.sendMessageWithoutPrefix(".spf clear - Stop finding path and clear renderer.");
+    Helper.sendMessageWithoutPrefix(".spf help - Show information of SmartyPathFinder");
   }
 }

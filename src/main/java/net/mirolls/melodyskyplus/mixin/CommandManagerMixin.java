@@ -1,6 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
-import net.mirolls.melodyskyplus.client.cmd.CrystalHollowGoTo;
+import net.mirolls.melodyskyplus.client.cmd.SmartyPathFinderCommand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,6 +20,6 @@ public class CommandManagerMixin {
       at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
   )
   public void init(CallbackInfo ci) {
-    this.commands.add(new CrystalHollowGoTo());
+    this.commands.add(new SmartyPathFinderCommand());
   }
 }
