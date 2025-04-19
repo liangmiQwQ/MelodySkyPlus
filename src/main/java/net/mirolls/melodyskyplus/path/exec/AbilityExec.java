@@ -26,7 +26,7 @@ public class AbilityExec {
   private int goEndTicks = 0;
   private int lastRightClick = 10;
 
-  public void exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
+  public boolean exec(Node nextNode, List<Node> path, Minecraft mc, SmartyPathFinder smartyPathFinder, Node node) {
     Ability nextAbility = (Ability) nextNode;
     Vec3d nextVec = Vec3d.ofCenter(nextNode.getPos());
     Node endNode = path.get(2);
@@ -96,6 +96,7 @@ public class AbilityExec {
       } else {
         // 情况2 先点一下后再进行etherWarp 不行就继续点
         Helper.sendMessage("Sorry Cannot warp to this pos now.");
+        return false;
       }
     } else if (stage == Stage.ETHER_WARP) {
       // 保持下蹲
@@ -116,6 +117,8 @@ public class AbilityExec {
         lastRightClick++;
       }
     }
+
+    return true;
   }
 
   public enum Stage {

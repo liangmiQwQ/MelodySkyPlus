@@ -4,6 +4,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.mirolls.melodyskyplus.path.EventHook;
 import net.mirolls.melodyskyplus.path.exec.AbilityExec;
 import net.mirolls.melodyskyplus.path.exec.PathExec;
 import net.mirolls.melodyskyplus.path.find.AStarPathFinder;
@@ -42,6 +43,8 @@ public class SmartyPathFinder extends Module {
   public List<Node> path = new ArrayList<>();
   public int retryTimes;
   public int tick;
+  private EventHook finishedHook = null;
+  private EventHook failedHook = null;
   private BlockPos end;
   private Vec3d lastVec = null;
   private boolean findingPath = false;
@@ -98,9 +101,31 @@ public class SmartyPathFinder extends Module {
 
     if (aStarPath == null || path == null) {
       Helper.sendMessage("Cannot found path");
+      failed();
       throw new IllegalStateException("Path no Found");
     }
   }
+
+  public void onFailed(EventHook hook) {
+    failedHook = hook;
+  }
+
+  public void onFinished(EventHook hook) {
+    finishedHook = hook;
+  }
+
+  public void failed() {
+    if (failedHook != null) {
+      failedHook.hook();
+    }
+  }
+
+  public void finished() {
+    if (finishedHook != null) {
+      finishedHook.hook();
+    }
+  }
+
 
   @EventHandler
   public void onTick(EventTick event) {
@@ -126,6 +151,7 @@ public class SmartyPathFinder extends Module {
           } else {
             // 出问题了 无法走到节点
             Helper.sendMessage("Sorry Cannot exec the path");
+            failed();
             strongClear(false);
           }
         }
@@ -161,6 +187,7 @@ public class SmartyPathFinder extends Module {
   public void onWorldLoad(WorldEvent.Load event) {
     if (!this.path.isEmpty() && !this.aStarPath.isEmpty()) {
       Helper.sendMessage(EnumChatFormatting.YELLOW + "[MacroProtection]" + EnumChatFormatting.GRAY + " Stopped " + EnumChatFormatting.LIGHT_PURPLE + this.getName() + EnumChatFormatting.GRAY + " due to World Change.");
+      failed();
       strongClear(false);
     }
   }
@@ -178,5 +205,9 @@ public class SmartyPathFinder extends Module {
     retryTimes = 0;
     tick = start ? 0 : -1;
     timer.reset();
+    PathExec.area = null;
+    PathExec.abilityExec = new AbilityExec();
+    onFailed(null);
+    onFinished(null);
   }
 }
