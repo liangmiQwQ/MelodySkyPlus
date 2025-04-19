@@ -360,7 +360,7 @@ public class AutoGold extends Module {
     for (int x = -findGoldRadius.getValue().intValue(); x < findGoldRadius.getValue().intValue(); x++) {
       for (int z = -findGoldRadius.getValue().intValue(); z < findGoldRadius.getValue().intValue(); z++) {
         for (int y = findGoldRadius.getValue().intValue() / -5; y < findGoldRadius.getValue().intValue() / 5; y++) {
-          BlockPos bp = new BlockPos(x, y, z);
+          BlockPos bp = PlayerUtils.getPlayerLocation().add(x, y, z);
           if (mc.theWorld.getBlockState(bp).getBlock() == Blocks.gold_block) {
             // 这是金块
             golds.add(bp);
