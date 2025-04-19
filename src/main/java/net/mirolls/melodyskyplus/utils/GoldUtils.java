@@ -13,7 +13,7 @@ public class GoldUtils {
   public static BlockPos findGoldToRotate(int findGoldRadius) {
     Minecraft mc = Minecraft.getMinecraft();
     Helper.sendMessage("Finding Gold...");
-    final BlockPos playerPos = mc.thePlayer.getPosition();
+    final BlockPos playerPos = PlayerUtils.getPlayerLocation();
     final int playerX = playerPos.getX();
     final int playerY = playerPos.getY();
     final int playerZ = playerPos.getZ();
