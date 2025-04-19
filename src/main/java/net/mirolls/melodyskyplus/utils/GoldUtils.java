@@ -70,7 +70,7 @@ public class GoldUtils {
       return replaceBlock;
     }
 
-    Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you're out of Mines of Divan.");
+    Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
     return null;
   }
 

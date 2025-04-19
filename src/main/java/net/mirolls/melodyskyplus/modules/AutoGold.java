@@ -9,6 +9,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.utils.GoldUtils;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
@@ -29,9 +30,7 @@ import xyz.Melody.module.modules.macros.Mining.GoldNuker;
 
 import java.awt.*;
 import java.lang.reflect.Field;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
 
@@ -46,6 +45,7 @@ public class AutoGold extends Module {
   private int rotateToGoldDoneTick = -2147483647;
   private int pfTick = -2147483647;
   private BlockPos targetBlock = null;
+  private int goldNumber = 0;
 
   private int prevItem;
 
@@ -354,7 +354,75 @@ public class AutoGold extends Module {
   }
 
   private BlockPos findGoldToPF() {
+    Set<BlockPos> golds = new HashSet<>();
+    Map<BlockPos, Integer> goldMap = new HashMap<>();
 
+    for (int x = -findGoldRadius.getValue().intValue(); x < findGoldRadius.getValue().intValue(); x++) {
+      for (int z = -findGoldRadius.getValue().intValue(); z < findGoldRadius.getValue().intValue(); z++) {
+        for (int y = findGoldRadius.getValue().intValue() / -5; y < findGoldRadius.getValue().intValue() / 5; y++) {
+          BlockPos bp = new BlockPos(x, y, z);
+          if (mc.theWorld.getBlockState(bp).getBlock() == Blocks.gold_block) {
+            // 这是金块
+            golds.add(bp);
+          }
+        }
+      }
+    }
+
+    while (!golds.isEmpty()) {
+      // 开始寻找连续的金子
+      goldNumber = 0;
+      BlockPos nearestGold = null;
+      int nearestGoldDistanceSquare = Integer.MAX_VALUE;
+      for (BlockPos gold : golds) {
+        int distanceSquare = (int) (Math.pow(PlayerUtils.getPlayerLocation().getX() - gold.getX(), 2) + Math.pow(PlayerUtils.getPlayerLocation().getZ() - gold.getZ(), 2));
+
+        if (distanceSquare < nearestGoldDistanceSquare) {
+          nearestGold = gold;
+        }
+      }
+      goldMap.put(nearestGold, 0);
+      processGold(nearestGold, nearestGold, golds, goldMap);
+    }
+
+    Set<BlockPos> keySet = goldMap.keySet();
+    if (keySet.isEmpty())
+      Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
+
+    BlockPos largestGold = null;
+    int largestGoldNumber = 0;
+
+    for (BlockPos key : keySet) {
+      if (goldMap.get(key) > largestGoldNumber) {
+        largestGold = key;
+      }
+    }
+
+    return largestGold;
+  }
+
+  private void processGold(BlockPos nearestGold, BlockPos start, Set<BlockPos> golds, Map<BlockPos, Integer> goldMap) {
+    // gold的数量加1
+    goldMap.put(nearestGold, goldMap.get(nearestGold) + 1);
+
+    final BlockPos[] offsets = {
+        new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
+        new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
+        new BlockPos(0, -1, 0), new BlockPos(0, 1, 0)
+    };
+
+    for (BlockPos offset : offsets) {
+      // 找这个点附近的所有点
+      BlockPos pos = start.add(offset);
+      // 如果这些点里有金子的
+      if (golds.contains(pos)) {
+        // 删除原来的点 避免重复查找
+        golds.remove(start);
+
+        // 递归算法 把这个点按照原逻辑展开
+        processGold(nearestGold, pos, golds, goldMap);
+      }
+    }
   }
 
   private void rotateToGold(BlockPos gold) {
