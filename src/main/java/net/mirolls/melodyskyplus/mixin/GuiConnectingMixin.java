@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.client.multiplayer.GuiConnecting;
+import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.AutoReconnect.AutoReconnect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,6 +14,8 @@ import java.util.Objects;
 public class GuiConnectingMixin {
   @Inject(method = "connect", at = @At("HEAD"))
   private void connect(String host, int port, CallbackInfo ci) {
-    Objects.requireNonNull(AutoReconnect.getInstance()).host = host + ":" + port;
+    if (AntiBug.isBugRemoved()) {
+      Objects.requireNonNull(AutoReconnect.getInstance()).host = host + ":" + port;
+    }
   }
 }
