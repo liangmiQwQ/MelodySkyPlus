@@ -38,9 +38,8 @@ public class PathExec {
       if (path.size() == 1) {
         // 走到终点自动停止
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+        SmartyPathFinder.getINSTANCE().finished();
         smartyPathFinder.strongClear(false);
-        area = null;
-        abilityExec = new AbilityExec();
         return;
       }
 
@@ -80,7 +79,10 @@ public class PathExec {
       } else if (nextNode instanceof Jump) {
         JumpExec.exec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
-        abilityExec.exec(nextNode, path, mc, smartyPathFinder, node);
+        if (!abilityExec.exec(nextNode, path, mc, smartyPathFinder, node)) {
+          SmartyPathFinder.getINSTANCE().finished();
+          smartyPathFinder.strongClear(false);
+        }
       }
     }
   }
