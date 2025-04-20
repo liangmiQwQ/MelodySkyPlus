@@ -45,7 +45,6 @@ public class AutoGold extends Module {
   private int rotateToGoldDoneTick = -2147483647;
   private int pfTick = -2147483647;
   private BlockPos targetBlock = null;
-  private int goldNumber = 0;
 
   private int prevItem;
 
@@ -120,6 +119,8 @@ public class AutoGold extends Module {
           SmartyPathFinder.getINSTANCE().onFinished(() -> {
 
           });
+        } else {
+          Helper.sendMessage("Your Minecraft is not working well! try to restart it");
         }
       }).start();
     }
@@ -290,9 +291,7 @@ public class AutoGold extends Module {
           } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
           }
-          new Thread(() -> {
-            rotateToGold(GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue()));
-          }).start();
+          new Thread(() -> rotateToGold(GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue()))).start();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
@@ -371,7 +370,6 @@ public class AutoGold extends Module {
 
     while (!golds.isEmpty()) {
       // 开始寻找连续的金子
-      goldNumber = 0;
       BlockPos nearestGold = null;
       int nearestGoldDistanceSquare = Integer.MAX_VALUE;
       for (BlockPos gold : golds) {
@@ -382,7 +380,9 @@ public class AutoGold extends Module {
         }
       }
       goldMap.put(nearestGold, 0);
-      processGold(nearestGold, nearestGold, golds, goldMap);
+      if (nearestGold != null) {
+        processGold(nearestGold, nearestGold, golds, goldMap);
+      }
     }
 
     Set<BlockPos> keySet = goldMap.keySet();
@@ -405,6 +405,9 @@ public class AutoGold extends Module {
     // gold的数量加1
     goldMap.put(nearestGold, goldMap.get(nearestGold) + 1);
 
+    // 删除原来的点 避免重复查找
+    golds.remove(start);
+
     final BlockPos[] offsets = {
         new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
         new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
@@ -416,9 +419,6 @@ public class AutoGold extends Module {
       BlockPos pos = start.add(offset);
       // 如果这些点里有金子的
       if (golds.contains(pos)) {
-        // 删除原来的点 避免重复查找
-        golds.remove(start);
-
         // 递归算法 把这个点按照原逻辑展开
         processGold(nearestGold, pos, golds, goldMap);
       }

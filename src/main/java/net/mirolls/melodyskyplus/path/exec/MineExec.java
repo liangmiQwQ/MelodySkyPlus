@@ -21,7 +21,10 @@ import java.util.Random;
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class MineExec {
-  public static void exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
+  public boolean rubbish = false;
+  public int tick = -1;
+
+  public void exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
     // 先切换到稿子
     mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue() - 1;
 
@@ -36,6 +39,7 @@ public class MineExec {
 
     if (mc.theWorld.getBlockState(headBlock).getBlock() != Blocks.air) {
       // 停止走路 拒接转圈
+      tick++;
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
@@ -58,6 +62,7 @@ public class MineExec {
       }
     } else if (mc.theWorld.getBlockState(footBlock).getBlock() != Blocks.air) {
       // 停止走路 拒接转圈
+      tick++;
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
@@ -90,9 +95,8 @@ public class MineExec {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 5);
 
       // 处理下一个点
-
-
       if (nextNode.getPos().equals(PlayerUtils.getPlayerLocation())) {
+        rubbish = true;
         path.remove(0);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       }
