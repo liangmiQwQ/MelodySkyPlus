@@ -102,6 +102,7 @@ public class SmartyPathFinder extends Module {
     if (aStarPath == null || path == null) {
       Helper.sendMessage("Cannot found path");
       failed();
+      strongClear(false);
       throw new IllegalStateException("Path no Found");
     }
   }
@@ -168,10 +169,21 @@ public class SmartyPathFinder extends Module {
             // 异步操作
             List<PathPos> newPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(path.get(path.size() - 1).getPos(), end, length.getValue().intValue());
 
-            aStarPath.addAll(newPath);
-            path.addAll(new JumpOptimization(true)
-                .optimize(new PathOptimizer()
-                    .optimize(newPath)));
+            if (newPath == null) {
+              Helper.sendMessage("Cannot found path");
+              failed();
+              strongClear(false);
+              return;
+            }
+
+            if (path.get(path.size() - 1).getPos().equals(newPath.get(0).getPos())) {
+              newPath.remove(0);
+
+              aStarPath.addAll(newPath);
+              path.addAll(new JumpOptimization(true)
+                  .optimize(new PathOptimizer()
+                      .optimize(newPath)));
+            }
 
             findingPath = false;
           }).start();
@@ -181,8 +193,6 @@ public class SmartyPathFinder extends Module {
       timer.reset();
       lastVec = new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
     }
-
-
   }
 
   @SubscribeEvent
