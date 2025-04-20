@@ -58,7 +58,7 @@ public class PathExec {
       }
 
       if (mineExec.rubbish) {
-        abilityExec = new AbilityExec();
+        mineExec = new MineExec();
       }
 
       if (nextNode instanceof Walk) {
