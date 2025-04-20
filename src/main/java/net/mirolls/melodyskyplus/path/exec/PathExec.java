@@ -20,12 +20,12 @@ public class PathExec {
 
   public static SkyblockArea area = null;
   public static AbilityExec abilityExec = new AbilityExec();
+  public static MineExec mineExec = new MineExec();
 
   public PathExec() {
     EventBus.getInstance().register(this);
     MinecraftForge.EVENT_BUS.register(this);
   }
-
 
   @EventHandler
   public void onTick(EventPreUpdate event) {
@@ -57,6 +57,10 @@ public class PathExec {
         abilityExec = new AbilityExec();
       }
 
+      if (mineExec.rubbish) {
+        abilityExec = new AbilityExec();
+      }
+
       if (nextNode instanceof Walk) {
         WalkExec.exec(nextNode, mc, node);
 
@@ -75,7 +79,7 @@ public class PathExec {
           }
         }
       } else if (nextNode instanceof Mine) {
-        MineExec.exec(nextNode, mc, path, smartyPathFinder, area);
+        mineExec.exec(nextNode, mc, path, smartyPathFinder, area);
       } else if (nextNode instanceof Jump) {
         JumpExec.exec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {

@@ -41,6 +41,7 @@ public class AbilityExec {
     if (isInBlock) {
       // 如果已经到达了终点 则代表执行到现在一切都很好
       path.remove(0);
+      rubbish = true;
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       // 不删除1的理由 见JumpExec部分
