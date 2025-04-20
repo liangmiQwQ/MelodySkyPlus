@@ -22,13 +22,14 @@ public class JumpExec {
 
 
     Vec3d center = Vec3d.ofCenter(endNode.getPos());
-    boolean isInBlock = Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8;
+    boolean isInBlockXZ = Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8;
+    boolean isInBlockY = Math.abs(mc.thePlayer.posY - endNode.getPos().getY()) <= 0.1;
 
 
     if (mc.thePlayer.onGround) {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
       // 如果在陆地上 则有2个情况
-      if (isInBlock) {
+      if (isInBlockXZ && isInBlockY) {
         // 落地了 到达位置了 删除跳跃节点
         // path.remove(1); 经过研究 发现不能一次性删除2个 否则如果有连续跳跃 将会出现极大的问题 这个节点应该由未来的该节点来亲自删除
         path.remove(0);
@@ -49,7 +50,7 @@ public class JumpExec {
       }
     } else {
       // 如果玩家没有到位的
-      if (isInBlock) {
+      if (isInBlockXZ) {
         // BUG 由于MOJANG设置的无脑惯性 需要按S抵消一下惯性(maybe)
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
 
