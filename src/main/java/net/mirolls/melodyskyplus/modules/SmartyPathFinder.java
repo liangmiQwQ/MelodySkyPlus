@@ -148,11 +148,13 @@ public class SmartyPathFinder extends Module {
           if (retryTimes < 5) {
             go(end);
             retryTimes++;
+            return;
           } else {
             // 出问题了 无法走到节点
             Helper.sendMessage("Sorry Cannot exec the path");
             failed();
             strongClear(false);
+            return;
           }
         }
       }

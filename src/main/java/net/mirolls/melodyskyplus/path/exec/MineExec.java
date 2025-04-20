@@ -24,6 +24,10 @@ public class MineExec {
   public boolean rubbish = false;
   public int tick = -1;
 
+  private boolean headMined = false;
+  private boolean footMined = false;
+
+
   public void exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
     // 先切换到稿子
     mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue() - 1;
@@ -54,7 +58,14 @@ public class MineExec {
 
       if (area.isIn(Areas.Crystal_Hollows)) {
         if (canGo) {
-          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, headBlock, EnumFacing.DOWN));
+          if (!headMined) {
+            mc.thePlayer.sendQueue.addToSendQueue(
+                new C07PacketPlayerDigging(
+                    C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, headBlock, EnumFacing.DOWN
+                )
+            );
+            headMined = true;
+          }
           mc.thePlayer.swingItem();
         }
       } else {
@@ -77,7 +88,10 @@ public class MineExec {
 
       if (area.isIn(Areas.Crystal_Hollows)) {
         if (canGo) {
-          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, footBlock, EnumFacing.DOWN));
+          if (!footMined) {
+            mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, footBlock, EnumFacing.DOWN));
+            footMined = true;
+          }
           mc.thePlayer.swingItem();
         }
       } else {
