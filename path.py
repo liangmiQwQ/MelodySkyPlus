@@ -9,7 +9,7 @@ import math
 from turtle import *  # type: ignore
 
 speedTick = 20
-angleNeed = 55
+angleNeed = 20
 maxAngle = 50
 a = 0
 ycor1 = 0
@@ -71,7 +71,10 @@ print(result)
 import math
 
 
-def calculate_result(angleNeed, maxAngle, speedTick):
+def calculate_result(angleNeed, speedTick, maxAngle):
+    print("Angle: " + str(angleNeed))
+    print("Speed: " + str(speedTick))
+    print("Max: " + str(maxAngle))
     # 模拟紫色路径的process过程
     angle_sum = 0.0
     current_direction = 90.0  # 初始方向向上
@@ -116,6 +119,6 @@ def calculate_result(angleNeed, maxAngle, speedTick):
     return result
 
 
-print(calculate_result(angleNeed, maxAngle, speedTick))
+print("Result: " + calculate_result(angleNeed, speedTick, maxAngle))
 
 done();
