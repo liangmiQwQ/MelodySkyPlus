@@ -6,7 +6,6 @@ import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.client.task.TaskHelper;
 import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
-import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 
@@ -59,40 +58,43 @@ public class Node {
           Walk node = new Walk(pos.getPos(), rotation, distance, -1);
 
           values.add(node);
-          Node prevNode = values.get(values.size() - 2);
+          if (values.size() > 1) {
+            Node prevNode = values.get(values.size() - 2);
 
-          taskHelper.addTask(() -> {
-            if (values.contains(node) && node.advanceFraction == -1) {
-              try {
-                URL url = new URL(AntiBug.ROOT_URL + "/hack/path/?bug=" + MelodySkyPlus.antiBug.getBug()
-                    + "&speed=1&max=75&angle="
-                    + Math.abs(PlayerUtils.getYawDiff(prevNode.nextRotation.getYaw(), node.nextRotation.getYaw()))
-                );
+            taskHelper.addTask(() -> {
+              if (values.contains(node) && node.advanceFraction == -1) {
+                try {
+                  URL url = new URL(AntiBug.ROOT_URL + "hack/path/?bug=" + MelodySkyPlus.antiBug.getBug()
+                      + "&speed=1&max=75&angle="
+                      + Math.abs(PlayerUtils.getYawDiff(prevNode.nextRotation.getYaw(), node.nextRotation.getYaw()))
+                  );
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-                conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-                conn.setRequestProperty("Connection", "keep-alive");
+                  HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                  conn.setRequestMethod("GET");
+                  conn.setRequestProperty("Content-Type", "application/json");
+                  conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                  conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+                  conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+                  conn.setRequestProperty("Connection", "keep-alive");
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
+                  BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                  String inputLine;
+                  StringBuilder response = new StringBuilder();
 
-                while ((inputLine = in.readLine()) != null) {
-                  response.append(inputLine);
+                  while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                  }
+
+                  in.close();
+
+                  node.advanceFraction = Double.parseDouble(response.toString());
+                } catch (IOException e) {
+                  MelodySkyPlus.LOGGER.info(e);
+                  throw new RuntimeException(e);
                 }
-
-                in.close();
-
-                Helper.sendMessage(response);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
               }
-            }
-          });
+            });
+          }
 
         }
       } else if (pos.getType() == PathPos.PathNodeType.JUMP_END) {
@@ -136,6 +138,7 @@ public class Node {
       }
     }
 
+    taskHelper.run();
     return values;
   }
 
