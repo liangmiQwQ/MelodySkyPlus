@@ -24,13 +24,14 @@ public class AntiBug {
   // mld-plus.lmfans.cn/bug/check -> 传入token 返回有效性和创建日期以及该账户 UUID
   // -> 检查获取日期、UID是否相同
 
+  public static String ROOT_URL = "https://mld-plus.lmfans.cn:443/";
   private static Bug newBug = null;
 
   public static boolean removeBug(CallbackInfoReturnable<Boolean> cir) {
     // 进行基础的获取
     try {
       String bugID = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
-      BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/remove/?bugid=" + bugID
+      BufferedReader in = lIIllI(ROOT_URL + "bug/remove/?bugid=" + bugID
           + "&version=" + MelodySkyPlus.VERSION + "_" + MelodySkyPlus.MELODY_VERSION
           + "&rat=" + llIlll());
       StringBuilder response = new StringBuilder();
@@ -74,7 +75,7 @@ public class AntiBug {
     if (newBug == null) {
       // 获取new Bug
       try {
-        BufferedReader in = lIIllI("https://mld-plus.lmfans.cn:443/bug/new/?bug=" + MelodySkyPlus.antiBug.getBug()
+        BufferedReader in = lIIllI(ROOT_URL + "bug/new/?bug=" + MelodySkyPlus.antiBug.getBug()
         );
         StringBuilder response = new StringBuilder();
         String line;
@@ -116,7 +117,7 @@ public class AntiBug {
 //    return true;
 //  }
 
-  private static BufferedReader lIIllI(String url) throws IOException {
+  public static BufferedReader lIIllI(String url) throws IOException {
     /*URL link = new URL(url);
     HttpURLConnection connection = (HttpURLConnection) link.openConnection();
     connection.setRequestMethod("GET");
