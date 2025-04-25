@@ -72,8 +72,7 @@ public class PathExec {
 
 
         if (path.size() > 2 && nextNode.nextRotation != null) {
-          double maxDiff = PlayerUtils.getYawDiff(node.nextRotation.getYaw(), nextNode.nextRotation.getYaw()) / 30 * (mc.thePlayer.getAIMoveSpeed());
-          if (Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ()) < maxDiff) {
+          if (Math.hypot(mc.thePlayer.posX - nextNode.getPos().getX(), mc.thePlayer.posZ - nextNode.getPos().getZ()) < ((Walk) nextNode).advanceFraction * Math.hypot(mc.thePlayer.posX - mc.thePlayer.lastTickPosX, mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ)) {
             // 根据角度不同 提前的量也不同
             path.remove(0);
           }
