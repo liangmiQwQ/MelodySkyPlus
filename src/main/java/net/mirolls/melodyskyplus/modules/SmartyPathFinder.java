@@ -37,7 +37,7 @@ public class SmartyPathFinder extends Module {
   private final Option<Boolean> jumpBoost = new Option<>("Jump Boost", true);
   private final Option<Boolean> miningAllowed = new Option<>("Mining Allowed", true);
   private final Option<Boolean> segmentation;
-  private final Numbers<Double> length = new Numbers<>("Segment Length", 60.0, 30.0, 1000.0, 1.0);
+  private final Numbers<Double> length = new Numbers<>("Segment Length", 100.0, 30.0, 1000.0, 1.0);
   private final TimerUtil timer = new TimerUtil();
   public List<PathPos> aStarPath = new ArrayList<>();
   public List<Node> path = new ArrayList<>();
