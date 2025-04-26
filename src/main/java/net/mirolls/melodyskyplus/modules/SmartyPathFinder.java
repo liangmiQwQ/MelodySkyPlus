@@ -209,6 +209,10 @@ public class SmartyPathFinder extends Module {
     }
   }
 
+  @Override
+  public void onDisable() {
+    Helper.sendMessage("[Warning] You're closing SmartyPathFinder. You cannot use modules with spf any longer.");
+  }
 
   public void clear() {
     aStarPath.clear();
