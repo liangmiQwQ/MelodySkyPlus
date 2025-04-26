@@ -137,7 +137,7 @@ public class AStarPathFinder {
           // 找到终点了
           returnPaths.add(abilityStartPos);
 
-          if (posBetween.size() <= 3 && abilityStartPos.getPos().getY() > node.pos.getY()) {
+          if (posBetween.size() <= 5 && abilityStartPos.getPos().getY() > node.pos.getY()) {
             // 面对这种情况 我们可以转换为walk节点 直接走过去
             returnPaths.add(new PathPos(PathPos.PathNodeType.WALK, node.pos));
           } else {
