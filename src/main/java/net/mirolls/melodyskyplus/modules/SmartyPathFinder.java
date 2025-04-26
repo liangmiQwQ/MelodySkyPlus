@@ -143,9 +143,12 @@ public class SmartyPathFinder extends Module {
 
     if (!path.isEmpty() && !aStarPath.isEmpty() && timer.hasReached(500)) {
       // 如果卡住了
+
       if ((PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 400) && (PathExec.mineExec.tick == -1 || PathExec.mineExec.tick > 400)) {
         // 如果没有在abilityExec或者说 ability卡死了
+
         if (mc.thePlayer.onGround && lastVec != null && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
+
           if (retryTimes < 5) {
             go(end);
             retryTimes++;
@@ -162,8 +165,10 @@ public class SmartyPathFinder extends Module {
 
       // 分段寻路
       if (!path.get(path.size() - 1).getPos().equals(end) && segmentation.getValue() && !findingPath) {
+
         // 分段查询 添加多段
-        if (path.size() < length.getValue() / 20 || MathUtil.distanceToPos(PlayerUtils.getPlayerLocation(), aStarPath.get(aStarPath.size() - 1).getPos()) < length.getValue() / 3) {
+        if (path.size() < length.getValue() / 12 || MathUtil.distanceToPos(PlayerUtils.getPlayerLocation(), aStarPath.get(aStarPath.size() - 1).getPos()) < length.getValue() / 2) {
+
           findingPath = true;
           new Thread(() -> {
             // 异步操作

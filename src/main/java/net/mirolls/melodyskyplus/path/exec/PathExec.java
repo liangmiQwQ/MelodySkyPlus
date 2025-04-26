@@ -78,7 +78,11 @@ public class PathExec {
           }
         }
       } else if (nextNode instanceof Mine) {
-        mineExec.exec(nextNode, mc, path, smartyPathFinder, area);
+        if (!mineExec.exec(nextNode, mc, path, smartyPathFinder, area)) {
+          Helper.sendMessage("Sorry Cannot exec the path");
+          SmartyPathFinder.getINSTANCE().finished();
+          smartyPathFinder.strongClear(false);
+        }
       } else if (nextNode instanceof Jump) {
         JumpExec.exec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
