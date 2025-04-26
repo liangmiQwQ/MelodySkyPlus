@@ -15,7 +15,9 @@ import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
@@ -23,12 +25,10 @@ import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 public class MineExec {
   public boolean rubbish = false;
   public int tick = -1;
-
-  private boolean headMined = false;
-  private boolean footMined = false;
+  Map<BlockPos, Boolean> minedMap = new HashMap<>();
 
 
-  public void exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
+  public boolean exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
     // 先切换到稿子
     mc.thePlayer.inventory.currentItem = smartyPathFinder.pickaxeSlot.getValue().intValue() - 1;
 
@@ -38,65 +38,12 @@ public class MineExec {
 
 
     Rotation footBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(footBlock));
-    Rotation headBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(headBlock));
 
 
     if (mc.theWorld.getBlockState(headBlock).getBlock() != Blocks.air) {
-      // 停止走路 拒接转圈
-      tick++;
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
-
-      // 转头到方块
-      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, headBlockRotation.getPitch(), 25);
-      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, headBlockRotation.getYaw(), 25);
-
-      boolean canGo = RotationUtil.isLookingAtBlock(headBlock)
-          || (Math.abs(mc.thePlayer.rotationPitch - headBlockRotation.getPitch()) < 1
-          && Math.abs(mc.thePlayer.rotationYaw - headBlockRotation.getYaw()) < 1);
-
-      if (area.isIn(Areas.Crystal_Hollows)) {
-        if (canGo) {
-          if (!headMined) {
-            mc.thePlayer.sendQueue.addToSendQueue(
-                new C07PacketPlayerDigging(
-                    C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, headBlock, EnumFacing.DOWN
-                )
-            );
-            headMined = true;
-          }
-          mc.thePlayer.swingItem();
-        }
-      } else {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
-      }
+      return mine(mc, area, headBlock);
     } else if (mc.theWorld.getBlockState(footBlock).getBlock() != Blocks.air) {
-      // 停止走路 拒接转圈
-      tick++;
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
-      KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
-
-      // 转头到方块
-      mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), 25);
-      mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25);
-
-      boolean canGo = RotationUtil.isLookingAtBlock(footBlock)
-          || (Math.abs(mc.thePlayer.rotationPitch - footBlockRotation.getPitch()) < 1
-          && Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 1);
-
-      if (area.isIn(Areas.Crystal_Hollows)) {
-        if (canGo) {
-          if (!footMined) {
-            mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, footBlock, EnumFacing.DOWN));
-            footMined = true;
-          }
-          mc.thePlayer.swingItem();
-        }
-      } else {
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
-      }
+      return mine(mc, area, footBlock);
     } else {
       // 停止挖掘
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
@@ -115,5 +62,52 @@ public class MineExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
       }
     }
+
+    return true;
+  }
+
+  private boolean mine(Minecraft mc, SkyblockArea area, BlockPos block) {
+    Vec3d blockCenter = Vec3d.ofCenter(block);
+    if (Math.hypot(
+        Math.hypot(
+            mc.thePlayer.posX - blockCenter.getX(),
+            mc.thePlayer.posZ - blockCenter.getZ()
+        ),
+        mc.thePlayer.posY + 1 - blockCenter.getY()
+    ) > 5.0
+    ) {
+      return false;
+    }
+
+
+    Rotation footBlockRotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(block));
+
+    // 停止走路 拒接转圈
+    tick++;
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindLeft.getKeyCode(), false);
+    KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+
+    // 转头到方块
+    mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, footBlockRotation.getPitch(), 25);
+    mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, footBlockRotation.getYaw(), 25);
+
+    boolean canGo = RotationUtil.isLookingAtBlock(block)
+        || (Math.abs(mc.thePlayer.rotationPitch - footBlockRotation.getPitch()) < 1
+        && Math.abs(mc.thePlayer.rotationYaw - footBlockRotation.getYaw()) < 1);
+
+    if (area.isIn(Areas.Crystal_Hollows)) {
+      if (canGo) {
+        if (!minedMap.get(block)) {
+          mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, block, EnumFacing.DOWN));
+          minedMap.put(block, true);
+        }
+        mc.thePlayer.swingItem();
+      }
+    } else {
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), canGo);
+    }
+
+    return true;
   }
 }
