@@ -82,7 +82,7 @@ public class PathExec {
       } else if (nextNode instanceof Jump) {
         JumpExec.exec(nextNode, path, mc, node);
       } else if (nextNode instanceof Ability) {
-        if (!abilityExec.exec(nextNode, path, mc, smartyPathFinder, node)) {
+        if (!abilityExec.exec(path, mc, node)) {
           SmartyPathFinder.getINSTANCE().finished();
           smartyPathFinder.strongClear(false);
         }
