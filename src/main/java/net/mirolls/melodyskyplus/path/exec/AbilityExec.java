@@ -44,8 +44,8 @@ public class AbilityExec {
     }
     boolean addTick = true;
 
-    double targetX = mc.thePlayer.posX;
-    double targetZ = mc.thePlayer.posZ;
+    double targetX = nextAbility.pos.getX();
+    double targetZ = nextAbility.pos.getZ();
     // 检查 是正在warp还是正在走路
     int xDiff = endNode.getPos().getX() - nextAbility.getPos().getX();
     if (xDiff != 0) {
@@ -68,6 +68,7 @@ public class AbilityExec {
         // 可以进行etherWarp
         // 保持下蹲
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
 
         // 转头到目标方块
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos.down()));
@@ -85,7 +86,6 @@ public class AbilityExec {
         }
 
       } else {
-        // 情况2 先点一下后再进行etherWarp 不行就继续点
         Helper.sendMessage("Sorry Cannot warp to this pos now.");
         return false;
       }
