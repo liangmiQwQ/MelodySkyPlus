@@ -140,7 +140,6 @@ public class SmartyPathFinder extends Module {
       }
     }
 
-
     if (!path.isEmpty() && !aStarPath.isEmpty() && timer.hasReached(500) && !findingPath) {
       // 如果卡住了
 
@@ -148,7 +147,6 @@ public class SmartyPathFinder extends Module {
         // 如果没有在abilityExec或者说 ability卡死了
 
         if (mc.thePlayer.onGround && lastVec != null && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
-
           if (retryTimes < 5) {
             findingPath = true;
             new Thread(() -> {
@@ -229,6 +227,7 @@ public class SmartyPathFinder extends Module {
     retryTimes = 0;
     tick = start ? 0 : -1;
     timer.reset();
+    findingPath = false;
     PathExec.area = null;
     PathExec.abilityExec = new AbilityExec();
     onFailed(null);
