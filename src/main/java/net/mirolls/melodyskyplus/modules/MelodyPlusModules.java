@@ -17,6 +17,7 @@ public class MelodyPlusModules {
       newModules.add(new AutoReconnect());
       newModules.add(new AutoFilet());
       newModules.add(new AutoGold());
+      newModules.add(new AutoLobby());
     }
 
     return newModules;
