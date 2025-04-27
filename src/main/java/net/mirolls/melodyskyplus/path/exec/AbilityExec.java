@@ -96,9 +96,8 @@ public class AbilityExec {
         // 依然需要移动玩家视角来避免错误位置
         Rotation rotation = RotationUtil.vec3ToRotation(centerEnd);
 
-        // 移动玩家视角
         mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
-        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
+        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, nextAbility.nextRotation.getYaw(), 75F);
       } else {
         // 没走到 先走到
         addTick = false;
