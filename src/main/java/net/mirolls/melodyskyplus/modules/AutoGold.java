@@ -277,6 +277,7 @@ public class AutoGold extends Module {
             GoldNuker goldNuker = (GoldNuker) ModuleManager.getModuleByName("GoldNuker");
             Field field = GoldNuker.class.getDeclaredField("range");
             field.setAccessible(true);
+            @SuppressWarnings("unchecked")
             Numbers<Double> range = (Numbers<Double>) field.get(goldNuker);
 
             for (BlockPos blockPos : BlockPos.getAllInBox(
