@@ -7,7 +7,6 @@ import net.mirolls.melodyskyplus.path.type.Ability;
 import net.mirolls.melodyskyplus.path.type.Node;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
-import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
@@ -23,7 +22,7 @@ public class AbilityExec {
   private int lastRightClick = 10;
 
 
-  public boolean exec(List<Node> path, Minecraft mc, Node node) {
+  public void exec(List<Node> path, Minecraft mc, Node node) {
     Ability nextAbility = (Ability) path.get(1);
     Vec3d nextVec = Vec3d.ofCenter(nextAbility.pos);
     Node endNode = path.get(2);
@@ -86,8 +85,8 @@ public class AbilityExec {
         }
 
       } else {
-        Helper.sendMessage("Sorry Cannot warp to this pos now.");
-        return false;
+        // 尝试retry
+        tick = 4000;
       }
     } else {
       if (Math.hypot(mc.thePlayer.posX - nextVec.getX(), mc.thePlayer.posZ - nextVec.getZ()) < 4) {
@@ -108,6 +107,5 @@ public class AbilityExec {
     }
 
     if (addTick) tick++;
-    return true;
   }
 }
