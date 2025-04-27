@@ -60,7 +60,7 @@ public class AbilityExec {
       targetZ = nextVec.getZ() + var1 * 0.8;
     }
 
-    boolean warping = Math.abs(mc.thePlayer.posX - targetX) < 0.05 || Math.abs(mc.thePlayer.posZ - targetZ) < 0.05;
+    boolean warping = Math.abs(mc.thePlayer.posX - targetX) < 0.05 || Math.abs(mc.thePlayer.posZ - targetZ) < 0.05 || tick > 180;
 
     if (warping) {
       if (PlayerUtils.rayTrace(endNode.getPos().down()) && MathUtil.distanceToPos(endNode.getPos().down(), PlayerUtils.getPlayerLocation()) < 55) {
