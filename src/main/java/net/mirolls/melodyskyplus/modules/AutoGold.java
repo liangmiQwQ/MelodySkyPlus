@@ -117,10 +117,11 @@ public class AutoGold extends Module {
             }
           });
           SmartyPathFinder.getINSTANCE().onFinished(() -> {
-
+            // 完成时
+            pfTick = findingGoldTick + 1;
           });
         } else {
-          Helper.sendMessage("Your Minecraft is not working well! try to restart it");
+          Helper.sendMessage("Your Minecraft is bugged and your account is ratted! try to restart it.");
         }
       }).start();
     }
