@@ -15,17 +15,17 @@ import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
 
 public class MineExec {
   public boolean rubbish = false;
   public int tick = -1;
-  Map<BlockPos, Boolean> minedMap = new HashMap<>();
+  Set<BlockPos> mineSet = new HashSet<>();
 
 
   public boolean exec(Node nextNode, Minecraft mc, List<Node> path, SmartyPathFinder smartyPathFinder, SkyblockArea area) {
@@ -98,9 +98,9 @@ public class MineExec {
 
     if (area.isIn(Areas.Crystal_Hollows)) {
       if (canGo) {
-        if (!minedMap.get(block)) {
+        if (mineSet.contains(block)) {
           mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, block, EnumFacing.DOWN));
-          minedMap.put(block, true);
+          mineSet.add(block);
         }
         mc.thePlayer.swingItem();
       }
