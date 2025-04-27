@@ -15,6 +15,7 @@ import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
+import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
@@ -39,6 +40,7 @@ public class AutoGold extends Module {
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
   private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
+  private final Option<Boolean> usePathFinder = new Option<>("UsePathFinder", true);
 
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
@@ -103,27 +105,38 @@ public class AutoGold extends Module {
         }
       }
 
-      // 启动新线程进行金矿查找
-      new Thread(() -> {
-        if (SmartyPathFinder.getINSTANCE() != null) {
-          SmartyPathFinder.getINSTANCE().strongClear(true);
-          SmartyPathFinder.getINSTANCE().go(findGoldToPF());
-          SmartyPathFinder.getINSTANCE().onFailed(() -> {
-            BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
-            if (gold == null) {
-              gotoGold();
-            } else {
-              rotateToGold(gold);
-            }
-          });
-          SmartyPathFinder.getINSTANCE().onFinished(() -> {
-            // 完成时
-            pfTick = findingGoldTick + 1;
-          });
-        } else {
-          Helper.sendMessage("Your Minecraft is bugged and your account is ratted! try to restart it.");
-        }
-      }).start();
+      if (usePathFinder.getValue()) {
+        // 启动新线程进行金矿查找
+        new Thread(() -> {
+          if (SmartyPathFinder.getINSTANCE() != null) {
+            SmartyPathFinder.getINSTANCE().strongClear(true);
+            SmartyPathFinder.getINSTANCE().go(findGoldToPF());
+            SmartyPathFinder.getINSTANCE().onFailed(() -> {
+              BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+              if (gold == null) {
+                gotoGold();
+              } else {
+                rotateToGold(gold);
+              }
+            });
+            SmartyPathFinder.getINSTANCE().onFinished(() -> {
+              // 完成时
+              pfTick = findingGoldTick + 1;
+            });
+          } else {
+            Helper.sendMessage("Your Minecraft is bugged and your account is ratted! try to restart it.");
+          }
+        }).start();
+      } else {
+        new Thread(() -> {
+          BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+          if (gold == null) {
+            gotoGold();
+          } else {
+            rotateToGold(gold);
+          }
+        }).start();
+      }
     }
   }
 
