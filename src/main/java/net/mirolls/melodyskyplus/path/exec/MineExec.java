@@ -98,7 +98,7 @@ public class MineExec {
 
     if (area.isIn(Areas.Crystal_Hollows)) {
       if (canGo) {
-        if (mineSet.contains(block)) {
+        if (!mineSet.contains(block)) {
           mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, block, EnumFacing.DOWN));
           mineSet.add(block);
         }
