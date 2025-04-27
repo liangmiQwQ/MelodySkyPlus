@@ -143,7 +143,7 @@ public class SmartyPathFinder extends Module {
     if (!path.isEmpty() && !aStarPath.isEmpty() && timer.hasReached(500) && !findingPath) {
       // 如果卡住了
 
-      if ((PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 200) && (PathExec.mineExec.tick == -1 || PathExec.mineExec.tick > 200)) {
+      if ((PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 300) && (PathExec.mineExec.tick == -1 || PathExec.mineExec.tick > 200)) {
         // 如果没有在abilityExec或者说 ability卡死了
 
         if (mc.thePlayer.onGround && lastVec != null && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
