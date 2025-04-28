@@ -4,6 +4,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntityIronGolem;
+import net.minecraft.entity.monster.EntityMagmaCube;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.Slot;
@@ -12,25 +17,33 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.StringUtils;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import xyz.Melody.Client;
+import xyz.Melody.Event.EventHandler;
+import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.Event.events.world.EventTick;
+import xyz.Melody.Event.value.IValAction;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.GUI.Notification.NotificationPublisher;
+import xyz.Melody.GUI.Notification.NotificationType;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.Item.ItemUtils;
+import xyz.Melody.Utils.game.PlayerListUtils;
 import xyz.Melody.Utils.game.ScoreboardUtils;
+import xyz.Melody.Utils.game.item.ItemUtils;
+import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,11 +62,131 @@ public class AutoRubyMixin {
   private BlockPos nextBP;
   @Shadow
   private TimerUtil timer;
+  @Shadow
+  private ArrayList<Entity> yogs;
+  @Shadow
+  private Numbers<Double> yogRange;
+  @Shadow
+  private Option<Boolean> rcKill;
+  @Shadow
+  private boolean killingYogs;
+  @Shadow
+  private TimerUtil attackTimer;
+  @Shadow
+  private Numbers<Double> weaponSlot;
+  @Shadow
+  private Option<Boolean> faceDown;
+  @Shadow
+  private Option<Boolean> aim;
   private Option<Boolean> melodySkyPlus$autoHeat = null;
   private int reactingTick = -1;
   private int prevItem;
 
-  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V", remap = false))
+  @SuppressWarnings("unchecked")
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
+  private Option initYogToMobOption(String name, Object enabled, IValAction[] actions) {
+    String newName = name.replace("Yog", "Mob");
+    return new Option(newName, enabled, actions);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
+  private Numbers initYogToMobNumber(String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
+    String newName = name.replace("Yog", "Mob");
+
+    Number newMax = max;
+    if (name.equals("YogRange")) {
+      newMax = 10.0;
+    }
+    return new Numbers(newName, value, min, newMax, inc, action);
+  }
+
+  /**
+   * @author liangmimi
+   * @reason 实现查找除了yog以外的生物 并且保证合理使用yogs数组
+   */
+  @Overwrite
+  private void loadYogs() {
+    Minecraft mc = Minecraft.getMinecraft();
+    yogs.clear();
+
+    for (Entity entity : mc.theWorld.loadedEntityList) {
+      if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityLivingBase && (double) mc.thePlayer.getDistanceToEntity(entity) < yogRange.getValue()) {
+        if (entity instanceof EntityMagmaCube || entity instanceof EntityIronGolem) {
+          this.yogs.add(entity);
+        }
+
+        if (entity instanceof EntityPlayer) {
+          String name = entity.getName().toLowerCase();
+
+          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+            if (name.contains("team treasurite")) {
+              this.yogs.add(entity);
+            }
+          }
+        }
+      }
+    }
+
+    this.yogs.sort(Comparator.comparingDouble((sb) -> mc.thePlayer.getDistanceToEntity(sb)));
+  }
+
+  /**
+   * @author liangmimi
+   * @reason 配合新的loadYogs实现自动杀死其他生物
+   */
+  @EventHandler
+  @Overwrite
+  private void onKillYog(EventPreUpdate event) {
+    Minecraft mc = Minecraft.getMinecraft();
+    if (rcKill.getValue()) {
+      this.loadYogs();
+    } else if (!this.yogs.isEmpty()) {
+      this.yogs.clear();
+    }
+
+    if (!this.yogs.isEmpty()) {
+      Entity entity = this.yogs.get(0);
+      if (this.started) {
+        NotificationPublisher.queue("AutoRuby", "Mob Detected, Trying to ATTACK it.", NotificationType.WARN, 3000);
+        this.started = false;
+        this.killingYogs = true;
+        this.attackTimer.reset();
+      }
+
+      if (entity != null && entity.isEntityAlive() && killingYogs) {
+        mc.thePlayer.inventory.currentItem = weaponSlot.getValue().intValue() - 1;
+        if (rcKill.getValue()) {
+          if (faceDown.getValue()) {
+            event.setPitch(90.0F);
+            if (this.attackTimer.hasReached(180.0)) {
+              Client.rightClick();
+              this.attackTimer.reset();
+            }
+          } else {
+            if (aim.getValue()) {
+              float[] r = RotationUtil.getPredictedRotations((EntityLivingBase) entity);
+              event.setYaw(r[0]);
+              event.setPitch(r[1]);
+            }
+
+            if (this.attackTimer.hasReached(180.0)) {
+              Client.rightClick();
+              this.attackTimer.reset();
+            }
+          }
+        }
+      }
+    } else if (this.killingYogs) {
+      NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
+      this.started = true;
+      this.killingYogs = false;
+      this.attackTimer.reset();
+    }
+
+  }
+
+  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
     reactingTick = -1;
 

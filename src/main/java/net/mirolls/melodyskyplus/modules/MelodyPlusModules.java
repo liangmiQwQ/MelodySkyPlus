@@ -12,10 +12,12 @@ public class MelodyPlusModules {
     List<Module> newModules = new ArrayList<>();
 
     if (AntiBug.isBugRemoved()) {
+      newModules.add(new SmartyPathFinder());
       newModules.add(new Failsafe());
       newModules.add(new AutoReconnect());
       newModules.add(new AutoFilet());
       newModules.add(new AutoGold());
+      newModules.add(new AutoLobby());
     }
 
     return newModules;

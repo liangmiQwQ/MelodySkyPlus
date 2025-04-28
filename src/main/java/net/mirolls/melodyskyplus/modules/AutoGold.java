@@ -5,21 +5,22 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.utils.GoldUtils;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.rendering.EventRender3D;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
+import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.Item.ItemUtils;
-import xyz.Melody.Utils.Vec3d;
+import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.render.RenderUtil;
@@ -30,18 +31,21 @@ import xyz.Melody.module.modules.macros.Mining.GoldNuker;
 
 import java.awt.*;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.*;
+
+import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
 
 public class AutoGold extends Module {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
   private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
+  private final Option<Boolean> usePathFinder = new Option<>("UsePathFinder", true);
 
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
   private int rotateToGoldDoneTick = -2147483647;
+  private int pfTick = -2147483647;
   private BlockPos targetBlock = null;
 
   private int prevItem;
@@ -77,6 +81,7 @@ public class AutoGold extends Module {
   public void findGold() {
 //    rotateDoneTick = 0;
     rotateDoneTick = -2147483647;
+    pfTick = -2147483647;
 
     if (findingGoldTick < 0) {
       // 最复杂的部分
@@ -88,6 +93,7 @@ public class AutoGold extends Module {
         ModuleManager.getModuleByName("GoldNuker").setEnabled(false);
       }
 
+      // 切换到AOTV物品
       if (this.mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(this.mc.thePlayer.getHeldItem()).equals("ASPECT_OF_THE_VOID") || this.mc.thePlayer.getHeldItem() == null) {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = this.mc.thePlayer.inventory.mainInventory[i];
@@ -99,14 +105,38 @@ public class AutoGold extends Module {
         }
       }
 
-      new Thread(() -> {
-        BlockPos gold = findGoldNearPlayer();
-        if (gold == null) {
-          gotoGold();
-        } else {
-          rotateToGold(gold);
-        }
-      }).start();
+      if (usePathFinder.getValue()) {
+        // 启动新线程进行金矿查找
+        new Thread(() -> {
+          if (SmartyPathFinder.getINSTANCE() != null) {
+            SmartyPathFinder.getINSTANCE().strongClear(true);
+            SmartyPathFinder.getINSTANCE().go(findGoldToPF());
+            SmartyPathFinder.getINSTANCE().onFailed(() -> {
+              BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+              if (gold == null) {
+                gotoGold();
+              } else {
+                rotateToGold(gold);
+              }
+            });
+            SmartyPathFinder.getINSTANCE().onFinished(() -> {
+              // 完成时
+              pfTick = findingGoldTick + 1;
+            });
+          } else {
+            Helper.sendMessage("Your Minecraft is bugged and your account is ratted! try to restart it.");
+          }
+        }).start();
+      } else {
+        new Thread(() -> {
+          BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+          if (gold == null) {
+            gotoGold();
+          } else {
+            rotateToGold(gold);
+          }
+        }).start();
+      }
     }
   }
 
@@ -260,6 +290,7 @@ public class AutoGold extends Module {
             GoldNuker goldNuker = (GoldNuker) ModuleManager.getModuleByName("GoldNuker");
             Field field = GoldNuker.class.getDeclaredField("range");
             field.setAccessible(true);
+            @SuppressWarnings("unchecked")
             Numbers<Double> range = (Numbers<Double>) field.get(goldNuker);
 
             for (BlockPos blockPos : BlockPos.getAllInBox(
@@ -275,9 +306,7 @@ public class AutoGold extends Module {
           } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
           }
-          new Thread(() -> {
-            rotateToGold(findGoldNearPlayer());
-          }).start();
+          new Thread(() -> rotateToGold(GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue()))).start();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
@@ -291,17 +320,28 @@ public class AutoGold extends Module {
             KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
           }
         }
-
         if (findingGoldTick == rotateToGoldDoneTick + 40) {
           if (this.mc.thePlayer.inventory.currentItem != prevItem) {
             rotateDoneTick = -2147483647;
             rotateToGoldDoneTick = -2147483647;
+            pfTick = -2147483647;
             gotoGold();
           } else {
             resume();
           }
           targetBlock = null;
         }
+        if (findingGoldTick == pfTick) {
+          if (this.mc.thePlayer.inventory.currentItem != prevItem) {
+            this.mc.thePlayer.inventory.currentItem = prevItem;
+          }
+          KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
+        }
+        if (findingGoldTick == pfTick + 40) {
+          resume();
+          targetBlock = null;
+        }
+
       } else {
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
@@ -320,108 +360,84 @@ public class AutoGold extends Module {
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
+    pfTick = -2147483647;
     targetBlock = null;
     if (!ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
       ModuleManager.getModuleByName("GoldNuker").setEnabled(true);
     }
   }
 
-  private BlockPos findGoldNearPlayer() {
-    Helper.sendMessage("Finding Gold...");
-    BlockPos replaceBlock = null;
-    BlockPos goldBlock = null;
+  private BlockPos findGoldToPF() {
+    Set<BlockPos> golds = new HashSet<>();
+    Map<BlockPos, Integer> goldMap = new HashMap<>();
 
-    List<BlockPos> blocks = new ArrayList<>();
-    List<BlockPos> needToRemove = new ArrayList<>();
-
-
-    for (BlockPos bp : BlockPos.getAllInBox(mc.thePlayer.getPosition().add(-1 * findGoldRadius.getValue(), -1 * findGoldRadius.getValue() / 5, -1 * findGoldRadius.getValue() / 5), mc.thePlayer.getPosition().add(findGoldRadius.getValue(), findGoldRadius.getValue() / 5, findGoldRadius.getValue()))) {
-      blocks.add(bp);
-    }
-
-    Double readyFindGoldRadius = findGoldRadius.getValue();
-    for (int radius = 0; radius < readyFindGoldRadius; radius++) {
-      // 我们对y进行一个/5的操作 其他正常操作
-      if (goldBlock != null) break;
-
-      for (BlockPos blockPos : blocks) {
-        double distance = Math.hypot(Math.hypot(
-                blockPos.getX() - mc.thePlayer.getPosition().getX(),
-                blockPos.getZ() - mc.thePlayer.getPosition().getZ()
-            ),
-            (blockPos.getY() - mc.thePlayer.getPosition().getY()) * 5 // 这里直接*5他到一定程度给你反馈超出范围就ok了
-        );
-
-        if (distance < radius + 1 && distance >= radius) {
-//          blocks.remove(blockPos);
-          needToRemove.add(blockPos);
-
-          if (mc.theWorld.getBlockState(blockPos).getBlock() != Blocks.air) {
-            if (rayTrace(blockPos)) {
-              if (mc.theWorld.getBlockState(blockPos.up()).getBlock() == Blocks.air && mc.theWorld.getBlockState(blockPos.up().up()).getBlock() == Blocks.air) {
-                int aroundBlocks = 0;
-                for (int i = 0; i < 4; i++) {
-                  BlockPos checkingBlockDown = blockPos;
-                  BlockPos checkingBlockEast = blockPos;
-                  BlockPos checkingBlockNorth = blockPos;
-                  BlockPos checkingBlockWest = blockPos;
-                  BlockPos checkingBlockSouth = blockPos;
-
-                  for (int j = 0; j < i + 1; j++) {
-                    checkingBlockDown = checkingBlockDown.down();
-                    checkingBlockEast = checkingBlockEast.east();
-                    checkingBlockNorth = checkingBlockNorth.north();
-                    checkingBlockWest = checkingBlockWest.west();
-                    checkingBlockSouth = checkingBlockSouth.south();
-                  }
-
-                  if (mc.theWorld.getBlockState(checkingBlockDown).getBlock() == Blocks.gold_block) {
-                    aroundBlocks++;
-                  }
-                  if (mc.theWorld.getBlockState(checkingBlockEast).getBlock() == Blocks.gold_block) {
-                    aroundBlocks++;
-                  }
-                  if (mc.theWorld.getBlockState(checkingBlockNorth).getBlock() == Blocks.gold_block) {
-                    aroundBlocks++;
-                  }
-                  if (mc.theWorld.getBlockState(checkingBlockWest).getBlock() == Blocks.gold_block) {
-                    aroundBlocks++;
-                  }
-                  if (mc.theWorld.getBlockState(checkingBlockSouth).getBlock() == Blocks.gold_block) {
-                    aroundBlocks++;
-                  }
-                }
-
-
-                if (aroundBlocks >= 3) {
-                  if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block) {
-                    // 周围有东西
-                    goldBlock = blockPos;
-                    break;
-                  } else {
-                    replaceBlock = blockPos;
-                  }
-                }
-              }
-            }
+    for (int x = -findGoldRadius.getValue().intValue(); x < findGoldRadius.getValue().intValue(); x++) {
+      for (int z = -findGoldRadius.getValue().intValue(); z < findGoldRadius.getValue().intValue(); z++) {
+        for (int y = findGoldRadius.getValue().intValue() / -5; y < findGoldRadius.getValue().intValue() / 5; y++) {
+          BlockPos bp = PlayerUtils.getPlayerLocation().add(x, y, z);
+          if (mc.theWorld.getBlockState(bp).getBlock() == Blocks.gold_block) {
+            // 这是金块
+            golds.add(bp);
           }
         }
       }
+    }
 
-      for (BlockPos blockPos : needToRemove) {
-        blocks.remove(blockPos);
+    while (!golds.isEmpty()) {
+      // 开始寻找连续的金子
+      BlockPos nearestGold = null;
+      int nearestGoldDistanceSquare = Integer.MAX_VALUE;
+      for (BlockPos gold : golds) {
+        int distanceSquare = (int) (Math.pow(PlayerUtils.getPlayerLocation().getX() - gold.getX(), 2) + Math.pow(PlayerUtils.getPlayerLocation().getZ() - gold.getZ(), 2));
+
+        if (distanceSquare < nearestGoldDistanceSquare) {
+          nearestGold = gold;
+        }
+      }
+      goldMap.put(nearestGold, 0);
+      if (nearestGold != null) {
+        processGold(nearestGold, nearestGold, golds, goldMap);
       }
     }
 
-    if (goldBlock != null) {
-      return goldBlock;
-    } else if (replaceBlock != null) {
-      Helper.sendMessage("Cannot Find Gold Blocks. Will teleport you to random block near a gold block.");
-      return replaceBlock;
+    Set<BlockPos> keySet = goldMap.keySet();
+    if (keySet.isEmpty())
+      Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
+
+    BlockPos largestGold = null;
+    int largestGoldNumber = 0;
+
+    for (BlockPos key : keySet) {
+      if (goldMap.get(key) > largestGoldNumber) {
+        largestGold = key;
+      }
     }
 
-    Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you're out of Mines of Divan.");
-    return null;
+    return largestGold;
+  }
+
+  private void processGold(BlockPos nearestGold, BlockPos start, Set<BlockPos> golds, Map<BlockPos, Integer> goldMap) {
+    // gold的数量加1
+    goldMap.put(nearestGold, goldMap.get(nearestGold) + 1);
+
+    // 删除原来的点 避免重复查找
+    golds.remove(start);
+
+    final BlockPos[] offsets = {
+        new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
+        new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
+        new BlockPos(0, -1, 0), new BlockPos(0, 1, 0)
+    };
+
+    for (BlockPos offset : offsets) {
+      // 找这个点附近的所有点
+      BlockPos pos = start.add(offset);
+      // 如果这些点里有金子的
+      if (golds.contains(pos)) {
+        // 递归算法 把这个点按照原逻辑展开
+        processGold(nearestGold, pos, golds, goldMap);
+      }
+    }
   }
 
   private void rotateToGold(BlockPos gold) {
@@ -440,6 +456,7 @@ public class AutoGold extends Module {
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
+    pfTick = -2147483647;
     if (ModuleManager.getModuleByName("GoldNuker").isEnabled()) {
       ModuleManager.getModuleByName("GoldNuker").setEnabled(false);
     }
@@ -458,6 +475,7 @@ public class AutoGold extends Module {
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
+    pfTick = -2147483647;
     SkyblockArea area = new SkyblockArea();
     area.updateCurrentArea();
     if (!area.isIn(Areas.Crystal_Hollows)) {
@@ -471,45 +489,7 @@ public class AutoGold extends Module {
     walkTimer.reset();
   }
 
-  private boolean rayTrace(BlockPos blockPos) {
-    Vec3d target = null;
-    Vec3d[] var2 = Vec3d.points(blockPos);
-    int var3 = var2.length;
-    int var4 = 0;
 
-    while (var4 < var3) {
-      Vec3d vec = var2[var4];
-      MovingObjectPosition trajectory = RotationUtil.rayTrace(vec);
-      if (trajectory == null) {
-        target = vec;
-        break;
-      }
-
-      label69:
-      {
-        if (trajectory.entityHit == null || trajectory.entityHit == mc.thePlayer) {
-          if (trajectory.getBlockPos() == null) {
-            break label69;
-          }
-
-          boolean sameX = trajectory.getBlockPos().getX() == blockPos.getX();
-          boolean sameY = trajectory.getBlockPos().getY() == blockPos.getY();
-          boolean sameZ = trajectory.getBlockPos().getZ() == blockPos.getZ();
-          if (sameX && sameY && sameZ) {
-            break label69;
-          }
-        }
-
-        ++var4;
-        continue;
-      }
-
-      target = vec;
-      break;
-    }
-
-    return target != null;
-  }
 }
 
 class SidesAroundPlayer {
