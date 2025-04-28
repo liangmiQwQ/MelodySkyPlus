@@ -20,7 +20,7 @@ import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.game.item.ItemUtils;
+import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.render.RenderUtil;
