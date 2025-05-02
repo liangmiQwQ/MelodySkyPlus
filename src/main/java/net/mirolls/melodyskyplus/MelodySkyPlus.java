@@ -8,10 +8,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.mirolls.melodyskyplus.client.Bug;
 import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
 import net.mirolls.melodyskyplus.event.MiningUtil;
-import net.mirolls.melodyskyplus.libs.NukerTicks;
-import net.mirolls.melodyskyplus.libs.PickaxeAbility;
-import net.mirolls.melodyskyplus.libs.RotationLib;
-import net.mirolls.melodyskyplus.libs.WalkLib;
+import net.mirolls.melodyskyplus.libs.*;
 import net.mirolls.melodyskyplus.path.PathRenderer;
 import net.mirolls.melodyskyplus.path.exec.PathExec;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +28,7 @@ public class MelodySkyPlus {
   public static MiningUtil miningUtil;
   public static Bug antiBug;
   public static NukerTicks nukerTicks;
+  public static JasperUsed jasperUsed;
   public static PickaxeAbility pickaxeAbility;
   public static PathRenderer pathRenderer;
   public static PathExec pathExec;
@@ -54,6 +52,7 @@ public class MelodySkyPlus {
     miningUtil = new MiningUtil();
     antiBug = new Bug();
     nukerTicks = new NukerTicks();
+    jasperUsed = new JasperUsed();
     pickaxeAbility = new PickaxeAbility();
     pathExec = new PathExec();
     pathRenderer = new PathRenderer();
