@@ -119,7 +119,8 @@ public class AutoRubyMixin {
         if (entity instanceof EntityPlayer) {
           String name = entity.getName().toLowerCase();
 
-          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && !PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+            // TODO 研究此处mithril的名称
             if (name.contains("team treasurite")) {
               this.yogs.add(entity);
             }
