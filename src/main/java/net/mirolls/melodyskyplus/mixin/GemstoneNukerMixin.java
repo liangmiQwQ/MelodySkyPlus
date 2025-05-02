@@ -69,6 +69,13 @@ public abstract class GemstoneNukerMixin {
     }
   }
 
+  @Redirect(method = "destoryBlock", at = @At(value = "INVOKE", target = "Lxyz/Melody/Event/value/Option;getValue()Ljava/lang/Object;", remap = false, ordinal = 1), remap = false)
+  public Object destoryBlock(Option instance) {
+    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) return false;
+    return instance.getValue();
+  }
+
+
   @Inject(method = "advanced", remap = false,
       at = @At(value = "INVOKE", remap = false, shift = At.Shift.AFTER,
           target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;checkBroken()V"
