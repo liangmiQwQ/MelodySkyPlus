@@ -6,8 +6,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.mirolls.melodyskyplus.client.Bug;
-import net.mirolls.melodyskyplus.event.CheckPlayerFlying;
-import net.mirolls.melodyskyplus.event.MiningUtil;
 import net.mirolls.melodyskyplus.libs.*;
 import net.mirolls.melodyskyplus.path.PathRenderer;
 import net.mirolls.melodyskyplus.path.exec.PathExec;

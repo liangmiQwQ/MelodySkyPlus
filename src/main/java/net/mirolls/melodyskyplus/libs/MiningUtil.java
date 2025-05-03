@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.event;
+package net.mirolls.melodyskyplus.libs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;

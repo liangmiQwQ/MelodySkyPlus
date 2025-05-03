@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.event;
+package net.mirolls.melodyskyplus.libs;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
