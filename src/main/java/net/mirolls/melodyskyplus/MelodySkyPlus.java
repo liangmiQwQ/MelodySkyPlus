@@ -30,6 +30,7 @@ public class MelodySkyPlus {
   public static PickaxeAbility pickaxeAbility;
   public static PathRenderer pathRenderer;
   public static PathExec pathExec;
+  public static PackRecord packRecord;
 
 
   public static String verify(String text) {
@@ -54,6 +55,7 @@ public class MelodySkyPlus {
     pickaxeAbility = new PickaxeAbility();
     pathExec = new PathExec();
     pathRenderer = new PathRenderer();
+    packRecord = new PackRecord();
     // events
 
     try {

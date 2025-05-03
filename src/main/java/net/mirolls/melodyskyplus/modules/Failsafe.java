@@ -6,8 +6,10 @@ import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.network.play.server.S08PacketPlayerPosLook;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -16,6 +18,7 @@ import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
+import net.mirolls.melodyskyplus.react.failsafe.TPCheckReact;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
@@ -51,6 +54,8 @@ public class Failsafe extends Module {
   public Option<Boolean> antiBedrockBoatCheck;
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiTPCheck;
+  public Numbers<Double> TPCheckDistance = new Numbers<>("TPCheckDistance", 4.0, 0.1, 20.0, 0.1);
+
   public TextValue<String> TPCheckMessage = new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public long lastLegitTeleport = -16;
   private boolean reacting = false;
@@ -60,20 +65,21 @@ public class Failsafe extends Module {
     super("Failsafe", ModuleType.Mining);
     antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.fakePlayerCheckMessage.setEnabled(true);
+        INSTANCE.fakePlayerCheckMessage.setEnabled(val);
       }
     });
     antiBedrockBoatCheck = new Option<>("AntiBedrockBoatCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.bedrockCheckMessage.setEnabled(true);
+        INSTANCE.bedrockCheckMessage.setEnabled(val);
       }
     });
     antiTPCheck = new Option<>("AntiTPCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.TPCheckMessage.setEnabled(true);
+        INSTANCE.TPCheckDistance.setEnabled(val);
+        INSTANCE.TPCheckMessage.setEnabled(val);
       }
     });
-    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckMessage);
+    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckDistance, TPCheckMessage);
     this.setModInfo("Anti-staff while doing macros.");
     this.except();
   }
@@ -309,6 +315,28 @@ public class Failsafe extends Module {
   @SubscribeEvent
   public void onPacket(ServerPacketEvent event) {
     if (antiTPCheck.getValue()) {
+      if (!(event.packet instanceof S08PacketPlayerPosLook)) return;
+
+      S08PacketPlayerPosLook packet = (S08PacketPlayerPosLook) event.packet;
+
+      Vec3 currentPlayerPos = mc.thePlayer.getPositionVector();
+      Vec3 packetPlayerPos = new Vec3(
+          packet.getX() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.X) ? currentPlayerPos.xCoord : 0),
+          packet.getY() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Y) ? currentPlayerPos.yCoord : 0),
+          packet.getZ() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Z) ? currentPlayerPos.zCoord : 0)
+      );
+      double distance = currentPlayerPos.distanceTo(packetPlayerPos);
+
+      if (distance >= TPCheckDistance.getValue()) {
+        final double lastReceivedPacketDistance = currentPlayerPos.distanceTo(MelodySkyPlus.packRecord.getLastPacketPosition());
+        final double playerMovementSpeed = mc.thePlayer.getAttributeMap().getAttributeInstanceByName("generic.movementSpeed").getAttributeValue();
+        final int ticksSinceLastPacket = (int) Math.ceil(MelodySkyPlus.packRecord.getLastPacketTime() / 50D);
+        final double estimatedMovement = playerMovementSpeed * ticksSinceLastPacket;
+        if (lastReceivedPacketDistance > 7.5D && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5)
+          return;
+        react(true);
+        TPCheckReact.react(TPCheckMessage.getValue());
+      }
     }
   }
 
