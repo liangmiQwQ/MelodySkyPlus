@@ -11,12 +11,15 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.event.ServerPacketEvent;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
+import xyz.Melody.Event.EventHandler;
+import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
@@ -125,7 +128,7 @@ public class Failsafe extends Module {
     }
   }
 
-  private void checkMarcoChecked() {
+  private void tickFailsafe() {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
     if (!reacting) {
@@ -297,4 +300,16 @@ public class Failsafe extends Module {
     this.resumeTimer.reset();
     lastLegitTeleport = -16;
   }
+
+  @EventHandler
+  public void onTick(EventTick event) {
+    this.tickFailsafe();
+  }
+
+  @SubscribeEvent
+  public void onPacket(ServerPacketEvent event) {
+    if (antiTPCheck.getValue()) {
+    }
+  }
+
 }
