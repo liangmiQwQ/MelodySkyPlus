@@ -82,15 +82,13 @@ public class AutoRubyMixin {
   private Option<Boolean> melodySkyPlus$autoHeat = null;
   private int melodySkyPlus$reactingTick = -1;
   private int melodySkyPlus$prevItem;
-  private int melodySkyPlus$headValueIDK = -1;
-  private int melodySkyPlus$headValueEtherWarp = -1;
 
   private void melodySkyPlus$switchToJasper() {
     Minecraft mc = Minecraft.getMinecraft();
     if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
       for (int i = 0; i < 9; ++i) {
         ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
-        if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).equals("GEMSTONE_DRILL")) {
+        if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
           mc.thePlayer.inventory.currentItem = i;
           break;
         }
@@ -118,15 +116,10 @@ public class AutoRubyMixin {
   }
 
   // Mojang极其恶心的混淆了他的代码 导致我无法使用Redirect精准定位 只能使用恶心Inject处理currentItem
-  @Inject(method = "idk", remap = false, at = @At("HEAD"))
-  private void idkHead(EventTick event, CallbackInfo ci) {
-    melodySkyPlus$headValueIDK = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-  }
-
   @Inject(method = "idk", remap = false, at = @At("TAIL"))
   private void idkTail(EventTick event, CallbackInfo ci) {
     if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
-      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0 && melodySkyPlus$headValueIDK != 0) {
+      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
         // 如果新的currentItem被设置为0了 但是之前不是0
         // 则手动替换到jasper钻头
         melodySkyPlus$switchToJasper();
@@ -134,15 +127,11 @@ public class AutoRubyMixin {
     }
   }
 
-  @Inject(method = "etherWarp", remap = false, at = @At("HEAD"))
-  private void etherWarpHead(BlockPos pos, CallbackInfo ci) {
-    melodySkyPlus$headValueEtherWarp = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-  }
-
   @Inject(method = "etherWarp", remap = false, at = @At("TAIL"))
   private void etherWarpTail(BlockPos pos, CallbackInfo ci) {
     if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
-      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0 && melodySkyPlus$headValueEtherWarp != 0) {
+      MelodySkyPlus.LOGGER.info("etherWarp executed");
+      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
         // 如果新的currentItem被设置为0了 但是之前不是0
         // 则手动替换到jasper钻头
         melodySkyPlus$switchToJasper();
