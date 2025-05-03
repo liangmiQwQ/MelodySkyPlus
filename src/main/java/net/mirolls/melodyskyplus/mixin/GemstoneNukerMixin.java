@@ -75,6 +75,16 @@ public abstract class GemstoneNukerMixin {
     return instance.getValue();
   }
 
+  @Inject(method = "normal", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;getBlock()Lnet/minecraft/util/BlockPos;"))
+  public void normal(EventPreUpdate event, CallbackInfo ci) {
+    if (MelodySkyPlus.jasperUsed.minedBlock > 3) {
+      MelodySkyPlus.jasperUsed.setJasperUsed(true);
+      MelodySkyPlus.jasperUsed.minedBlock = 0;
+    }
+
+    MelodySkyPlus.jasperUsed.minedBlock++;
+  }
+
 
   @Inject(method = "advanced", remap = false,
       at = @At(value = "INVOKE", remap = false, shift = At.Shift.AFTER,
