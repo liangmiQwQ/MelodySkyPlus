@@ -14,6 +14,7 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.event.ServerPacketEvent;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.libs.TPCheckDetector;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
@@ -264,6 +265,10 @@ public class Failsafe extends Module {
     }
 
     nowTick++;
+  }
+
+  @EventHandler
+  public void onPacket(ServerPacketEvent event) {
   }
 
 

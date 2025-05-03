@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.mixin;
+package net.mirolls.melodyskyplus.mixin.minecraft;
 
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.mirolls.melodyskyplus.client.AntiBug;

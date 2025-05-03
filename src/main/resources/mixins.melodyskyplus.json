@@ -13,13 +13,14 @@
     "HUDManagerMixin",
     "MiningProtectMixin",
     "ModuleManagerMixin",
-    "PinglessMiningMixin"
+    "PinglessMiningMixin",
+    "minecraft.NetWorkManagerMixin"
   ],
   "client": [
     "GuiAltManager",
-    "GuiConnectingMixin",
-    "GuiDisconnectedMixin",
-    "MiningProtectMixin"
+    "MiningProtectMixin",
+    "minecraft.GuiConnectingMixin",
+    "minecraft.GuiDisconnectedMixin"
   ],
   "server": [],
   "priority": 1500
