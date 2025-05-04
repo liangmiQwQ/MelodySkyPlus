@@ -36,9 +36,9 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.GUI.Notification.NotificationPublisher;
 import xyz.Melody.GUI.Notification.NotificationType;
 import xyz.Melody.Utils.Helper;
+import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.game.PlayerListUtils;
 import xyz.Melody.Utils.game.ScoreboardUtils;
-import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
@@ -96,7 +96,7 @@ public class AutoRubyMixin {
     }
   }
 
-  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
+  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
     melodySkyPlus$reactingTick = -1;
 
@@ -140,14 +140,14 @@ public class AutoRubyMixin {
   }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", remap = false, target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
   private Option initYogToMobOption(String name, Object enabled, IValAction[] actions) {
     String newName = name.replace("Yog", "Mob");
     return new Option(newName, enabled, actions);
   }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", remap = false, target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
   private Numbers initYogToMobNumber(String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
     String newName = name.replace("Yog", "Mob");
 
