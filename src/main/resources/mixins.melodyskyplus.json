@@ -12,6 +12,7 @@
     "GoldNukerMixin",
     "HUDManagerMixin",
     "MiningProtectMixin",
+    "MithrilNukerMixin",
     "ModuleManagerMixin",
     "PinglessMiningMixin",
     "minecraft.NetWorkManagerMixin"
