@@ -58,7 +58,7 @@ public class Failsafe extends Module {
   public Numbers<Double> TPCheckDistance = new Numbers<>("TPCheckDistance", 4.0, 0.1, 20.0, 0.1);
 
   public TextValue<String> TPCheckMessage = new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
-  public long lastLegitTeleport = -16;
+  public long lastTeleport = System.currentTimeMillis();
   private boolean reacting = false;
 
 
@@ -287,7 +287,6 @@ public class Failsafe extends Module {
   public void onEnable() {
     this.resumeTimer.reset();
     this.reacting = false;
-    this.lastLegitTeleport = -16;
     super.onEnable();
   }
 
@@ -310,7 +309,6 @@ public class Failsafe extends Module {
   public void clear(WorldEvent.Load event) {
     this.reacting = false;
     this.resumeTimer.reset();
-    lastLegitTeleport = -16;
   }
 
   @EventHandler
@@ -320,7 +318,7 @@ public class Failsafe extends Module {
 
   @SubscribeEvent
   public void onPacket(ServerPacketEvent event) {
-    if (antiTPCheck.getValue()) {
+    if (antiTPCheck.getValue() && System.currentTimeMillis() - lastTeleport > 1000 && isDoingMarco()) {
       if (!(event.packet instanceof S08PacketPlayerPosLook)) return;
 
       S08PacketPlayerPosLook packet = (S08PacketPlayerPosLook) event.packet;
