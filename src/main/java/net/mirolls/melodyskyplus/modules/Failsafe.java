@@ -36,6 +36,7 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.FMLModules.PlayerSoundHandler;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
+import xyz.Melody.module.modules.macros.Fishing.AutoFish;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
 import java.util.ArrayList;
@@ -103,7 +104,14 @@ public class Failsafe extends Module {
   }
 
   private static boolean isDoingMarco() {
-    return AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started;
+    AutoFish AutoFishINSTANCE = null;
+    for (Module m : ModuleManager.modules) {
+      if (m.getClass() == AutoFish.class) {
+        AutoFishINSTANCE = (AutoFish) m;
+      }
+    }
+
+    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started) || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
   }
 
   private void reactBedrock() {
@@ -187,12 +195,10 @@ public class Failsafe extends Module {
             if (bedrockTest) {
               // 是基岩船或者基岩房子
               reactBedrock();
-              return;
             } // else: 正常走到基岩上了 忽略
           } else {
             // 绝对是了 洗不了
             reactBedrock();
-            return;
           }
         }
 
@@ -332,7 +338,7 @@ public class Failsafe extends Module {
         final double playerMovementSpeed = mc.thePlayer.getAttributeMap().getAttributeInstanceByName("generic.movementSpeed").getAttributeValue();
         final int ticksSinceLastPacket = (int) Math.ceil(MelodySkyPlus.packRecord.getLastPacketTime() / 50D);
         final double estimatedMovement = playerMovementSpeed * ticksSinceLastPacket;
-        if (lastReceivedPacketDistance > 7.5D && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5)
+        if (lastReceivedPacketDistance > 7.5D && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5f)
           return;
         react(true);
         TPCheckReact.react(TPCheckMessage.getValue());
