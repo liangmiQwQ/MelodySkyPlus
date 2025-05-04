@@ -3,19 +3,18 @@ package net.mirolls.melodyskyplus.modules;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.potion.Potion;
+import net.minecraft.network.play.server.S08PacketPlayerPosLook;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.event.ServerPacketEvent;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
-import net.mirolls.melodyskyplus.libs.TPCheckDetector;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockHouseReact;
 import net.mirolls.melodyskyplus.react.failsafe.FakePlayerCheckReact;
@@ -38,8 +37,8 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.FMLModules.PlayerSoundHandler;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
+import xyz.Melody.module.modules.macros.Fishing.AutoFish;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
-import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -57,35 +56,33 @@ public class Failsafe extends Module {
   public Option<Boolean> antiBedrockBoatCheck;
   public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiTPCheck;
+  public Numbers<Double> TPCheckDistance = new Numbers<>("TPCheckDistance", 4.0, 0.1, 20.0, 0.1);
+
   public TextValue<String> TPCheckMessage = new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
-  public long nowTick = 0;
-  public long lastLegitTeleport = -16;
-  public long lastHurt = -16;
-  public long lastJump = -16;
-  //  private BlockPos lastLocation = null;
+  public long lastTeleport = System.currentTimeMillis();
   private boolean reacting = false;
-//  private boolean nextCheckTP = false;
 
 
   public Failsafe() {
     super("Failsafe", ModuleType.Mining);
     antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.fakePlayerCheckMessage.setEnabled(true);
+        INSTANCE.fakePlayerCheckMessage.setEnabled(val);
       }
     });
     antiBedrockBoatCheck = new Option<>("AntiBedrockBoatCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.bedrockCheckMessage.setEnabled(true);
+        INSTANCE.bedrockCheckMessage.setEnabled(val);
       }
     });
     antiTPCheck = new Option<>("AntiTPCheck", true, (val) -> {
       if (getINSTANCE() != null) {
-        INSTANCE.TPCheckMessage.setEnabled(true);
+        INSTANCE.TPCheckDistance.setEnabled(val);
+        INSTANCE.TPCheckMessage.setEnabled(val);
       }
     });
-    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckMessage);
-    this.setModInfo("Anti staffs while doing macro (ONLY WORK ON AUTO_GEMSTONE).");
+    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckDistance, TPCheckMessage);
+    this.setModInfo("Anti-staff while doing macros.");
     this.except();
   }
 
@@ -108,7 +105,14 @@ public class Failsafe extends Module {
   }
 
   private static boolean isDoingMarco() {
-    return AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started && GemstoneNuker.getINSTANCE().isEnabled();
+    AutoFish AutoFishINSTANCE = null;
+    for (Module m : ModuleManager.modules) {
+      if (m.getClass() == AutoFish.class) {
+        AutoFishINSTANCE = (AutoFish) m;
+      }
+    }
+
+    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started) || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
   }
 
   private void reactBedrock() {
@@ -139,7 +143,7 @@ public class Failsafe extends Module {
     }
   }
 
-  private void checkMarcoChecked() {
+  private void tickFailsafe() {
     Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
 
     if (!reacting) {
@@ -192,64 +196,13 @@ public class Failsafe extends Module {
             if (bedrockTest) {
               // 是基岩船或者基岩房子
               reactBedrock();
-              return;
             } // else: 正常走到基岩上了 忽略
           } else {
             // 绝对是了 洗不了
             reactBedrock();
-            return;
           }
         }
 
-
-        if (antiTPCheck.getValue() && nowTick > 20) {
-          // 记录lastLocation
-          boolean legitTeleporting =
-              Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_VOID")
-                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_END")
-                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "GRAPPLING_HOOK")
-                  || Objects.equals(ItemUtils.getSkyBlockID(mc.thePlayer.inventory.getCurrentItem()), "ASPECT_OF_THE_LEECH");
-
-          GameSettings gameSettings = this.mc.gameSettings;
-          lastLegitTeleport = legitTeleporting ? nowTick : lastLegitTeleport;
-
-          lastJump = gameSettings.keyBindJump.isKeyDown() ? nowTick : lastJump;
-
-          int warnLevel = TPCheckDetector.checkPositionChange();
-          if (warnLevel > 0 && nowTick > 20 && nowTick - lastLegitTeleport > 40 && nowTick - lastHurt > 30) {
-            int checkMotion = TPCheckDetector.checkMotion();
-            if ((checkMotion != 0 && (warnLevel += checkMotion) > 3) || warnLevel > 19) { // 如果能通过Motion发现这个事情不是很对劲了
-              int checkVelocity = TPCheckDetector.checkVelocity();
-              int checkEnvironmentChange = TPCheckDetector.checkEnvironmentChange();
-
-              warnLevel += checkVelocity;
-              warnLevel += checkEnvironmentChange;
-
-              if (warnLevel >= 20) {
-                // 多个检测 你都有点问题你可以去死了
-                Helper.sendMessage("Bad Luck. You was checked by Admin through TP. "
-                    + "WarnLevelL: " + warnLevel + "; CheckMotion" + checkMotion + "; CheckVelocity" + checkVelocity + "; CheckEnvironmentChange" + checkEnvironmentChange);
-                react(true);
-                TPCheckReact.react(TPCheckMessage.getValue());
-              } else {
-                if (nowTick - lastJump > 50 && mc.thePlayer.fallDistance < 0.1) {
-                  if (!gameSettings.keyBindForward.isKeyDown() && !gameSettings.keyBindBack.isKeyDown() && !gameSettings.keyBindRight.isKeyDown() && !gameSettings.keyBindLeft.isKeyDown()) {
-                    if (!mc.thePlayer.capabilities.isFlying) {
-                      if (!mc.thePlayer.isInLava()
-                          && !mc.thePlayer.isPotionActive(Potion.jump)
-                          && !mc.thePlayer.capabilities.isFlying
-                          && !mc.thePlayer.isRiding() && mc.thePlayer.onGround) {
-                        react(true);
-                        TPCheckReact.react(TPCheckMessage.getValue());
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-        }
       }
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
@@ -262,31 +215,8 @@ public class Failsafe extends Module {
       this.reacting = false;
       this.resumeTimer.reset();
     }
-
-    nowTick++;
   }
 
-
-  @EventHandler
-  public void onAttack(LivingAttackEvent event) {
-    if (event.entity instanceof EntityPlayer) {
-      if (event.entity.getUniqueID() == mc.thePlayer.getUniqueID()) {
-        // 玩家被殴打了
-        lastHurt = nowTick;
-      }
-    }
-  }
-
-  @EventHandler
-  public void onTick(EventTick event) {
-    this.checkMarcoChecked();
-    if (nowTick % 20 == 0) {
-      TPCheckDetector.saveEnvironment();
-    }
-    TPCheckDetector.lastMotionZ = mc.thePlayer.motionZ;
-    TPCheckDetector.lastMotionX = mc.thePlayer.motionX;
-
-  }
 
   private void react(boolean delay) {
     if (!reacting) { // 这个前提是为了防止部分react同时触发(考虑到假人飞行的问题)
@@ -358,9 +288,6 @@ public class Failsafe extends Module {
   public void onEnable() {
     this.resumeTimer.reset();
     this.reacting = false;
-    this.lastLegitTeleport = -16;
-    this.lastHurt = -16;
-    this.nowTick = 0;
     super.onEnable();
   }
 
@@ -383,8 +310,39 @@ public class Failsafe extends Module {
   public void clear(WorldEvent.Load event) {
     this.reacting = false;
     this.resumeTimer.reset();
-    nowTick = 0;
-    lastLegitTeleport = -16;
-    lastHurt = -16;
   }
+
+  @EventHandler
+  public void onTick(EventTick event) {
+    this.tickFailsafe();
+  }
+
+  @SubscribeEvent
+  public void onPacket(ServerPacketEvent event) {
+    if (antiTPCheck.getValue() && System.currentTimeMillis() - lastTeleport > 1000 && isDoingMarco()) {
+      if (!(event.packet instanceof S08PacketPlayerPosLook)) return;
+
+      S08PacketPlayerPosLook packet = (S08PacketPlayerPosLook) event.packet;
+
+      Vec3 currentPlayerPos = mc.thePlayer.getPositionVector();
+      Vec3 packetPlayerPos = new Vec3(
+          packet.getX() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.X) ? currentPlayerPos.xCoord : 0),
+          packet.getY() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Y) ? currentPlayerPos.yCoord : 0),
+          packet.getZ() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Z) ? currentPlayerPos.zCoord : 0)
+      );
+      double distance = currentPlayerPos.distanceTo(packetPlayerPos);
+
+      if (distance >= TPCheckDistance.getValue()) {
+        final double lastReceivedPacketDistance = currentPlayerPos.distanceTo(MelodySkyPlus.packRecord.getLastPacketPosition());
+        final double playerMovementSpeed = mc.thePlayer.getAttributeMap().getAttributeInstanceByName("generic.movementSpeed").getAttributeValue();
+        final int ticksSinceLastPacket = (int) Math.ceil(MelodySkyPlus.packRecord.getLastPacketTime() / 50D);
+        final double estimatedMovement = playerMovementSpeed * ticksSinceLastPacket;
+        if (lastReceivedPacketDistance > 7.5D && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5f)
+          return;
+        react(true);
+        TPCheckReact.react(TPCheckMessage.getValue());
+      }
+    }
+  }
+
 }

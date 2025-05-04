@@ -1,4 +1,4 @@
-package net.mirolls.melodyskyplus.mixin;
+package net.mirolls.melodyskyplus.mixin.minecraft;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiDisconnected;

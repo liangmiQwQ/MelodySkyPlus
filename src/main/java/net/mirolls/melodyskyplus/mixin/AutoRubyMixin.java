@@ -15,6 +15,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.StringUtils;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -35,9 +36,9 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.GUI.Notification.NotificationPublisher;
 import xyz.Melody.GUI.Notification.NotificationType;
 import xyz.Melody.Utils.Helper;
-import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.Utils.game.PlayerListUtils;
 import xyz.Melody.Utils.game.ScoreboardUtils;
+import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
@@ -79,18 +80,74 @@ public class AutoRubyMixin {
   @Shadow
   private Option<Boolean> aim;
   private Option<Boolean> melodySkyPlus$autoHeat = null;
-  private int reactingTick = -1;
-  private int prevItem;
+  private int melodySkyPlus$reactingTick = -1;
+  private int melodySkyPlus$prevItem;
+
+  private void melodySkyPlus$switchToJasper() {
+    Minecraft mc = Minecraft.getMinecraft();
+    if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
+      for (int i = 0; i < 9; ++i) {
+        ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
+        if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
+          mc.thePlayer.inventory.currentItem = i;
+          break;
+        }
+      }
+    }
+  }
+
+  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
+  private Value[] init(Value[] originalValues) {
+    melodySkyPlus$reactingTick = -1;
+
+    melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
+      if (AutoRuby.getINSTANCE() != null) {
+        melodySkyPlus$heatLimit.setEnabled(val);
+      }
+    });
+
+    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
+
+    returnValues[returnValues.length - 3] = melodySkyPlus$autoHeat;
+    returnValues[returnValues.length - 2] = melodySkyPlus$heatLimit;
+    returnValues[returnValues.length - 1] = MelodySkyPlus.jasperUsed.autoUseJasper;
+
+    return returnValues;
+  }
+
+  // Mojang极其恶心的混淆了他的代码 导致我无法使用Redirect精准定位 只能使用恶心Inject处理currentItem
+  @Inject(method = "idk", remap = false, at = @At("TAIL"))
+  private void idkTail(EventTick event, CallbackInfo ci) {
+    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
+        // 如果新的currentItem被设置为0了 但是之前不是0
+        // 则手动替换到jasper钻头
+        melodySkyPlus$switchToJasper();
+      }
+    }
+  }
+
+  @Inject(method = "etherWarp", remap = false, at = @At("TAIL"))
+  private void etherWarpTail(BlockPos pos, CallbackInfo ci) {
+    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+      MelodySkyPlus.LOGGER.info("etherWarp executed");
+      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
+        // 如果新的currentItem被设置为0了 但是之前不是0
+        // 则手动替换到jasper钻头
+        melodySkyPlus$switchToJasper();
+      }
+    }
+  }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", remap = false, target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
   private Option initYogToMobOption(String name, Object enabled, IValAction[] actions) {
     String newName = name.replace("Yog", "Mob");
     return new Option(newName, enabled, actions);
   }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", remap = false, target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
+  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
   private Numbers initYogToMobNumber(String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
     String newName = name.replace("Yog", "Mob");
 
@@ -119,7 +176,8 @@ public class AutoRubyMixin {
         if (entity instanceof EntityPlayer) {
           String name = entity.getName().toLowerCase();
 
-          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && !PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+            // TODO 研究此处mithril的名称
             if (name.contains("team treasurite")) {
               this.yogs.add(entity);
             }
@@ -186,27 +244,10 @@ public class AutoRubyMixin {
 
   }
 
-  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
-  private Value[] init(Value[] originalValues) {
-    reactingTick = -1;
-
-    melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
-      if (AutoRuby.getINSTANCE() != null) {
-        melodySkyPlus$heatLimit.setEnabled(val);
-      }
-    });
-
-    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
-
-    returnValues[returnValues.length - 2] = melodySkyPlus$autoHeat;
-    returnValues[returnValues.length - 1] = melodySkyPlus$heatLimit;
-
-    return returnValues;
-  }
 
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
-    reactingTick = -1;
+    melodySkyPlus$reactingTick = -1;
   }
 
 
@@ -215,7 +256,7 @@ public class AutoRubyMixin {
     Minecraft mc = Minecraft.getMinecraft();
 
     if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
-      Objects.requireNonNull(Failsafe.getINSTANCE()).lastLegitTeleport = Failsafe.getINSTANCE().nowTick;
+      Objects.requireNonNull(Failsafe.getINSTANCE()).lastTeleport = System.currentTimeMillis();
     } else {
       // 如果没有在进行TP
       if (melodySkyPlus$autoHeat.getValue()) {
@@ -231,58 +272,59 @@ public class AutoRubyMixin {
             }
           }
 
-          if (heat >= melodySkyPlus$heatLimit.getValue() && reactingTick == -1) {
+          if (heat >= melodySkyPlus$heatLimit.getValue() && melodySkyPlus$reactingTick == -1) {
             Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
             if (AutoRuby.getINSTANCE().started) {
-              reactingTick = 0;
+              melodySkyPlus$reactingTick = 0;
               AutoRuby.getINSTANCE().started = false;
+              MelodySkyPlus.jasperUsed.setJasperUsed(false);
             }
           }
         }
       }
     }
 
-    if (reactingTick > -1) {
-      reactingTick++;
+    if (melodySkyPlus$reactingTick > -1) {
+      melodySkyPlus$reactingTick++;
 
-      if (reactingTick == 5) {
+      if (melodySkyPlus$reactingTick == 5) {
         for (int i = 0; i < 9; ++i) {
           ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
           if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
-            prevItem = mc.thePlayer.inventory.currentItem;
+            melodySkyPlus$prevItem = mc.thePlayer.inventory.currentItem;
             mc.thePlayer.inventory.currentItem = i;
           }
         }
-      } else if (reactingTick == 15) {
+      } else if (melodySkyPlus$reactingTick == 15) {
         ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
 
         if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
         } else {
           Helper.sendMessage("Missing Water Bottle in hotbar.");
-          reactingTick = -1;
+          melodySkyPlus$reactingTick = -1;
           AutoRuby.getINSTANCE().started = true;
         }
-      } else if (reactingTick == 160) {
+      } else if (melodySkyPlus$reactingTick == 160) {
 
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-      } else if (reactingTick == 170) {
+      } else if (melodySkyPlus$reactingTick == 170) {
         for (int i = 0; i < 9; ++i) {
           ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
           if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
             mc.thePlayer.inventory.currentItem = i;
           }
         }
-      } else if (reactingTick == 180) {
+      } else if (melodySkyPlus$reactingTick == 180) {
         ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
         if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
           mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
         } else {
           Helper.sendMessage("Missing AbiPhone in hotbar.");
-          reactingTick = -1;
+          melodySkyPlus$reactingTick = -1;
           AutoRuby.getINSTANCE().started = true;
         }
-      } else if (reactingTick == 190) {
+      } else if (melodySkyPlus$reactingTick == 190) {
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
           Container container = ((GuiChest) gui).inventorySlots;
@@ -300,9 +342,9 @@ public class AutoRubyMixin {
             }
           }
         } else {
-          reactingTick = 169; // 重新返回上一步 打开电话
+          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 450) {
+      } else if (melodySkyPlus$reactingTick == 450) {
         // 卖水
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
@@ -320,9 +362,9 @@ public class AutoRubyMixin {
           }
         } else {
           mc.thePlayer.closeScreen();
-          reactingTick = 169; // 重新返回上一步 打开电话
+          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 470) {
+      } else if (melodySkyPlus$reactingTick == 470) {
         GuiScreen gui = mc.currentScreen;
         if (gui instanceof GuiChest) {
           Container container = ((GuiChest) gui).inventorySlots;
@@ -342,14 +384,14 @@ public class AutoRubyMixin {
           }
         } else {
           mc.thePlayer.closeScreen();
-          reactingTick = 169; // 重新返回上一步 打开电话
+          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
         }
-      } else if (reactingTick == 490) {
+      } else if (melodySkyPlus$reactingTick == 490) {
         mc.thePlayer.closeScreen();
         Helper.sendMessage("Bought water and drank successfully");
-      } else if (reactingTick == 510) {
-        mc.thePlayer.inventory.currentItem = prevItem;
-        reactingTick = -1;
+      } else if (melodySkyPlus$reactingTick == 510) {
+        mc.thePlayer.inventory.currentItem = melodySkyPlus$prevItem;
+        melodySkyPlus$reactingTick = -1;
         AutoRuby.getINSTANCE().started = true;
       }
     }

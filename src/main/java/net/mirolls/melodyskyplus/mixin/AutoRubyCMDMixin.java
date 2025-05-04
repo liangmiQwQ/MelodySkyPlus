@@ -15,12 +15,16 @@ public class AutoRubyCMDMixin {
   @Inject(method = "execute", at = @At("HEAD"), remap = false)
   public void execute(String[] args, CallbackInfoReturnable<String> cir) {
     if (args.length >= 1) {
-      if (args[0].toLowerCase().contains("adac")) {
+      if (args[0].toLowerCase().contains("adac") || args[0].toLowerCase().contains("ac")) {
         MelodySkyPlus.nukerTicks.reset();
         Helper.sendMessage("AutoRuby: Adaptive Mode Ticks Cleared.");
       } else if (args[0].toLowerCase().contains("stop")) {
+        // 重置此前设置的nukerTicks
         MelodySkyPlus.nukerTicks.reset();
         Helper.sendMessage("AutoRuby: Adaptive Mode Ticks Cleared.");
+      } else if (args[0].toLowerCase().contains("start")) {
+        // 重制卡jasper的状态
+        MelodySkyPlus.jasperUsed.setJasperUsed(false);
       } else if (args[0].toLowerCase().contains("first")) {
         if (args.length == 4) {
           try {
