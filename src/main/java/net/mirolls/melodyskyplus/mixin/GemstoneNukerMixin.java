@@ -6,7 +6,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.AntiBug;
-import net.mirolls.melodyskyplus.gui.GemstoneTick;
 import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,7 +20,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
-import xyz.Melody.GUI.Hud.HUDManager;
+import xyz.Melody.GUI.CustomUI.HUDManager;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
@@ -81,7 +80,7 @@ public abstract class GemstoneNukerMixin {
     return instance.getValue();
   }
 
-  @Inject(method = "normal", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;getBlock()Lnet/minecraft/util/BlockPos;"))
+  @Inject(method = "normal", remap = false, at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;getBlock()Lnet/minecraft/util/BlockPos;"))
   public void normal(EventPreUpdate event, CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
 
@@ -424,8 +423,8 @@ public abstract class GemstoneNukerMixin {
   public void onEnable(CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
       if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
-        if (!HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
-          HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(true);
+        if (!HUDManager.getApiByName("GemstoneTick").isEnabled()) {
+          HUDManager.getApiByName("GemstoneTick").setEnabled(true);
         }
       }
       melodySkyPlus$tryFasterTimer.resume();
@@ -436,8 +435,8 @@ public abstract class GemstoneNukerMixin {
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
   public void onDisable(CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
-      if (HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
-        HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(false);
+      if (HUDManager.getApiByName("GemstoneTick").isEnabled()) {
+        HUDManager.getApiByName("GemstoneTick").setEnabled(false);
       }
       melodySkyPlus$tryFasterTimer.pause();
       AutoRubyTimer.timer.pause();
