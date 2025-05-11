@@ -3,6 +3,7 @@ package net.mirolls.melodyskyplus.modules;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.System.Managers.Client.ModuleManager;
@@ -21,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-public class AutoFilet extends Module {
+public class AutoFilet extends ModulePlus {
   private static AutoFilet INSTANCE;
   private final TimerUtil ticksTimer;
   private final TimerUtil coolDownTimer;

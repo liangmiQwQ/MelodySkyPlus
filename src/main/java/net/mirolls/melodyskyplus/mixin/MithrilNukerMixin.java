@@ -11,6 +11,7 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.gui.MithrilTick;
 import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,7 +26,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
-import xyz.Melody.GUI.CustomUI.HUDManager;
+import xyz.Melody.GUI.Hud.HUDManager;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.MithrilNuker;
 
@@ -370,8 +371,8 @@ public abstract class MithrilNukerMixin {
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
     if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
-      if (!HUDManager.getApiByName("MithrilTick").isEnabled()) {
-        HUDManager.getApiByName("MithrilTick").setEnabled(true);
+      if (!HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
+        HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(true);
       }
     }
     melodySkyPlus$tryFasterTimer.resume();
@@ -380,8 +381,8 @@ public abstract class MithrilNukerMixin {
 
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
   public void onDisable(CallbackInfo ci) {
-    if (HUDManager.getApiByName("MithrilTick").isEnabled()) {
-      HUDManager.getApiByName("MithrilTick").setEnabled(false);
+    if (HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
+      HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(false);
     }
     melodySkyPlus$tryFasterTimer.pause();
     AutoRubyTimer.timer.pause();

@@ -13,6 +13,7 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.event.ServerPacketEvent;
 import net.mirolls.melodyskyplus.libs.CustomPlayerInRange;
 import net.mirolls.melodyskyplus.react.failsafe.BedrockBoatReact;
@@ -45,7 +46,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.Random;
 
-public class Failsafe extends Module {
+public class Failsafe extends ModulePlus {
   private static Failsafe INSTANCE;
   private final ArrayList<Module> mods = new ArrayList<>();
   private final TimerUtil resumeTimer = (new TimerUtil()).reset();

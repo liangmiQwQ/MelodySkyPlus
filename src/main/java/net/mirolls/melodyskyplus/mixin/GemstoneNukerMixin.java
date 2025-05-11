@@ -6,6 +6,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.gui.GemstoneTick;
 import net.mirolls.melodyskyplus.libs.AutoRubyTimer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,7 +21,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
-import xyz.Melody.GUI.CustomUI.HUDManager;
+import xyz.Melody.GUI.Hud.HUDManager;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
@@ -61,27 +62,36 @@ public abstract class GemstoneNukerMixin {
 
   @Redirect(method = "advanced", at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;checkBlock(Lnet/minecraft/util/BlockPos;)Z", remap = false), remap = false)
   public boolean checkBlockInAdvanced(GemstoneNuker instance, BlockPos pos) {
-    if (this.melodySkyPlus$adaptive.getValue()) {
-      return false;
-    } else {
-      return checkBlock(pos);
+    if (AntiBug.isBugRemoved()) {
+      if (this.melodySkyPlus$adaptive.getValue()) {
+        return false;
+      } else {
+        return checkBlock(pos);
+      }
     }
+    return checkBlock(pos);
   }
 
   @Redirect(method = "destoryBlock", at = @At(value = "INVOKE", target = "Lxyz/Melody/Event/value/Option;getValue()Ljava/lang/Object;", remap = false, ordinal = 1), remap = false)
   public Object destoryBlock(Option instance) {
-    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) return false;
+    if (AntiBug.isBugRemoved()) {
+      if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) return false;
+      return instance.getValue();
+    }
     return instance.getValue();
   }
 
-  @Inject(method = "normal", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;getBlock()Lnet/minecraft/util/BlockPos;", remap = false))
+  @Inject(method = "normal", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/GemstoneNuker;getBlock()Lnet/minecraft/util/BlockPos;"))
   public void normal(EventPreUpdate event, CallbackInfo ci) {
-    if (MelodySkyPlus.jasperUsed.minedBlock > 3) {
-      MelodySkyPlus.jasperUsed.setJasperUsed(true);
-      MelodySkyPlus.jasperUsed.minedBlock = 0;
-    }
+    if (AntiBug.isBugRemoved()) {
 
-    MelodySkyPlus.jasperUsed.minedBlock++;
+      if (MelodySkyPlus.jasperUsed.minedBlock > 3) {
+        MelodySkyPlus.jasperUsed.setJasperUsed(true);
+        MelodySkyPlus.jasperUsed.minedBlock = 0;
+      }
+
+      MelodySkyPlus.jasperUsed.minedBlock++;
+    }
   }
 
 
@@ -91,59 +101,62 @@ public abstract class GemstoneNukerMixin {
       ),
       cancellable = true)
   public void resetTicksInAdvanced(EventPreUpdate event, CallbackInfo ci) {
-    if (melodySkyPlus$adaptive.getValue()) {
-      if (blockPos != null) {
-        if (checkBlock(blockPos)) {
-          if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-            // 首先 必须保证pickaxeAbility状态稳定!
+    if (AntiBug.isBugRemoved()) {
 
-            int targetTick = ticks - (int) Math.floor(removeTime.getValue() / 50);
-            switch (melodySkyPlus$miningType) {
-              case "AbilityRuby":
-                MelodySkyPlus.nukerTicks.setAbilityRuby(targetTick);
-                break;
-              case "AbilityJ_a_a_s_o":
-                MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(targetTick);
-                break;
-              case "AbilityTopaz":
-                MelodySkyPlus.nukerTicks.setAbilityTopaz(targetTick);
-                break;
-              case "AbilityJasper":
-                MelodySkyPlus.nukerTicks.setAbilityJasper(targetTick);
-                break;
-              case "AbilityO_a_c_p":
-                MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(targetTick);
-                break;
-              case "Ruby":
-                if (targetTick > 6) {
-                  MelodySkyPlus.nukerTicks.setRuby(targetTick);
-                }
-                break;
-              case "J_a_a_s_o":
-                if (targetTick > 8) {
-                  MelodySkyPlus.nukerTicks.setJ_a_a_s_o(targetTick);
-                }
-                break;
-              case "Topaz":
-                if (targetTick > 11) {
-                  MelodySkyPlus.nukerTicks.setTopaz(targetTick);
-                }
-                break;
-              case "Jasper":
-                if (targetTick > 14) {
-                  MelodySkyPlus.nukerTicks.setJasper(targetTick);
-                }
-                break;
-              case "O_a_c_p":
-                if (targetTick > 15) {
-                  MelodySkyPlus.nukerTicks.setO_a_c_p(targetTick);
-                }
-                break;
+      if (melodySkyPlus$adaptive.getValue()) {
+        if (blockPos != null) {
+          if (checkBlock(blockPos)) {
+            if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
+              // 首先 必须保证pickaxeAbility状态稳定!
+
+              int targetTick = ticks - (int) Math.floor(removeTime.getValue() / 50);
+              switch (melodySkyPlus$miningType) {
+                case "AbilityRuby":
+                  MelodySkyPlus.nukerTicks.setAbilityRuby(targetTick);
+                  break;
+                case "AbilityJ_a_a_s_o":
+                  MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(targetTick);
+                  break;
+                case "AbilityTopaz":
+                  MelodySkyPlus.nukerTicks.setAbilityTopaz(targetTick);
+                  break;
+                case "AbilityJasper":
+                  MelodySkyPlus.nukerTicks.setAbilityJasper(targetTick);
+                  break;
+                case "AbilityO_a_c_p":
+                  MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(targetTick);
+                  break;
+                case "Ruby":
+                  if (targetTick > 6) {
+                    MelodySkyPlus.nukerTicks.setRuby(targetTick);
+                  }
+                  break;
+                case "J_a_a_s_o":
+                  if (targetTick > 8) {
+                    MelodySkyPlus.nukerTicks.setJ_a_a_s_o(targetTick);
+                  }
+                  break;
+                case "Topaz":
+                  if (targetTick > 11) {
+                    MelodySkyPlus.nukerTicks.setTopaz(targetTick);
+                  }
+                  break;
+                case "Jasper":
+                  if (targetTick > 14) {
+                    MelodySkyPlus.nukerTicks.setJasper(targetTick);
+                  }
+                  break;
+                case "O_a_c_p":
+                  if (targetTick > 15) {
+                    MelodySkyPlus.nukerTicks.setO_a_c_p(targetTick);
+                  }
+                  break;
+              }
+
+              this.blockPos = null;
+              this.ticks = 0;
+              ci.cancel();
             }
-
-            this.blockPos = null;
-            this.ticks = 0;
-            ci.cancel();
           }
         }
       }
@@ -218,198 +231,216 @@ public abstract class GemstoneNukerMixin {
       at = @At("RETURN"),
       cancellable = true)
   public void getTick(BlockPos pos, CallbackInfoReturnable<Integer> cir) {
-    // 自适应模式
-    if (this.melodySkyPlus$adaptive.getValue()) {
-      int blockStr = melodySkyPlus$getBlockStr(pos);
+    if (AntiBug.isBugRemoved()) {
 
-      // 先保存一下目前的pickaxeAbility
-      melodySkyPlus$dPrevPickaxeAblity = melodySkyPlus$prevPickaxeAbility;
-      melodySkyPlus$prevPickaxeAbility = melodySkyPlus$pickaxeAbility;
+      // 自适应模式
+      if (this.melodySkyPlus$adaptive.getValue()) {
+        int blockStr = melodySkyPlus$getBlockStr(pos);
 
-      // 开技能了
-      melodySkyPlus$pickaxeAbility = MelodySkyPlus.pickaxeAbility.isPickaxeAbility();
+        // 先保存一下目前的pickaxeAbility
+        melodySkyPlus$dPrevPickaxeAblity = melodySkyPlus$prevPickaxeAbility;
+        melodySkyPlus$prevPickaxeAbility = melodySkyPlus$pickaxeAbility;
 
-      // 尝试加快速度
-      if (melodySkyPlus$tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
-        melodySkyPlus$tryFasterTimer.reset();
+        // 开技能了
+        melodySkyPlus$pickaxeAbility = MelodySkyPlus.pickaxeAbility.isPickaxeAbility();
+
+        // 尝试加快速度
+        if (melodySkyPlus$tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
+          melodySkyPlus$tryFasterTimer.reset();
+          if (melodySkyPlus$pickaxeAbility) {
+            if (blockStr == 2300) {
+              MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() - 1);
+            } else if (blockStr == 3000) {
+              MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() - 1);
+            } else if (blockStr == 3800) {
+              MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() - 1);
+            } else if (blockStr == 4800) {
+              MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() - 1);
+            } else if (blockStr == 5200) {
+              MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() - 1);
+            }
+          } else {
+            if (blockStr == 2300) {
+              MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() - 1);
+            } else if (blockStr == 3000) {
+              MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() - 1);
+            } else if (blockStr == 3800) {
+              MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() - 1);
+            } else if (blockStr == 4800) {
+              MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() - 1);
+            } else if (blockStr == 5200) {
+              MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() - 1);
+            }
+          }
+        }
+
+        int tick = 15;
         if (melodySkyPlus$pickaxeAbility) {
           if (blockStr == 2300) {
-            MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityRuby();
+            melodySkyPlus$miningType = "AbilityRuby";
           } else if (blockStr == 3000) {
-            MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o();
+            melodySkyPlus$miningType = "AbilityJ_a_a_s_o";
           } else if (blockStr == 3800) {
-            MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityTopaz();
+            melodySkyPlus$miningType = "AbilityTopaz";
           } else if (blockStr == 4800) {
-            MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityJasper();
+            melodySkyPlus$miningType = "AbilityJasper";
           } else if (blockStr == 5200) {
-            MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityO_a_c_p();
+            melodySkyPlus$miningType = "AbilityO_a_c_p";
           }
         } else {
           if (blockStr == 2300) {
-            MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() - 1);
+            tick = MelodySkyPlus.nukerTicks.getRuby();
+            melodySkyPlus$miningType = "Ruby";
           } else if (blockStr == 3000) {
-            MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() - 1);
+            tick = MelodySkyPlus.nukerTicks.getJ_a_a_s_o();
+            melodySkyPlus$miningType = "J_a_a_s_o";
           } else if (blockStr == 3800) {
-            MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() - 1);
+            tick = MelodySkyPlus.nukerTicks.getTopaz();
+            melodySkyPlus$miningType = "Topaz";
           } else if (blockStr == 4800) {
-            MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() - 1);
+            tick = MelodySkyPlus.nukerTicks.getJasper();
+            melodySkyPlus$miningType = "Jasper";
           } else if (blockStr == 5200) {
-            MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() - 1);
+            tick = MelodySkyPlus.nukerTicks.getO_a_c_p();
+            melodySkyPlus$miningType = "O_a_c_p";
           }
         }
-      }
 
-      int tick = 15;
-      if (melodySkyPlus$pickaxeAbility) {
-        if (blockStr == 2300) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityRuby();
-          melodySkyPlus$miningType = "AbilityRuby";
-        } else if (blockStr == 3000) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o();
-          melodySkyPlus$miningType = "AbilityJ_a_a_s_o";
-        } else if (blockStr == 3800) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityTopaz();
-          melodySkyPlus$miningType = "AbilityTopaz";
-        } else if (blockStr == 4800) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityJasper();
-          melodySkyPlus$miningType = "AbilityJasper";
-        } else if (blockStr == 5200) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityO_a_c_p();
-          melodySkyPlus$miningType = "AbilityO_a_c_p";
+        tick = (int) (tick + shiftTick.getValue());
+        if (tick < 4) {
+          tick = 4;
         }
-      } else {
-        if (blockStr == 2300) {
-          tick = MelodySkyPlus.nukerTicks.getRuby();
-          melodySkyPlus$miningType = "Ruby";
-        } else if (blockStr == 3000) {
-          tick = MelodySkyPlus.nukerTicks.getJ_a_a_s_o();
-          melodySkyPlus$miningType = "J_a_a_s_o";
-        } else if (blockStr == 3800) {
-          tick = MelodySkyPlus.nukerTicks.getTopaz();
-          melodySkyPlus$miningType = "Topaz";
-        } else if (blockStr == 4800) {
-          tick = MelodySkyPlus.nukerTicks.getJasper();
-          melodySkyPlus$miningType = "Jasper";
-        } else if (blockStr == 5200) {
-          tick = MelodySkyPlus.nukerTicks.getO_a_c_p();
-          melodySkyPlus$miningType = "O_a_c_p";
-        }
-      }
 
-      tick = (int) (tick + shiftTick.getValue());
-      if (tick < 4) {
-        tick = 4;
+        MelodySkyPlus.nukerTicks.setCurrentTicks(tick);
+        cir.setReturnValue(tick);
+        cir.cancel();
       }
-
-      MelodySkyPlus.nukerTicks.setCurrentTicks(tick);
-      cir.setReturnValue(tick);
-      cir.cancel();
     }
   }
 
   private int melodySkyPlus$getBlockStr(BlockPos blockPos) {
-    Minecraft mc = Minecraft.getMinecraft();
-    IBlockState block = mc.theWorld.getBlockState(blockPos);
-    if (block.getBlock() != Blocks.stained_glass && block.getBlock() != Blocks.stained_glass_pane) return 5000;
-    if (!pane.getValue() && block.getBlock() == Blocks.stained_glass_pane) return 5200;
+    if (AntiBug.isBugRemoved()) {
 
-    int metadata = block.getBlock().getMetaFromState(block);
+      Minecraft mc = Minecraft.getMinecraft();
+      IBlockState block = mc.theWorld.getBlockState(blockPos);
+      if (block.getBlock() != Blocks.stained_glass && block.getBlock() != Blocks.stained_glass_pane) return 5000;
+      if (!pane.getValue() && block.getBlock() == Blocks.stained_glass_pane) return 5200;
 
-    if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
-      return 3000;
-    } else if (metadata == 2) {
-      // jasper
-      return 4800;
-    } else if (metadata == 14) {
-      // ruby
-      return 2300;
-    } else if (metadata == 4) {
-      return 3800;
-    } else {
-      return 5200;
+      int metadata = block.getBlock().getMetaFromState(block);
+
+      if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
+        return 3000;
+      } else if (metadata == 2) {
+        // jasper
+        return 4800;
+      } else if (metadata == 14) {
+        // ruby
+        return 2300;
+      } else if (metadata == 4) {
+        return 3800;
+      } else {
+        return 5200;
+      }
     }
+    return Integer.MIN_VALUE;
   }
 
   @Inject(method = "checkBroken", remap = false,
       at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z", ordinal = 0, remap = false)
   )
   public void checkBrokenToRemoveAddWhileAir(CallbackInfo ci) {
-    melodySkyPlus$missedBlocks = 0; // 重置状态
+    if (AntiBug.isBugRemoved()) {
+
+      melodySkyPlus$missedBlocks = 0; // 重置状态
+    }
   }
 
   @ModifyArg(method = "checkBroken", remap = false,
       at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
   )
   public Object checkBrokenToRemoveAdd(Object e) {
-    if (melodySkyPlus$adaptive.getValue()) {
-      if (e instanceof BlockPos) {
-        IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState((BlockPos) e);
-        if (blockState.getBlock() == Blocks.stained_glass_pane || blockState.getBlock() == Blocks.stained_glass) {
-          int metadata = blockState.getBlock().getMetaFromState(blockState);
+    if (AntiBug.isBugRemoved()) {
 
-          if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-            // 至少保证这个是稳定的
-            melodySkyPlus$missedBlocks++;
-            if (melodySkyPlus$trySlowerBlocks.getValue() <= melodySkyPlus$missedBlocks) { // 如果已经多次这样
-              melodySkyPlus$missedBlocks = 0; // 重置状态
-              if (melodySkyPlus$prevPickaxeAbility) {
-                // 开技能了
-                if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
-                  MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() + 1);
-                } else if (metadata == 2) {
-                  // jasper
-                  MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() + 1);
-                } else if (metadata == 14) {
-                  // ruby
-                  MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() + 1);
-                } else if (metadata == 4) {
-                  // topaz
-                  MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() + 1);
+      if (melodySkyPlus$adaptive.getValue()) {
+        if (e instanceof BlockPos) {
+          IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState((BlockPos) e);
+          if (blockState.getBlock() == Blocks.stained_glass_pane || blockState.getBlock() == Blocks.stained_glass) {
+            int metadata = blockState.getBlock().getMetaFromState(blockState);
+
+            if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
+              // 至少保证这个是稳定的
+              melodySkyPlus$missedBlocks++;
+              if (melodySkyPlus$trySlowerBlocks.getValue() <= melodySkyPlus$missedBlocks) { // 如果已经多次这样
+                melodySkyPlus$missedBlocks = 0; // 重置状态
+                if (melodySkyPlus$prevPickaxeAbility) {
+                  // 开技能了
+                  if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
+                    MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(MelodySkyPlus.nukerTicks.getAbilityJ_a_a_s_o() + 1);
+                  } else if (metadata == 2) {
+                    // jasper
+                    MelodySkyPlus.nukerTicks.setAbilityJasper(MelodySkyPlus.nukerTicks.getAbilityJasper() + 1);
+                  } else if (metadata == 14) {
+                    // ruby
+                    MelodySkyPlus.nukerTicks.setAbilityRuby(MelodySkyPlus.nukerTicks.getAbilityRuby() + 1);
+                  } else if (metadata == 4) {
+                    // topaz
+                    MelodySkyPlus.nukerTicks.setAbilityTopaz(MelodySkyPlus.nukerTicks.getAbilityTopaz() + 1);
+                  } else {
+                    MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() + 1);
+                  }
                 } else {
-                  MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(MelodySkyPlus.nukerTicks.getAbilityO_a_c_p() + 1);
-                }
-              } else {
-                if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
-                  MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() + 1);
-                } else if (metadata == 2) {
-                  // jasper
-                  MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() + 1);
-                } else if (metadata == 14) {
-                  // ruby
-                  MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() + 1);
-                } else if (metadata == 4) {
-                  // topaz
-                  MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() + 1);
-                } else {
-                  MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() + 1);
+                  if (metadata == 0 || metadata == 1 || metadata == 3 || metadata == 5 || metadata == 10) {
+                    MelodySkyPlus.nukerTicks.setJ_a_a_s_o(MelodySkyPlus.nukerTicks.getJ_a_a_s_o() + 1);
+                  } else if (metadata == 2) {
+                    // jasper
+                    MelodySkyPlus.nukerTicks.setJasper(MelodySkyPlus.nukerTicks.getJasper() + 1);
+                  } else if (metadata == 14) {
+                    // ruby
+                    MelodySkyPlus.nukerTicks.setRuby(MelodySkyPlus.nukerTicks.getRuby() + 1);
+                  } else if (metadata == 4) {
+                    // topaz
+                    MelodySkyPlus.nukerTicks.setTopaz(MelodySkyPlus.nukerTicks.getTopaz() + 1);
+                  } else {
+                    MelodySkyPlus.nukerTicks.setO_a_c_p(MelodySkyPlus.nukerTicks.getO_a_c_p() + 1);
+                  }
                 }
               }
             }
           }
         }
       }
-    }
 
+      return e;
+    }
     return e;
   }
 
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
-    if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
-      if (!HUDManager.getApiByName("GemstoneTick").isEnabled()) {
-        HUDManager.getApiByName("GemstoneTick").setEnabled(true);
+    if (AntiBug.isBugRemoved()) {
+      if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
+        if (!HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
+          HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(true);
+        }
       }
+      melodySkyPlus$tryFasterTimer.resume();
+      AutoRubyTimer.timer.reset();
     }
-    melodySkyPlus$tryFasterTimer.resume();
-    AutoRubyTimer.timer.reset();
   }
 
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
   public void onDisable(CallbackInfo ci) {
-    if (HUDManager.getApiByName("GemstoneTick").isEnabled()) {
-      HUDManager.getApiByName("GemstoneTick").setEnabled(false);
+    if (AntiBug.isBugRemoved()) {
+      if (HUDManager.getInstance().getByClass(GemstoneTick.class).isEnabled()) {
+        HUDManager.getInstance().getByClass(GemstoneTick.class).setEnabled(false);
+      }
+      melodySkyPlus$tryFasterTimer.pause();
+      AutoRubyTimer.timer.pause();
     }
-    melodySkyPlus$tryFasterTimer.pause();
-    AutoRubyTimer.timer.pause();
   }
 }
