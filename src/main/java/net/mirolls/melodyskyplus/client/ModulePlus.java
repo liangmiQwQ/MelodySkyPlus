@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.client;
 
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
@@ -17,7 +18,8 @@ public abstract class ModulePlus extends Module {
   public void setEnabled(boolean enabled) {
     super.setEnabled(enabled);
 
-    if (AntiBug.isBugRemoved()) {
+    if (!AntiBug.isBugRemoved() && enabled) {
+      MelodySkyPlus.LOGGER.warn("Can't auth your account");
       Helper.sendMessage("Can't auth your account");
       this.setEnabled(false);
     }
