@@ -65,11 +65,14 @@ public abstract class MithrilNukerMixin {
 
   @Redirect(method = "advanced", at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MithrilNuker;checkBlock(Lnet/minecraft/util/BlockPos;)Z", remap = false), remap = false)
   public boolean checkBlockInAdvanced(MithrilNuker instance, BlockPos pos) {
-    if (this.melodySkyPlus$adaptive.getValue()) {
-      return false;
-    } else {
-      return checkBlock(pos);
+    if (AntiBug.isBugRemoved()) {
+      if (this.melodySkyPlus$adaptive.getValue()) {
+        return false;
+      } else {
+        return checkBlock(pos);
+      }
     }
+    return checkBlock(pos);
   }
 
   @Inject(method = "advanced", remap = false,
@@ -78,59 +81,61 @@ public abstract class MithrilNukerMixin {
       ),
       cancellable = true)
   public void resetTicksInAdvanced(EventPreUpdate event, CallbackInfo ci) {
-    if (melodySkyPlus$adaptive.getValue()) {
-      if (blockPos != null) {
-        if (checkBlock(blockPos)) {
-          if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-            // 首先 必须保证pickaxeAbility状态稳定!
+    if (AntiBug.isBugRemoved()) {
+      if (melodySkyPlus$adaptive.getValue()) {
+        if (blockPos != null) {
+          if (checkBlock(blockPos)) {
+            if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
+              // 首先 必须保证pickaxeAbility状态稳定!
 
-            int targetTick = ticks - (int) Math.floor(removeTime.getValue() / 50);
-            switch (melodySkyPlus$miningType) {
-              case "AbilityRuby":
-                MelodySkyPlus.nukerTicks.setAbilityRuby(targetTick);
-                break;
-              case "AbilityJ_a_a_s_o":
-                MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(targetTick);
-                break;
-              case "AbilityTopaz":
-                MelodySkyPlus.nukerTicks.setAbilityTopaz(targetTick);
-                break;
-              case "AbilityJasper":
-                MelodySkyPlus.nukerTicks.setAbilityJasper(targetTick);
-                break;
-              case "AbilityO_a_c_p":
-                MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(targetTick);
-                break;
-              case "Ruby":
-                if (targetTick > 6) {
-                  MelodySkyPlus.nukerTicks.setRuby(targetTick);
-                }
-                break;
-              case "J_a_a_s_o":
-                if (targetTick > 8) {
-                  MelodySkyPlus.nukerTicks.setJ_a_a_s_o(targetTick);
-                }
-                break;
-              case "Topaz":
-                if (targetTick > 11) {
-                  MelodySkyPlus.nukerTicks.setTopaz(targetTick);
-                }
-                break;
-              case "Jasper":
-                if (targetTick > 14) {
-                  MelodySkyPlus.nukerTicks.setJasper(targetTick);
-                }
-                break;
-              case "O_a_c_p":
-                if (targetTick > 15) {
-                  MelodySkyPlus.nukerTicks.setO_a_c_p(targetTick);
-                }
-                break;
+              int targetTick = ticks - (int) Math.floor(removeTime.getValue() / 50);
+              switch (melodySkyPlus$miningType) {
+                case "AbilityRuby":
+                  MelodySkyPlus.nukerTicks.setAbilityRuby(targetTick);
+                  break;
+                case "AbilityJ_a_a_s_o":
+                  MelodySkyPlus.nukerTicks.setAbilityJ_a_a_s_o(targetTick);
+                  break;
+                case "AbilityTopaz":
+                  MelodySkyPlus.nukerTicks.setAbilityTopaz(targetTick);
+                  break;
+                case "AbilityJasper":
+                  MelodySkyPlus.nukerTicks.setAbilityJasper(targetTick);
+                  break;
+                case "AbilityO_a_c_p":
+                  MelodySkyPlus.nukerTicks.setAbilityO_a_c_p(targetTick);
+                  break;
+                case "Ruby":
+                  if (targetTick > 6) {
+                    MelodySkyPlus.nukerTicks.setRuby(targetTick);
+                  }
+                  break;
+                case "J_a_a_s_o":
+                  if (targetTick > 8) {
+                    MelodySkyPlus.nukerTicks.setJ_a_a_s_o(targetTick);
+                  }
+                  break;
+                case "Topaz":
+                  if (targetTick > 11) {
+                    MelodySkyPlus.nukerTicks.setTopaz(targetTick);
+                  }
+                  break;
+                case "Jasper":
+                  if (targetTick > 14) {
+                    MelodySkyPlus.nukerTicks.setJasper(targetTick);
+                  }
+                  break;
+                case "O_a_c_p":
+                  if (targetTick > 15) {
+                    MelodySkyPlus.nukerTicks.setO_a_c_p(targetTick);
+                  }
+                  break;
+              }
+
+              this.blockPos = null;
+              this.ticks = 0;
+              ci.cancel();
             }
-
-            this.blockPos = null;
-            this.ticks = 0;
-            ci.cancel();
           }
         }
       }
@@ -142,181 +147,190 @@ public abstract class MithrilNukerMixin {
       index = 0, remap = false)
   public Value[] MithrilNuker(Value[] originalValues) {
     if (AntiBug.isBugRemoved()) {
-      melodySkyPlus$adaptive = new Option<>("Adaptive Mode", false, (val) -> {
-        if (MithrilNuker.getINSTANCE() != null) {
-          this.melodySkyPlus$tryFaster.setEnabled(val);
-          this.melodySkyPlus$trySlowerBlocks.setEnabled(val);
-          this.miningSpeed.setEnabled(!val);
-          this.skillMiningSpeed.setEnabled(!val);
-        }
-      });
-
-      melodySkyPlus$advanced = new Option<>("Advanced Mode", false, (val) -> {
-        if (MithrilNuker.getINSTANCE() != null) {
-          // 返回到源
-          this.advanced.setValue(val);
-
-          this.melodySkyPlus$adaptive.setEnabled(val);
-          if (val) {
-            if (this.melodySkyPlus$adaptive.getValue()) {
-              this.melodySkyPlus$tryFaster.setEnabled(true);
-              this.melodySkyPlus$trySlowerBlocks.setEnabled(true);
-
-              this.miningSpeed.setEnabled(false);
-              this.skillMiningSpeed.setEnabled(false);
-            } else {
-              this.melodySkyPlus$tryFaster.setEnabled(false);
-              this.melodySkyPlus$trySlowerBlocks.setEnabled(false);
-
-              this.miningSpeed.setEnabled(true);
-              this.skillMiningSpeed.setEnabled(true);
-            }
+      if (AntiBug.isBugRemoved()) {
+        melodySkyPlus$adaptive = new Option<>("Adaptive Mode", false, (val) -> {
+          if (MithrilNuker.getINSTANCE() != null) {
+            this.melodySkyPlus$tryFaster.setEnabled(val);
+            this.melodySkyPlus$trySlowerBlocks.setEnabled(val);
+            this.miningSpeed.setEnabled(!val);
+            this.skillMiningSpeed.setEnabled(!val);
           }
-          this.shiftTick.setEnabled(val);
-          this.removeTime.setEnabled(val);
-        }
-      });
+        });
 
-      // 自适应模式: 从理论最高6tick往上加 找到实际挖掘tick
-      Value[] returnValues = new Value[originalValues.length + 3];
+        melodySkyPlus$advanced = new Option<>("Advanced Mode", false, (val) -> {
+          if (MithrilNuker.getINSTANCE() != null) {
+            // 返回到源
+            this.advanced.setValue(val);
 
-      for (int i = 0; i < returnValues.length; i++) {
-        if (i == 8) {
-          returnValues[i] = melodySkyPlus$advanced;
-        } else if (i == 9) {
-          returnValues[i] = melodySkyPlus$adaptive;
-        } else if (i == 10) {
-          returnValues[i] = melodySkyPlus$tryFaster;
-        } else if (i == 11) {
-          returnValues[i] = melodySkyPlus$trySlowerBlocks;
-        } else if (i > 11) {
-          returnValues[i] = originalValues[i - 3];
-        } else {
-          returnValues[i] = originalValues[i];
+            this.melodySkyPlus$adaptive.setEnabled(val);
+            if (val) {
+              if (this.melodySkyPlus$adaptive.getValue()) {
+                this.melodySkyPlus$tryFaster.setEnabled(true);
+                this.melodySkyPlus$trySlowerBlocks.setEnabled(true);
+
+                this.miningSpeed.setEnabled(false);
+                this.skillMiningSpeed.setEnabled(false);
+              } else {
+                this.melodySkyPlus$tryFaster.setEnabled(false);
+                this.melodySkyPlus$trySlowerBlocks.setEnabled(false);
+
+                this.miningSpeed.setEnabled(true);
+                this.skillMiningSpeed.setEnabled(true);
+              }
+            }
+            this.shiftTick.setEnabled(val);
+            this.removeTime.setEnabled(val);
+          }
+        });
+
+        // 自适应模式: 从理论最高6tick往上加 找到实际挖掘tick
+        Value[] returnValues = new Value[originalValues.length + 3];
+
+        for (int i = 0; i < returnValues.length; i++) {
+          if (i == 8) {
+            returnValues[i] = melodySkyPlus$advanced;
+          } else if (i == 9) {
+            returnValues[i] = melodySkyPlus$adaptive;
+          } else if (i == 10) {
+            returnValues[i] = melodySkyPlus$tryFaster;
+          } else if (i == 11) {
+            returnValues[i] = melodySkyPlus$trySlowerBlocks;
+          } else if (i > 11) {
+            returnValues[i] = originalValues[i - 3];
+          } else {
+            returnValues[i] = originalValues[i];
+          }
         }
+        return returnValues;
+      } else {
+        return originalValues;
       }
-      return returnValues;
-    } else {
-      return originalValues;
     }
+    return originalValues;
   }
 
   @Inject(method = "getTick", remap = false,
       at = @At("RETURN"),
       cancellable = true)
   public void getTick(BlockPos pos, CallbackInfoReturnable<Integer> cir) {
-    // 自适应模式
-    if (this.melodySkyPlus$adaptive.getValue()) {
-      int blockStr = melodySkyPlus$getBlockStr(pos);
+    if (AntiBug.isBugRemoved()) {
+      // 自适应模式
+      if (this.melodySkyPlus$adaptive.getValue()) {
+        int blockStr = melodySkyPlus$getBlockStr(pos);
 
-      // 先保存一下目前的pickaxeAbility
-      melodySkyPlus$dPrevPickaxeAblity = melodySkyPlus$prevPickaxeAbility;
-      melodySkyPlus$prevPickaxeAbility = melodySkyPlus$pickaxeAbility;
+        // 先保存一下目前的pickaxeAbility
+        melodySkyPlus$dPrevPickaxeAblity = melodySkyPlus$prevPickaxeAbility;
+        melodySkyPlus$prevPickaxeAbility = melodySkyPlus$pickaxeAbility;
 
-      // 开技能了
-      melodySkyPlus$pickaxeAbility = MelodySkyPlus.pickaxeAbility.isPickaxeAbility();
+        // 开技能了
+        melodySkyPlus$pickaxeAbility = MelodySkyPlus.pickaxeAbility.isPickaxeAbility();
 
-      // 尝试加快速度
-      if (melodySkyPlus$tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
-        melodySkyPlus$tryFasterTimer.reset();
+        // 尝试加快速度
+        if (melodySkyPlus$tryFasterTimer.hasReached(1000 * melodySkyPlus$tryFaster.getValue()) && Minecraft.getMinecraft().thePlayer.onGround) {
+          melodySkyPlus$tryFasterTimer.reset();
+          if (melodySkyPlus$pickaxeAbility) {
+            if (blockStr == 500) {
+              MelodySkyPlus.nukerTicks.setAbilityGrayMithril(MelodySkyPlus.nukerTicks.getAbilityGrayMithril() - 1);
+            } else if (blockStr == 800) {
+              MelodySkyPlus.nukerTicks.setAbilityGreenMithril(MelodySkyPlus.nukerTicks.getAbilityGreenMithril() - 1);
+            } else if (blockStr == 1500) {
+              MelodySkyPlus.nukerTicks.setAbilityBlueMithril(MelodySkyPlus.nukerTicks.getAbilityBlueMithril() - 1);
+            } else if (blockStr == 2000) {
+              MelodySkyPlus.nukerTicks.setAbilityTitanium(MelodySkyPlus.nukerTicks.getAbilityTitanium() - 1);
+            }
+          } else {
+            if (blockStr == 500) {
+              MelodySkyPlus.nukerTicks.setGrayMithril(MelodySkyPlus.nukerTicks.getGrayMithril() - 1);
+            } else if (blockStr == 800) {
+              MelodySkyPlus.nukerTicks.setGreenMithril(MelodySkyPlus.nukerTicks.getGreenMithril() - 1);
+            } else if (blockStr == 1500) {
+              MelodySkyPlus.nukerTicks.setBlueMithril(MelodySkyPlus.nukerTicks.getBlueMithril() - 1);
+            } else if (blockStr == 2000) {
+              MelodySkyPlus.nukerTicks.setTitanium(MelodySkyPlus.nukerTicks.getTitanium() - 1);
+            }
+          }
+        }
+
+        int tick = 15;
         if (melodySkyPlus$pickaxeAbility) {
           if (blockStr == 500) {
-            MelodySkyPlus.nukerTicks.setAbilityGrayMithril(MelodySkyPlus.nukerTicks.getAbilityGrayMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityGrayMithril();
+            melodySkyPlus$miningType = "AbilityGrayMithril";
           } else if (blockStr == 800) {
-            MelodySkyPlus.nukerTicks.setAbilityGreenMithril(MelodySkyPlus.nukerTicks.getAbilityGreenMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityGreenMithril();
+            melodySkyPlus$miningType = "AbilityGreenMithril";
           } else if (blockStr == 1500) {
-            MelodySkyPlus.nukerTicks.setAbilityBlueMithril(MelodySkyPlus.nukerTicks.getAbilityBlueMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityBlueMithril();
+            melodySkyPlus$miningType = "AbilityBlueMithril";
           } else if (blockStr == 2000) {
-            MelodySkyPlus.nukerTicks.setAbilityTitanium(MelodySkyPlus.nukerTicks.getAbilityTitanium() - 1);
+            tick = MelodySkyPlus.nukerTicks.getAbilityTitanium();
+            melodySkyPlus$miningType = "AbilityTitanium";
           }
         } else {
           if (blockStr == 500) {
-            MelodySkyPlus.nukerTicks.setGrayMithril(MelodySkyPlus.nukerTicks.getGrayMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getGrayMithril();
+            melodySkyPlus$miningType = "GrayMithril";
           } else if (blockStr == 800) {
-            MelodySkyPlus.nukerTicks.setGreenMithril(MelodySkyPlus.nukerTicks.getGreenMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getGreenMithril();
+            melodySkyPlus$miningType = "GreenMithril";
           } else if (blockStr == 1500) {
-            MelodySkyPlus.nukerTicks.setBlueMithril(MelodySkyPlus.nukerTicks.getBlueMithril() - 1);
+            tick = MelodySkyPlus.nukerTicks.getBlueMithril();
+            melodySkyPlus$miningType = "BlueMithril";
           } else if (blockStr == 2000) {
-            MelodySkyPlus.nukerTicks.setTitanium(MelodySkyPlus.nukerTicks.getTitanium() - 1);
+            tick = MelodySkyPlus.nukerTicks.getTitanium();
+            melodySkyPlus$miningType = "Titanium";
           }
         }
-      }
 
-      int tick = 15;
-      if (melodySkyPlus$pickaxeAbility) {
-        if (blockStr == 500) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityGrayMithril();
-          melodySkyPlus$miningType = "AbilityGrayMithril";
-        } else if (blockStr == 800) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityGreenMithril();
-          melodySkyPlus$miningType = "AbilityGreenMithril";
-        } else if (blockStr == 1500) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityBlueMithril();
-          melodySkyPlus$miningType = "AbilityBlueMithril";
-        } else if (blockStr == 2000) {
-          tick = MelodySkyPlus.nukerTicks.getAbilityTitanium();
-          melodySkyPlus$miningType = "AbilityTitanium";
+        tick = (int) (tick + shiftTick.getValue());
+        if (tick < 4) {
+          tick = 4;
         }
-      } else {
-        if (blockStr == 500) {
-          tick = MelodySkyPlus.nukerTicks.getGrayMithril();
-          melodySkyPlus$miningType = "GrayMithril";
-        } else if (blockStr == 800) {
-          tick = MelodySkyPlus.nukerTicks.getGreenMithril();
-          melodySkyPlus$miningType = "GreenMithril";
-        } else if (blockStr == 1500) {
-          tick = MelodySkyPlus.nukerTicks.getBlueMithril();
-          melodySkyPlus$miningType = "BlueMithril";
-        } else if (blockStr == 2000) {
-          tick = MelodySkyPlus.nukerTicks.getTitanium();
-          melodySkyPlus$miningType = "Titanium";
-        }
-      }
 
-      tick = (int) (tick + shiftTick.getValue());
-      if (tick < 4) {
-        tick = 4;
+        MelodySkyPlus.nukerTicks.setCurrentTicks(tick);
+        cir.setReturnValue(tick);
+        cir.cancel();
       }
-
-      MelodySkyPlus.nukerTicks.setCurrentTicks(tick);
-      cir.setReturnValue(tick);
-      cir.cancel();
     }
   }
 
   private int melodySkyPlus$getBlockStr(BlockPos blockPos) {
-    Minecraft mc = Minecraft.getMinecraft();
-    IBlockState ibs = mc.theWorld.getBlockState(blockPos);
-    if (ibs != null && ibs.getBlock() != Blocks.air) {
-      Block block = ibs.getBlock();
-      if (block instanceof BlockColored) {
-        int meta = block.getMetaFromState(ibs);
-        EnumDyeColor color = EnumDyeColor.byMetadata(meta);
-        if (color == EnumDyeColor.GRAY) {
-          return 500;
+    if (AntiBug.isBugRemoved()) {
+      Minecraft mc = Minecraft.getMinecraft();
+      IBlockState ibs = mc.theWorld.getBlockState(blockPos);
+      if (ibs != null && ibs.getBlock() != Blocks.air) {
+        Block block = ibs.getBlock();
+        if (block instanceof BlockColored) {
+          int meta = block.getMetaFromState(ibs);
+          EnumDyeColor color = EnumDyeColor.byMetadata(meta);
+          if (color == EnumDyeColor.GRAY) {
+            return 500;
+          }
+
+          if (color == EnumDyeColor.CYAN) {
+            return 500;
+          }
+
+          if (color == EnumDyeColor.LIGHT_BLUE) {
+            return 1500;
+          }
+        } else {
+          if (block instanceof BlockPrismarine) {
+            return 800;
+          }
+
+          if (ibs.getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) {
+            return 2000;
+          }
         }
 
-        if (color == EnumDyeColor.CYAN) {
-          return 500;
-        }
-
-        if (color == EnumDyeColor.LIGHT_BLUE) {
-          return 1500;
-        }
+        return 2000;
       } else {
-        if (block instanceof BlockPrismarine) {
-          return 800;
-        }
+        return 2000;
 
-        if (ibs.getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) {
-          return 2000;
-        }
       }
-
-      return 2000;
-    } else {
-      return 2000;
     }
+    return Integer.MIN_VALUE;
   }
 
   @Inject(method = "checkBroken", remap = false,
@@ -330,61 +344,68 @@ public abstract class MithrilNukerMixin {
       at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
   )
   public Object checkBrokenToRemoveAdd(Object e) {
-    if (melodySkyPlus$adaptive.getValue()) {
-      if (e instanceof BlockPos) {
-        int blockStr = melodySkyPlus$getBlockStr((BlockPos) e);
+    if (AntiBug.isBugRemoved()) {
+      if (melodySkyPlus$adaptive.getValue()) {
+        if (e instanceof BlockPos) {
+          int blockStr = melodySkyPlus$getBlockStr((BlockPos) e);
 
-        if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
-          // 至少保证这个是稳定的
-          melodySkyPlus$missedBlocks++;
-          if (melodySkyPlus$trySlowerBlocks.getValue() <= melodySkyPlus$missedBlocks) { // 如果已经多次这样
-            melodySkyPlus$missedBlocks = 0; // 重置状态
-            if (melodySkyPlus$pickaxeAbility) {
-              if (blockStr == 500) {
-                MelodySkyPlus.nukerTicks.setAbilityGrayMithril(MelodySkyPlus.nukerTicks.getAbilityGrayMithril() + 1);
-              } else if (blockStr == 800) {
-                MelodySkyPlus.nukerTicks.setAbilityGreenMithril(MelodySkyPlus.nukerTicks.getAbilityGreenMithril() + 1);
-              } else if (blockStr == 1500) {
-                MelodySkyPlus.nukerTicks.setAbilityBlueMithril(MelodySkyPlus.nukerTicks.getAbilityBlueMithril() + 1);
-              } else if (blockStr == 2000) {
-                MelodySkyPlus.nukerTicks.setAbilityTitanium(MelodySkyPlus.nukerTicks.getAbilityTitanium() + 1);
-              }
-            } else {
-              if (blockStr == 500) {
-                MelodySkyPlus.nukerTicks.setGrayMithril(MelodySkyPlus.nukerTicks.getGrayMithril() + 1);
-              } else if (blockStr == 800) {
-                MelodySkyPlus.nukerTicks.setGreenMithril(MelodySkyPlus.nukerTicks.getGreenMithril() + 1);
-              } else if (blockStr == 1500) {
-                MelodySkyPlus.nukerTicks.setBlueMithril(MelodySkyPlus.nukerTicks.getBlueMithril() + 1);
-              } else if (blockStr == 2000) {
-                MelodySkyPlus.nukerTicks.setTitanium(MelodySkyPlus.nukerTicks.getTitanium() + 1);
+          if (melodySkyPlus$dPrevPickaxeAblity == melodySkyPlus$prevPickaxeAbility && melodySkyPlus$prevPickaxeAbility == melodySkyPlus$pickaxeAbility && Minecraft.getMinecraft().thePlayer.onGround) {
+            // 至少保证这个是稳定的
+            melodySkyPlus$missedBlocks++;
+            if (melodySkyPlus$trySlowerBlocks.getValue() <= melodySkyPlus$missedBlocks) { // 如果已经多次这样
+              melodySkyPlus$missedBlocks = 0; // 重置状态
+              if (melodySkyPlus$pickaxeAbility) {
+                if (blockStr == 500) {
+                  MelodySkyPlus.nukerTicks.setAbilityGrayMithril(MelodySkyPlus.nukerTicks.getAbilityGrayMithril() + 1);
+                } else if (blockStr == 800) {
+                  MelodySkyPlus.nukerTicks.setAbilityGreenMithril(MelodySkyPlus.nukerTicks.getAbilityGreenMithril() + 1);
+                } else if (blockStr == 1500) {
+                  MelodySkyPlus.nukerTicks.setAbilityBlueMithril(MelodySkyPlus.nukerTicks.getAbilityBlueMithril() + 1);
+                } else if (blockStr == 2000) {
+                  MelodySkyPlus.nukerTicks.setAbilityTitanium(MelodySkyPlus.nukerTicks.getAbilityTitanium() + 1);
+                }
+              } else {
+                if (blockStr == 500) {
+                  MelodySkyPlus.nukerTicks.setGrayMithril(MelodySkyPlus.nukerTicks.getGrayMithril() + 1);
+                } else if (blockStr == 800) {
+                  MelodySkyPlus.nukerTicks.setGreenMithril(MelodySkyPlus.nukerTicks.getGreenMithril() + 1);
+                } else if (blockStr == 1500) {
+                  MelodySkyPlus.nukerTicks.setBlueMithril(MelodySkyPlus.nukerTicks.getBlueMithril() + 1);
+                } else if (blockStr == 2000) {
+                  MelodySkyPlus.nukerTicks.setTitanium(MelodySkyPlus.nukerTicks.getTitanium() + 1);
+                }
               }
             }
           }
         }
       }
-    }
 
+      return e;
+    }
     return e;
   }
 
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
-    if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
-      if (!HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
-        HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(true);
+    if (AntiBug.isBugRemoved()) {
+      if (melodySkyPlus$advanced.getValue() && melodySkyPlus$adaptive.getValue()) {
+        if (!HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
+          HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(true);
+        }
       }
+      melodySkyPlus$tryFasterTimer.resume();
+      AutoRubyTimer.timer.reset();
     }
-    melodySkyPlus$tryFasterTimer.resume();
-    AutoRubyTimer.timer.reset();
   }
 
   @Inject(method = "onDisable", at = @At("HEAD"), remap = false)
   public void onDisable(CallbackInfo ci) {
-    if (HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
-      HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(false);
+    if (AntiBug.isBugRemoved()) {
+      if (HUDManager.getInstance().getByClass(MithrilTick.class).isEnabled()) {
+        HUDManager.getInstance().getByClass(MithrilTick.class).setEnabled(false);
+      }
+      melodySkyPlus$tryFasterTimer.pause();
+      AutoRubyTimer.timer.pause();
     }
-    melodySkyPlus$tryFasterTimer.pause();
-    AutoRubyTimer.timer.pause();
   }
 }

@@ -4,6 +4,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.path.EventHook;
 import net.mirolls.melodyskyplus.path.exec.AbilityExec;
 import net.mirolls.melodyskyplus.path.exec.PathExec;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class SmartyPathFinder extends Module {
+public class SmartyPathFinder extends ModulePlus {
   public static SmartyPathFinder INSTANCE;
   public final Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public final Numbers<Double> aotvSlot = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
