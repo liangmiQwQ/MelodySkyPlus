@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.StringUtils;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -85,12 +86,14 @@ public class AutoRubyMixin {
 
   private void melodySkyPlus$switchToJasper() {
     Minecraft mc = Minecraft.getMinecraft();
-    if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
-      for (int i = 0; i < 9; ++i) {
-        ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
-        if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
-          mc.thePlayer.inventory.currentItem = i;
-          break;
+    if (AntiBug.isBugRemoved()) {
+      if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
+        for (int i = 0; i < 9; ++i) {
+          ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
+          if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
+            mc.thePlayer.inventory.currentItem = i;
+            break;
+          }
         }
       }
     }
@@ -98,43 +101,51 @@ public class AutoRubyMixin {
 
   @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
-    melodySkyPlus$reactingTick = -1;
+    if (AntiBug.isBugRemoved()) {
+      melodySkyPlus$reactingTick = -1;
 
-    melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
-      if (AutoRuby.getINSTANCE() != null) {
-        melodySkyPlus$heatLimit.setEnabled(val);
-      }
-    });
+      melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {
+        if (AutoRuby.getINSTANCE() != null) {
+          melodySkyPlus$heatLimit.setEnabled(val);
+        }
+      });
 
-    Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
+      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
 
-    returnValues[returnValues.length - 3] = melodySkyPlus$autoHeat;
-    returnValues[returnValues.length - 2] = melodySkyPlus$heatLimit;
-    returnValues[returnValues.length - 1] = MelodySkyPlus.jasperUsed.autoUseJasper;
+      returnValues[returnValues.length - 3] = melodySkyPlus$autoHeat;
+      returnValues[returnValues.length - 2] = melodySkyPlus$heatLimit;
+      returnValues[returnValues.length - 1] = MelodySkyPlus.jasperUsed.autoUseJasper;
 
-    return returnValues;
+      return returnValues;
+    } else {
+      return originalValues;
+    }
   }
 
   // Mojang极其恶心的混淆了他的代码 导致我无法使用Redirect精准定位 只能使用恶心Inject处理currentItem
   @Inject(method = "idk", remap = false, at = @At("TAIL"))
   private void idkTail(EventTick event, CallbackInfo ci) {
-    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
-      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
-        // 如果新的currentItem被设置为0了 但是之前不是0
-        // 则手动替换到jasper钻头
-        melodySkyPlus$switchToJasper();
+    if (AntiBug.isBugRemoved()) {
+      if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+        if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
+          // 如果新的currentItem被设置为0了 但是之前不是0
+          // 则手动替换到jasper钻头
+          melodySkyPlus$switchToJasper();
+        }
       }
     }
   }
 
   @Inject(method = "etherWarp", remap = false, at = @At("TAIL"))
   private void etherWarpTail(BlockPos pos, CallbackInfo ci) {
-    if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
-      MelodySkyPlus.LOGGER.info("etherWarp executed");
-      if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
-        // 如果新的currentItem被设置为0了 但是之前不是0
-        // 则手动替换到jasper钻头
-        melodySkyPlus$switchToJasper();
+    if (AntiBug.isBugRemoved()) {
+      if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+        MelodySkyPlus.LOGGER.info("etherWarp executed");
+        if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
+          // 如果新的currentItem被设置为0了 但是之前不是0
+          // 则手动替换到jasper钻头
+          melodySkyPlus$switchToJasper();
+        }
       }
     }
   }
@@ -142,20 +153,28 @@ public class AutoRubyMixin {
   @SuppressWarnings("unchecked")
   @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
   private Option initYogToMobOption(String name, Object enabled, IValAction[] actions) {
-    String newName = name.replace("Yog", "Mob");
-    return new Option(newName, enabled, actions);
+    if (AntiBug.isBugRemoved()) {
+      String newName = name.replace("Yog", "Mob");
+      return new Option(newName, enabled, actions);
+    } else {
+      return new Option(name, enabled, actions);
+    }
   }
 
   @SuppressWarnings("unchecked")
   @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
   private Numbers initYogToMobNumber(String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
-    String newName = name.replace("Yog", "Mob");
+    if (AntiBug.isBugRemoved()) {
+      String newName = name.replace("Yog", "Mob");
 
-    Number newMax = max;
-    if (name.equals("YogRange")) {
-      newMax = 10.0;
+      Number newMax = max;
+      if (name.equals("YogRange")) {
+        newMax = 10.0;
+      }
+      return new Numbers(newName, value, min, newMax, inc, action);
+    } else {
+      return new Numbers(name, value, min, max, inc, action);
     }
-    return new Numbers(newName, value, min, newMax, inc, action);
   }
 
   /**
@@ -165,28 +184,40 @@ public class AutoRubyMixin {
   @Overwrite
   private void loadYogs() {
     Minecraft mc = Minecraft.getMinecraft();
-    yogs.clear();
 
-    for (Entity entity : mc.theWorld.loadedEntityList) {
-      if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityLivingBase && (double) mc.thePlayer.getDistanceToEntity(entity) < yogRange.getValue()) {
-        if (entity instanceof EntityMagmaCube || entity instanceof EntityIronGolem) {
-          this.yogs.add(entity);
-        }
+    if (AntiBug.isBugRemoved()) {
+      yogs.clear();
+      for (Entity entity : mc.theWorld.loadedEntityList) {
+        if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityLivingBase && (double) mc.thePlayer.getDistanceToEntity(entity) < yogRange.getValue()) {
+          if (entity instanceof EntityMagmaCube || entity instanceof EntityIronGolem) {
+            this.yogs.add(entity);
+          }
 
-        if (entity instanceof EntityPlayer) {
-          String name = entity.getName().toLowerCase();
+          if (entity instanceof EntityPlayer) {
+            String name = entity.getName().toLowerCase();
 
-          if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && !PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
-            // TODO 研究此处mithril的名称
-            if (name.contains("team treasurite")) {
-              this.yogs.add(entity);
+            if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && !PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+              // TODO 研究此处mithril的名称
+              if (name.contains("team treasurite")) {
+                this.yogs.add(entity);
+              }
             }
           }
         }
       }
-    }
 
-    this.yogs.sort(Comparator.comparingDouble((sb) -> mc.thePlayer.getDistanceToEntity(sb)));
+      this.yogs.sort(Comparator.comparingDouble((sb) -> mc.thePlayer.getDistanceToEntity(sb)));
+    } else {
+      this.yogs.clear();
+
+      for (Entity entity : mc.theWorld.loadedEntityList) {
+        if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityMagmaCube && (double) mc.thePlayer.getDistanceToEntity(entity) < this.yogRange.getValue()) {
+          this.yogs.add((EntityMagmaCube) entity);
+        }
+      }
+
+      this.yogs.sort(Comparator.comparingDouble((sb) -> (double) mc.thePlayer.getDistanceToEntity(sb)));
+    }
   }
 
   /**
@@ -197,49 +228,96 @@ public class AutoRubyMixin {
   @Overwrite
   private void onKillYog(EventPreUpdate event) {
     Minecraft mc = Minecraft.getMinecraft();
-    if (rcKill.getValue()) {
-      this.loadYogs();
-    } else if (!this.yogs.isEmpty()) {
-      this.yogs.clear();
-    }
-
-    if (!this.yogs.isEmpty()) {
-      Entity entity = this.yogs.get(0);
-      if (this.started) {
-        NotificationPublisher.queue("AutoRuby", "Mob Detected, Trying to ATTACK it.", NotificationType.WARN, 3000);
-        this.started = false;
-        this.killingYogs = true;
-        this.attackTimer.reset();
+    if (AntiBug.isBugRemoved()) {
+      if (rcKill.getValue()) {
+        this.loadYogs();
+      } else if (!this.yogs.isEmpty()) {
+        this.yogs.clear();
       }
 
-      if (entity != null && entity.isEntityAlive() && killingYogs) {
-        mc.thePlayer.inventory.currentItem = weaponSlot.getValue().intValue() - 1;
-        if (rcKill.getValue()) {
-          if (faceDown.getValue()) {
-            event.setPitch(90.0F);
-            if (this.attackTimer.hasReached(180.0)) {
-              Client.rightClick();
-              this.attackTimer.reset();
-            }
-          } else {
-            if (aim.getValue()) {
-              float[] r = RotationUtil.getPredictedRotations((EntityLivingBase) entity);
-              event.setYaw(r[0]);
-              event.setPitch(r[1]);
-            }
+      if (!this.yogs.isEmpty()) {
+        Entity entity = this.yogs.get(0);
+        if (this.started) {
+          NotificationPublisher.queue("AutoRuby", "Mob Detected, Trying to ATTACK it.", NotificationType.WARN, 3000);
+          this.started = false;
+          this.killingYogs = true;
+          this.attackTimer.reset();
+        }
 
-            if (this.attackTimer.hasReached(180.0)) {
-              Client.rightClick();
-              this.attackTimer.reset();
+        if (entity != null && entity.isEntityAlive() && killingYogs) {
+          mc.thePlayer.inventory.currentItem = weaponSlot.getValue().intValue() - 1;
+          if (rcKill.getValue()) {
+            if (faceDown.getValue()) {
+              event.setPitch(90.0F);
+              if (this.attackTimer.hasReached(180.0)) {
+                Client.rightClick();
+                this.attackTimer.reset();
+              }
+            } else {
+              if (aim.getValue()) {
+                float[] r = RotationUtil.getPredictedRotations((EntityLivingBase) entity);
+                event.setYaw(r[0]);
+                event.setPitch(r[1]);
+              }
+
+              if (this.attackTimer.hasReached(180.0)) {
+                Client.rightClick();
+                this.attackTimer.reset();
+              }
             }
           }
         }
+      } else if (this.killingYogs) {
+        NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
+        this.started = true;
+        this.killingYogs = false;
+        this.attackTimer.reset();
       }
-    } else if (this.killingYogs) {
-      NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
-      this.started = true;
-      this.killingYogs = false;
-      this.attackTimer.reset();
+    } else {
+      if ((Boolean) this.rcKill.getValue()) {
+        this.loadYogs();
+      } else if (!this.yogs.isEmpty()) {
+        this.yogs.clear();
+      }
+
+      if (!this.yogs.isEmpty()) {
+        EntityMagmaCube mcube = (EntityMagmaCube) this.yogs.get(0);
+        if (this.started) {
+          NotificationPublisher.queue("AutoRuby", "Yog Detected, Trying to FUCK it.", NotificationType.WARN, 3000);
+          this.started = false;
+          this.killingYogs = true;
+          this.attackTimer.reset();
+        }
+
+        if (mcube != null && mcube.isEntityAlive() && this.killingYogs) {
+          mc.thePlayer.inventory.currentItem = this.weaponSlot.getValue().intValue() - 1;
+          if ((Boolean) this.rcKill.getValue()) {
+            if ((Boolean) this.faceDown.getValue()) {
+              event.setPitch(90.0F);
+              if (this.attackTimer.hasReached((double) 180.0F)) {
+                Client.rightClick();
+                this.attackTimer.reset();
+              }
+            } else {
+              if ((Boolean) this.aim.getValue()) {
+                float[] r = RotationUtil.getPredictedRotations(mcube);
+                event.setYaw(r[0]);
+                event.setPitch(r[1]);
+              }
+
+              if (this.attackTimer.hasReached((double) 180.0F)) {
+                Client.rightClick();
+                this.attackTimer.reset();
+              }
+            }
+          }
+        }
+      } else if (this.killingYogs) {
+        NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
+        this.started = true;
+        this.killingYogs = false;
+        this.attackTimer.reset();
+      }
     }
 
   }
@@ -247,174 +325,186 @@ public class AutoRubyMixin {
 
   @Inject(method = "onEnable", at = @At("HEAD"), remap = false)
   public void onEnable(CallbackInfo ci) {
-    melodySkyPlus$reactingTick = -1;
+    if (AntiBug.isBugRemoved()) {
+      melodySkyPlus$reactingTick = -1;
+    }
   }
 
 
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
   private void idk(EventTick event, CallbackInfo ci) {
-    Minecraft mc = Minecraft.getMinecraft();
+    if (AntiBug.isBugRemoved()) {
+      Minecraft mc = Minecraft.getMinecraft();
 
-    if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
-      Objects.requireNonNull(Failsafe.getINSTANCE()).lastTeleport = System.currentTimeMillis();
-    } else {
-      // 如果没有在进行TP
-      if (melodySkyPlus$autoHeat.getValue()) {
-        if (AutoRuby.getINSTANCE().started) {
-          // 主要部分 处理AutoHeat
-          List<String> scoreBoard = ScoreboardUtils.getScoreboard();
+      if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
+        Objects.requireNonNull(Failsafe.getINSTANCE()).lastTeleport = System.currentTimeMillis();
+      } else {
+        // 如果没有在进行TP
+        if (melodySkyPlus$autoHeat.getValue()) {
+          if (AutoRuby.getINSTANCE().started) {
+            // 主要部分 处理AutoHeat
+            List<String> scoreBoard = ScoreboardUtils.getScoreboard();
 
-          int heat = 0;
-          for (String line : scoreBoard) {
-            if (line.toLowerCase().contains("heat:")) {
-              heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
-              break;
+            int heat = 0;
+            for (String line : scoreBoard) {
+              if (line.toLowerCase().contains("heat:")) {
+                heat = melodySkyPlus$getHeat(line.replaceAll(".*Heat: §[a-f0-9]", ""));
+                break;
+              }
             }
-          }
 
-          if (heat >= melodySkyPlus$heatLimit.getValue() && melodySkyPlus$reactingTick == -1) {
-            Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
-            if (AutoRuby.getINSTANCE().started) {
-              melodySkyPlus$reactingTick = 0;
-              AutoRuby.getINSTANCE().started = false;
-              MelodySkyPlus.jasperUsed.setJasperUsed(false);
+            if (heat >= melodySkyPlus$heatLimit.getValue() && melodySkyPlus$reactingTick == -1) {
+              Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
+              if (AutoRuby.getINSTANCE().started) {
+                melodySkyPlus$reactingTick = 0;
+                AutoRuby.getINSTANCE().started = false;
+                MelodySkyPlus.jasperUsed.setJasperUsed(false);
+              }
             }
           }
         }
       }
-    }
 
-    if (melodySkyPlus$reactingTick > -1) {
-      melodySkyPlus$reactingTick++;
+      if (melodySkyPlus$reactingTick > -1) {
+        melodySkyPlus$reactingTick++;
 
-      if (melodySkyPlus$reactingTick == 5) {
-        for (int i = 0; i < 9; ++i) {
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+        if (melodySkyPlus$reactingTick == 5) {
+          for (int i = 0; i < 9; ++i) {
+            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+            if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
+              melodySkyPlus$prevItem = mc.thePlayer.inventory.currentItem;
+              mc.thePlayer.inventory.currentItem = i;
+            }
+          }
+        } else if (melodySkyPlus$reactingTick == 15) {
+          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+
           if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
-            melodySkyPlus$prevItem = mc.thePlayer.inventory.currentItem;
-            mc.thePlayer.inventory.currentItem = i;
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+          } else {
+            Helper.sendMessage("Missing Water Bottle in hotbar.");
+            melodySkyPlus$reactingTick = -1;
+            AutoRuby.getINSTANCE().started = true;
           }
-        }
-      } else if (melodySkyPlus$reactingTick == 15) {
-        ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+        } else if (melodySkyPlus$reactingTick == 160) {
 
-        if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-        } else {
-          Helper.sendMessage("Missing Water Bottle in hotbar.");
-          melodySkyPlus$reactingTick = -1;
-          AutoRuby.getINSTANCE().started = true;
-        }
-      } else if (melodySkyPlus$reactingTick == 160) {
-
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-      } else if (melodySkyPlus$reactingTick == 170) {
-        for (int i = 0; i < 9; ++i) {
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-          if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
-            mc.thePlayer.inventory.currentItem = i;
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+        } else if (melodySkyPlus$reactingTick == 170) {
+          for (int i = 0; i < 9; ++i) {
+            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+            if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
+              mc.thePlayer.inventory.currentItem = i;
+            }
           }
-        }
-      } else if (melodySkyPlus$reactingTick == 180) {
-        ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
-        if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
-          mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
-        } else {
-          Helper.sendMessage("Missing AbiPhone in hotbar.");
-          melodySkyPlus$reactingTick = -1;
-          AutoRuby.getINSTANCE().started = true;
-        }
-      } else if (melodySkyPlus$reactingTick == 190) {
-        GuiScreen gui = mc.currentScreen;
-        if (gui instanceof GuiChest) {
-          Container container = ((GuiChest) gui).inventorySlots;
-          if (container instanceof ContainerChest) {
-            String chestName = this.melodySkyPlus$getGuiName(gui);
-            if (chestName.startsWith("Abiphone")) {
-              for (Slot slot : container.inventorySlots) {
-                ItemStack item = slot.getStack(); // 获取item
-                if (StringUtils.stripControlCodes(item.getDisplayName()).equals("Alchemist")) {
-                  // 找到对应的人了
-                  melodySkyPlus$clickSlot(slot.slotNumber, 0, 0);
-                  break;
+        } else if (melodySkyPlus$reactingTick == 180) {
+          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+          if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
+            mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
+          } else {
+            Helper.sendMessage("Missing AbiPhone in hotbar.");
+            melodySkyPlus$reactingTick = -1;
+            AutoRuby.getINSTANCE().started = true;
+          }
+        } else if (melodySkyPlus$reactingTick == 190) {
+          GuiScreen gui = mc.currentScreen;
+          if (gui instanceof GuiChest) {
+            Container container = ((GuiChest) gui).inventorySlots;
+            if (container instanceof ContainerChest) {
+              String chestName = this.melodySkyPlus$getGuiName(gui);
+              if (chestName.startsWith("Abiphone")) {
+                for (Slot slot : container.inventorySlots) {
+                  ItemStack item = slot.getStack(); // 获取item
+                  if (StringUtils.stripControlCodes(item.getDisplayName()).equals("Alchemist")) {
+                    // 找到对应的人了
+                    melodySkyPlus$clickSlot(slot.slotNumber, 0, 0);
+                    break;
+                  }
                 }
               }
             }
+          } else {
+            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
           }
-        } else {
-          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
-        }
-      } else if (melodySkyPlus$reactingTick == 450) {
-        // 卖水
-        GuiScreen gui = mc.currentScreen;
-        if (gui instanceof GuiChest) {
-          Container container = ((GuiChest) gui).inventorySlots;
-          if (container instanceof ContainerChest) {
-            String chestName = this.melodySkyPlus$getGuiName(gui);
-            if (chestName.startsWith("Alchemist")) {
-              for (int i = 0; i < 9; ++i) {
-                ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-                if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
-                  melodySkyPlus$clickSlot(i + 81, 0, 0);
+        } else if (melodySkyPlus$reactingTick == 450) {
+          // 卖水
+          GuiScreen gui = mc.currentScreen;
+          if (gui instanceof GuiChest) {
+            Container container = ((GuiChest) gui).inventorySlots;
+            if (container instanceof ContainerChest) {
+              String chestName = this.melodySkyPlus$getGuiName(gui);
+              if (chestName.startsWith("Alchemist")) {
+                for (int i = 0; i < 9; ++i) {
+                  ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+                  if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
+                    melodySkyPlus$clickSlot(i + 81, 0, 0);
+                  }
                 }
               }
             }
+          } else {
+            mc.thePlayer.closeScreen();
+            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
           }
-        } else {
-          mc.thePlayer.closeScreen();
-          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
-        }
-      } else if (melodySkyPlus$reactingTick == 470) {
-        GuiScreen gui = mc.currentScreen;
-        if (gui instanceof GuiChest) {
-          Container container = ((GuiChest) gui).inventorySlots;
-          if (container instanceof ContainerChest) {
-            String chestName = this.melodySkyPlus$getGuiName(gui);
-            if (chestName.startsWith("Alchemist")) {
-              for (Slot slot : container.inventorySlots) {
-                // 买水
-                ItemStack item = slot.getStack(); // 获取item
-                if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
-                  melodySkyPlus$clickSlot(slot.getSlotIndex(), 0, 0);
+        } else if (melodySkyPlus$reactingTick == 470) {
+          GuiScreen gui = mc.currentScreen;
+          if (gui instanceof GuiChest) {
+            Container container = ((GuiChest) gui).inventorySlots;
+            if (container instanceof ContainerChest) {
+              String chestName = this.melodySkyPlus$getGuiName(gui);
+              if (chestName.startsWith("Alchemist")) {
+                for (Slot slot : container.inventorySlots) {
                   // 买水
-                  break;
+                  ItemStack item = slot.getStack(); // 获取item
+                  if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
+                    melodySkyPlus$clickSlot(slot.getSlotIndex(), 0, 0);
+                    // 买水
+                    break;
+                  }
                 }
               }
             }
+          } else {
+            mc.thePlayer.closeScreen();
+            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
           }
-        } else {
+        } else if (melodySkyPlus$reactingTick == 490) {
           mc.thePlayer.closeScreen();
-          melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
+          Helper.sendMessage("Bought water and drank successfully");
+        } else if (melodySkyPlus$reactingTick == 510) {
+          mc.thePlayer.inventory.currentItem = melodySkyPlus$prevItem;
+          melodySkyPlus$reactingTick = -1;
+          AutoRuby.getINSTANCE().started = true;
         }
-      } else if (melodySkyPlus$reactingTick == 490) {
-        mc.thePlayer.closeScreen();
-        Helper.sendMessage("Bought water and drank successfully");
-      } else if (melodySkyPlus$reactingTick == 510) {
-        mc.thePlayer.inventory.currentItem = melodySkyPlus$prevItem;
-        melodySkyPlus$reactingTick = -1;
-        AutoRuby.getINSTANCE().started = true;
       }
     }
 
   }
 
   private int melodySkyPlus$getHeat(String input) {
-    Pattern pattern = Pattern.compile("^\\d+");
-    Matcher matcher = pattern.matcher(input.trim());
+    if (AntiBug.isBugRemoved()) {
+      Pattern pattern = Pattern.compile("^\\d+");
+      Matcher matcher = pattern.matcher(input.trim());
 
-    if (matcher.find()) {
-      return Integer.parseInt(matcher.group());
-    } else {
-      throw new IllegalArgumentException("Error: No target heat found");
+      if (matcher.find()) {
+        return Integer.parseInt(matcher.group());
+      } else {
+        throw new IllegalArgumentException("Error: No target heat found");
+      }
     }
+    return Integer.MIN_VALUE;
   }
 
   public String melodySkyPlus$getGuiName(GuiScreen gui) {
-    return gui instanceof GuiChest ? ((ContainerChest) ((GuiChest) gui).inventorySlots).getLowerChestInventory().getDisplayName().getUnformattedText() : "";
+    if (AntiBug.isBugRemoved()) {
+      return gui instanceof GuiChest ? ((ContainerChest) ((GuiChest) gui).inventorySlots).getLowerChestInventory().getDisplayName().getUnformattedText() : "";
+    }
+    return "";
   }
 
   private void melodySkyPlus$clickSlot(int slot, int button, int mode) {
-    Minecraft mc = Minecraft.getMinecraft();
-    mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, button, mode, mc.thePlayer);
+    if (AntiBug.isBugRemoved()) {
+      Minecraft mc = Minecraft.getMinecraft();
+      mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, button, mode, mc.thePlayer);
+    }
   }
 }
