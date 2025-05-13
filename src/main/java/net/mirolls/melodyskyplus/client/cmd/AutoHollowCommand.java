@@ -14,7 +14,13 @@ public class AutoHollowCommand extends Command {
   public String execute(String[] args) {
     AutoHollow autoHollow = Objects.requireNonNull(AutoHollow.getINSTANCE());
 
-    autoHollow.start();
+    if (args.length >= 1) {
+      if (args[0].toLowerCase().contains("start")) {
+        autoHollow.start();
+      } else if (args[0].toLowerCase().contains("stop")) {
+        autoHollow.clear();
+      }
+    }
     return null;
 
   }
