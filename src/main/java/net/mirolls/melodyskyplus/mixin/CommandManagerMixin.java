@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.client.cmd.AutoHollowCommand;
 import net.mirolls.melodyskyplus.client.cmd.SmartyPathFinderCommand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,6 +24,7 @@ public class CommandManagerMixin {
   public void init(CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
       this.commands.add(new SmartyPathFinderCommand());
+      this.commands.add(new AutoHollowCommand());
     }
   }
 }
