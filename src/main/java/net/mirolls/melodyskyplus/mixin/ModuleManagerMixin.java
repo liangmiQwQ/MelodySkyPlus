@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.MelodyPlusModules;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +28,8 @@ public class ModuleManagerMixin {
 
   @Inject(method = "init", remap = false, at = @At("RETURN"))
   public void initReturn(CallbackInfo ci) {
-    Objects.requireNonNull(SmartyPathFinder.getINSTANCE()).setEnabled(true);
+    if (AntiBug.isBugRemoved()) {
+      Objects.requireNonNull(SmartyPathFinder.getINSTANCE()).setEnabled(true);
+    }
   }
 }

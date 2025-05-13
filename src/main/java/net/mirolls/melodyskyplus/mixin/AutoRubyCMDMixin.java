@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.client.AntiBug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +15,7 @@ import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 public class AutoRubyCMDMixin {
   @Inject(method = "execute", at = @At("HEAD"), remap = false)
   public void execute(String[] args, CallbackInfoReturnable<String> cir) {
-    if (args.length >= 1) {
+    if (args.length >= 1 && AntiBug.isBugRemoved()) {
       if (args[0].toLowerCase().contains("adac") || args[0].toLowerCase().contains("ac")) {
         MelodySkyPlus.nukerTicks.reset();
         Helper.sendMessage("AutoRuby: Adaptive Mode Ticks Cleared.");

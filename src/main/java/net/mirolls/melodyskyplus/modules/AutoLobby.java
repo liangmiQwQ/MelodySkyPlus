@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.modules;
 
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
 import xyz.Melody.Event.value.Numbers;
@@ -8,12 +9,11 @@ import xyz.Melody.System.Managers.Skyblock.Area.Areas;
 import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.timer.TimerUtil;
-import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
 import java.util.Random;
 
-public class AutoLobby extends Module {
+public class AutoLobby extends ModulePlus {
   public final Option<Boolean> useWarpCn = new Option<>("/warp cn", true);
   public final Numbers<Double> minDay = new Numbers<>("MinDay", 0.0, 0.0, 18.0, 1.0);
   public final Numbers<Double> maxDay = new Numbers<>("MaxDay", 5.0, 0.0, 18.0, 1.0);

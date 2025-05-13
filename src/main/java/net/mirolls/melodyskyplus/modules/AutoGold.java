@@ -8,6 +8,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.utils.GoldUtils;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Client;
@@ -35,7 +36,7 @@ import java.util.*;
 
 import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
 
-public class AutoGold extends Module {
+public class AutoGold extends ModulePlus {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);

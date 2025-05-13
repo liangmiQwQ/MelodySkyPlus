@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.AutoGold;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,29 +20,39 @@ public class GoldNukerMixin {
 
   @Inject(method = "getBlock", remap = false, at = @At("RETURN"))
   public void getBlock(CallbackInfoReturnable<BlockPos> cir) {
-    if (cir.getReturnValue() == null) {
-      Objects.requireNonNull(AutoGold.getINSTANCE()).findGold();
+    if (AntiBug.isBugRemoved()) {
+      if (cir.getReturnValue() == null) {
+        Objects.requireNonNull(AutoGold.getINSTANCE()).findGold();
+      }
     }
   }
 
   @Inject(method = "destoryBlock", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;func_71038_i()V", remap = false))
   public void destoryBlock(EventPreUpdate event, CallbackInfo ci) {
-    lastSwingHandTick = nowTick;
+    if (AntiBug.isBugRemoved()) {
+      lastSwingHandTick = nowTick;
+    }
   }
 
   @Inject(method = "destoryBlock", remap = false, at = @At("HEAD"))
   public void onTick(EventPreUpdate event, CallbackInfo ci) {
-    nowTick++;
+    if (AntiBug.isBugRemoved()) {
+      nowTick++;
 
-    if (nowTick - lastSwingHandTick > 20) {
-      // 超过1秒没挖了
-      Objects.requireNonNull(AutoGold.getINSTANCE()).findGold();
+      if (nowTick - lastSwingHandTick > 20) {
+        // 超过1秒没挖了
+        Objects.requireNonNull(AutoGold.getINSTANCE()).findGold();
+      }
     }
   }
 
   @Inject(method = "onEnable", remap = false, at = @At("HEAD"))
   public void onEnable(CallbackInfo ci) {
-    nowTick = 0;
-    lastSwingHandTick = 0;
+    if (AntiBug.isBugRemoved()) {
+
+
+      nowTick = 0;
+      lastSwingHandTick = 0;
+    }
   }
 }

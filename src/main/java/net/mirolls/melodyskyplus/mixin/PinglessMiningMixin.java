@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.client.Minecraft;
+import net.mirolls.melodyskyplus.client.AntiBug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,26 +25,35 @@ public class PinglessMiningMixin {
 
   @Inject(method = "<init>", at = @At("RETURN"), remap = false)
   public void init(CallbackInfo ci) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method method = Module.class.getDeclaredMethod("addValues", Value[].class);
-    method.setAccessible(true);
-    method.invoke(this, (Object) new Value[]{melodySkyPlus$bps, melodySkyPlus$disableInAir});
+    if (AntiBug.isBugRemoved()) {
+      Method method = Module.class.getDeclaredMethod("addValues", Value[].class);
+      method.setAccessible(true);
+      method.invoke(this, (Object) new Value[]{melodySkyPlus$bps, melodySkyPlus$disableInAir});
+    }
   }
 
   @Inject(method = "tick", at = @At("HEAD"), cancellable = true, remap = false)
   public void tick(EventTick event, CallbackInfo ci) {
-    if (melodySkyPlus$disableInAir.getValue()) {
-      if (!Minecraft.getMinecraft().thePlayer.onGround) ci.cancel();
+    if (AntiBug.isBugRemoved()) {
+      if (melodySkyPlus$disableInAir.getValue()) {
+        if (!Minecraft.getMinecraft().thePlayer.onGround) ci.cancel();
+      }
     }
   }
 
   @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lxyz/Melody/Utils/timer/TimerUtil;hasReached(D)Z", remap = false), remap = false)
   public double tick(double milliseconds) {
-    return 1000 / melodySkyPlus$bps.getValue();
+    if (AntiBug.isBugRemoved()) {
+      return 1000 / melodySkyPlus$bps.getValue();
+    }
+    return 50.0F;
   }
 
 
   @Inject(method = "onRender", at = @At("HEAD"), cancellable = true, remap = false)
   public void onRender(EventRender3D event, CallbackInfo ci) {
-    if (!Minecraft.getMinecraft().thePlayer.onGround) ci.cancel();
+    if (AntiBug.isBugRemoved()) {
+      if (!Minecraft.getMinecraft().thePlayer.onGround) ci.cancel();
+    }
   }
 }
