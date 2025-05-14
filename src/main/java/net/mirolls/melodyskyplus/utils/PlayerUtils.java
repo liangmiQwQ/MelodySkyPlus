@@ -85,7 +85,14 @@ public class PlayerUtils {
       yaw1 = (yaw1 - (-180) + 180);
       diff = yaw1 - yaw2;
     }
-    
+
     return diff;
+  }
+
+  public static double distanceToPos(BlockPos pos) {
+    Vec3d center = Vec3d.ofCenter(pos);
+    Vec3d player = new Vec3d(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ);
+
+    return center.distanceTo(player);
   }
 }
