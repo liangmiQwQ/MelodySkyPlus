@@ -13,6 +13,7 @@ import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.Event.events.rendering.EventRender3D;
 import xyz.Melody.Event.value.Numbers;
+import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
@@ -37,9 +38,11 @@ public class AutoHollow extends ModulePlus {
   public int currentIndex;
   public List<BlockPos> stones = new ArrayList<>();
   public TimerUtil packetSendTimer = new TimerUtil();
+  public List<BlockPos> posesMined = new ArrayList<>();
 
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public Numbers<Double> aotvSold = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
+  public Option<Boolean> blatant = new Option<>("Blatant", false);
 
   public AutoHollow() {
     super("AutoHollow", ModuleType.Mining);
@@ -97,9 +100,33 @@ public class AutoHollow extends ModulePlus {
 
         if (packetSendTimer.hasReached(1000)) {
           stones = filterAir(stones);
-          Helper.sendMessage("Left Click Mined!");
-          clear();
+          stage = Stage.PACKET_MINE_FIRST;
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+        }
+      } else if (stage == Stage.PACKET_MINE_FIRST) {
+        if (!stones.isEmpty()) {
+          BlockPos pos = stones.get(0);
+
+          if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
+            Rotation rotation = RotationUtil.posToRotation(pos);
+
+            mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
+            mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
+
+            if (RotationUtil.isLookingAtBlock(pos)) {
+              if (!posesMined.contains(pos)) {
+                mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
+                posesMined.add(pos);
+              }
+              mc.thePlayer.swingItem();
+            }
+          } else {
+            Helper.sendMessage("Finished Packet Mine");
+            clear();
+          }
+        } else {
+          Helper.sendMessage("Start To Go To End");
+          stage = Stage.GO_TO_END;
         }
       }
     }
@@ -127,6 +154,7 @@ public class AutoHollow extends ModulePlus {
       }
 
       stones = filterAir(BlockUtils.getBlocksBetween(eyes, end));
+      posesMined.clear();
       started = true;
       stage = Stage.LEFT_CLICK_MINE;
       currentIndex = index;
@@ -147,7 +175,16 @@ public class AutoHollow extends ModulePlus {
     packetSendTimer.reset();
     started = false;
     stones.clear();
+    posesMined.clear();
     currentIndex = -1;
+  }
+
+  public void next() {
+    // 对比start 减少了stones的设置 并且started也变成了条件
+    if (started) {
+      stage = Stage.LEFT_CLICK_MINE;
+      packetSendTimer.reset().pause();
+    }
   }
 
   @Override
@@ -159,9 +196,11 @@ public class AutoHollow extends ModulePlus {
 
   public enum Stage {
     LEFT_CLICK_MINE,
-    PACKET_MINE,
+    PACKET_MINE_FIRST,
+    PACKET_MINE_SECOND,
     WALK,
-    FALLING
+    FALLING,
+    GO_TO_END,
   }
 }
 
