@@ -104,30 +104,10 @@ public class AutoHollow extends ModulePlus {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
         }
       } else if (stage == Stage.PACKET_MINE_FIRST) {
-        if (!stones.isEmpty()) {
-          BlockPos pos = stones.get(0);
-
-          if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
-            Rotation rotation = RotationUtil.posToRotation(pos);
-
-            mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
-            mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
-
-            if (RotationUtil.isLookingAtBlock(pos)) {
-              if (!posesMined.contains(pos)) {
-                mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
-                posesMined.add(pos);
-              }
-              mc.thePlayer.swingItem();
-            }
-          } else {
-            Helper.sendMessage("Finished Packet Mine");
-            clear();
-          }
-        } else {
-          Helper.sendMessage("Start To Go To End");
-          stage = Stage.GO_TO_END;
-        }
+        packetMine();
+      } else if (stage == Stage.WALK) {
+        // 暴力: 使用AOTV移动
+        // 非暴力: 走路过去(有一定风险)掉落
       }
     }
   }
@@ -136,6 +116,33 @@ public class AutoHollow extends ModulePlus {
   public void onSendPacket(ClientPacketEvent event) {
     if (event.packet instanceof C07PacketPlayerDigging) {
       packetSendTimer.reset();
+    }
+  }
+
+  public void packetMine() {
+    if (!stones.isEmpty()) {
+      BlockPos pos = stones.get(0);
+
+      if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
+        Rotation rotation = RotationUtil.posToRotation(pos);
+
+        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
+        mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
+
+        if (RotationUtil.isLookingAtBlock(pos)) {
+          if (!posesMined.contains(pos)) {
+            mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
+            posesMined.add(pos);
+          }
+          mc.thePlayer.swingItem();
+        }
+      } else {
+        Helper.sendMessage("Finished Packet Mine");
+        clear();
+      }
+    } else {
+      Helper.sendMessage("Start To Go To End");
+      stage = Stage.GO_TO_END;
     }
   }
 
