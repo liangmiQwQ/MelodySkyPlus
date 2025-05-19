@@ -27,13 +27,15 @@ public class EtherWarpUtils {
     layerMap.put(0, new HashSet<>());
     layerMap.get(0).add(new EtherWarpPos(end, null));
 
+    Set<BlockPos> allInBlock = getBlocksInArea(end, radius);
+
     for (int i = 1; i < layer; i++) { // 这里特意少做一层 最后直接用PlayerUtils.rayTrace获取
       // 每一层单独处理
       Set<EtherWarpPos> thisLayer = new HashSet<>();
 
       for (EtherWarpPos lastPos : layerMap.get(i - 1)) {
         // 面对上一层的所有点展开搜查
-        for (BlockPos pos : BlockPos.getAllInBox(end.add(-radius, -radius, -radius), end.add(radius, radius, radius))) {
+        for (BlockPos pos : allInBlock) {
           if (PlayerUtils.rayTrace(pos, lastPos.pos)) {
             // 存入当前层
             thisLayer.add(new EtherWarpPos(pos, lastPos));
@@ -67,6 +69,21 @@ public class EtherWarpUtils {
     } else {
       return currentPath;
     }
+  }
+
+  private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius) {
+    BlockPos player = PlayerUtils.getPlayerLocation();
+
+    int x = target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
+    int y = target.getY() - player.getY() / Math.abs(target.getY() - player.getY());
+    int z = target.getZ() - player.getZ() / Math.abs(target.getZ() - player.getZ());
+
+    Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
+    HashSet<BlockPos> set = new HashSet<>();
+    for (BlockPos pos : iterable) {
+      set.add(pos);
+    }
+    return set;
   }
 }
 
