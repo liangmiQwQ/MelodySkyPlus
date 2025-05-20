@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.utils;
 
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
 import java.util.*;
@@ -80,8 +81,15 @@ public class EtherWarpUtils {
 
     Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
     HashSet<BlockPos> set = new HashSet<>();
+
+    BlockStateStoreUtils store = new BlockStateStoreUtils();
     for (BlockPos pos : iterable) {
-      set.add(pos);
+      // 只有可到达的ether warp点
+      if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
+        if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+          set.add(pos);
+        }
+      }
     }
     return set;
   }
@@ -96,3 +104,5 @@ class EtherWarpPos {
     this.parent = parent;
   }
 }
+
+
