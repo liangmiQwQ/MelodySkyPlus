@@ -111,7 +111,7 @@ public class AutoHollow extends ModulePlus {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
         }
       } else if (stage == Stage.PACKET_MINE_FIRST) {
-        packetMine();
+        packetMine(Stage.WALK);
       } else if (stage == Stage.WALK) {
         // 暴力: 使用AOTV移动
         // 非暴力: 走路过去
@@ -143,7 +143,7 @@ public class AutoHollow extends ModulePlus {
     }
   }
 
-  public void packetMine() {
+  public void packetMine(Stage nextStage) {
     if (!stones.isEmpty()) {
       BlockPos pos = stones.get(0);
 
@@ -161,11 +161,9 @@ public class AutoHollow extends ModulePlus {
           mc.thePlayer.swingItem();
         }
       } else {
-        Helper.sendMessage("Finished Packet Mine");
-        clear();
+        stage = nextStage;
       }
     } else {
-      Helper.sendMessage("Start To Go To End");
       stage = Stage.GO_TO_END;
     }
   }

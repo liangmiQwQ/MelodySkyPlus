@@ -125,7 +125,7 @@ public class AutoRubyMixin {
   // Mojang极其恶心的混淆了他的代码 导致我无法使用Redirect精准定位 只能使用恶心Inject处理currentItem
   @Inject(method = "idk", remap = false, at = @At("TAIL"))
   private void idkTail(EventTick event, CallbackInfo ci) {
-    if (AntiBug.isBugRemoved()) {
+    if (AntiBug.isBugRemoved() && started) {
       if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
         if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
           // 如果新的currentItem被设置为0了 但是之前不是0
@@ -138,7 +138,7 @@ public class AutoRubyMixin {
 
   @Inject(method = "etherWarp", remap = false, at = @At("TAIL"))
   private void etherWarpTail(BlockPos pos, CallbackInfo ci) {
-    if (AntiBug.isBugRemoved()) {
+    if (AntiBug.isBugRemoved() && started) {
       if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
         MelodySkyPlus.LOGGER.info("etherWarp executed");
         if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
