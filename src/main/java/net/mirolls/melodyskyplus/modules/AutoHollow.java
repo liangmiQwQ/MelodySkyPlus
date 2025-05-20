@@ -7,7 +7,9 @@ import net.minecraft.util.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.event.ClientPacketEvent;
+import net.mirolls.melodyskyplus.utils.BlockStateStoreUtils;
 import net.mirolls.melodyskyplus.utils.BlockUtils;
+import net.mirolls.melodyskyplus.utils.EtherWarpUtils;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
@@ -17,6 +19,7 @@ import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
+import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.render.RenderUtil;
@@ -37,6 +40,7 @@ public class AutoHollow extends ModulePlus {
   public boolean started = false;
   public int currentIndex;
   public List<BlockPos> stones = new ArrayList<>();
+  public List<BlockPos> etherWarpPoints = new ArrayList<>();
   public TimerUtil packetSendTimer = new TimerUtil();
   public List<BlockPos> posesMined = new ArrayList<>();
 
@@ -74,6 +78,9 @@ public class AutoHollow extends ModulePlus {
       for (BlockPos pos : stones) {
         RenderUtil.drawFullBlockESP(pos, new Color(8, 125, 13, 40), event.getPartialTicks());
       }
+      for (BlockPos pos : etherWarpPoints) {
+        RenderUtil.drawFullBlockESP(pos, new Color(101, 4, 131, 108), event.getPartialTicks());
+      }
     }
   }
 
@@ -107,7 +114,24 @@ public class AutoHollow extends ModulePlus {
         packetMine();
       } else if (stage == Stage.WALK) {
         // 暴力: 使用AOTV移动
-        // 非暴力: 走路过去(有一定风险)掉落
+        // 非暴力: 走路过去
+
+        BlockStateStoreUtils store = new BlockStateStoreUtils();
+        BlockPos target = PlayerUtils.getPlayerLocation();
+
+        for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
+          if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
+            if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+              if (MathUtil.distanceToPos(target, stones.get(0)) > MathUtil.distanceToPos(pos, stones.get(0))) {
+                target = pos;
+              }
+            }
+          }
+        }
+
+        if (blatant.getValue()) {
+          etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 5, 10);
+        }
       }
     }
   }

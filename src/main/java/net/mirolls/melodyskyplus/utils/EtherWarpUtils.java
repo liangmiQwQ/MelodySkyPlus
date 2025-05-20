@@ -7,28 +7,31 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class EtherWarpUtils {
-
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius) {
-    return findWayToEtherWarp(1, end, maxLayer, radius);
+    return findWayToEtherWarp(end, maxLayer, radius, new BlockStateStoreUtils());
   }
 
-  public static List<BlockPos> findWayToEtherWarp(int layer, BlockPos end, int maxLayer, int radius) {
-    List<BlockPos> routes = findRoutesWithLayer(layer, end, radius);
+  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils) {
+    return find(1, end, maxLayer, radius, blockStateStoreUtils);
+  }
+
+  private static List<BlockPos> find(int layer, BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils) {
+    List<BlockPos> routes = findRoutesWithLayer(layer, end, radius, blockStateStoreUtils);
     if (routes.isEmpty() && layer <= maxLayer) {
-      return findWayToEtherWarp(layer + 1, end, maxLayer, radius);
+      return find(layer + 1, end, maxLayer, radius, blockStateStoreUtils);
     }
 
     return routes;
   }
 
-  private static List<BlockPos> findRoutesWithLayer(int layer, BlockPos end, int radius) {
+  private static List<BlockPos> findRoutesWithLayer(int layer, BlockPos end, int radius, BlockStateStoreUtils blockStateStoreUtils) {
     Map<Integer, Set<EtherWarpPos>> layerMap = new HashMap<>();
 
     // 先加入第0层
     layerMap.put(0, new HashSet<>());
     layerMap.get(0).add(new EtherWarpPos(end, null));
 
-    Set<BlockPos> allInBlock = getBlocksInArea(end, radius);
+    Set<BlockPos> allInBlock = getBlocksInArea(end, radius, blockStateStoreUtils);
 
     for (int i = 1; i < layer; i++) { // 这里特意少做一层 最后直接用PlayerUtils.rayTrace获取
       // 每一层单独处理
@@ -72,7 +75,7 @@ public class EtherWarpUtils {
     }
   }
 
-  private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius) {
+  private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
     BlockPos player = PlayerUtils.getPlayerLocation();
 
     int x = target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
@@ -82,7 +85,6 @@ public class EtherWarpUtils {
     Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
     HashSet<BlockPos> set = new HashSet<>();
 
-    BlockStateStoreUtils store = new BlockStateStoreUtils();
     for (BlockPos pos : iterable) {
       // 只有可到达的ether warp点
       if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
