@@ -78,9 +78,9 @@ public class EtherWarpUtils {
   private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
     BlockPos player = PlayerUtils.getPlayerLocation();
 
-    int x = target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
-    int y = target.getY() - player.getY() / Math.abs(target.getY() - player.getY());
-    int z = target.getZ() - player.getZ() / Math.abs(target.getZ() - player.getZ());
+    int x = target.getX() - player.getX() == 0 ? 0 : target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
+    int y = target.getY() - player.getY() == 0 ? 0 : target.getY() - player.getY() / Math.abs(target.getY() - player.getY());
+    int z = target.getZ() - player.getZ() == 0 ? 0 : target.getZ() - player.getZ() / Math.abs(target.getZ() - player.getZ());
 
     Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
     HashSet<BlockPos> set = new HashSet<>();
