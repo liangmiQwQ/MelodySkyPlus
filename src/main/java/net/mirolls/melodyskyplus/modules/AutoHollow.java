@@ -19,7 +19,6 @@ import xyz.Melody.Event.value.Option;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
-import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 import xyz.Melody.Utils.render.RenderUtil;
@@ -123,7 +122,7 @@ public class AutoHollow extends ModulePlus {
         for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
           if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
             if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
-              if (MathUtil.distanceToPos(target, stones.get(0)) > MathUtil.distanceToPos(pos, stones.get(0))) {
+              if (target.distanceSq(stones.get(0)) > pos.distanceSq(stones.get(0))) {
                 target = pos;
               }
             }
