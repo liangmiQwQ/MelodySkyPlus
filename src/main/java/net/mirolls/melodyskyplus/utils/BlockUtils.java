@@ -3,10 +3,27 @@ package net.mirolls.melodyskyplus.utils;
 import net.minecraft.util.BlockPos;
 import xyz.Melody.Utils.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class BlockUtils {
+  public static List<BlockPos> getDoubleHeightBlocksBetween(Vec3d startVec, Vec3d endVec) {
+    List<BlockPos> betweens = getBlocksBetween(startVec, endVec);
+    Set<BlockPos> resultSet = new HashSet<>(betweens);
+
+    for (BlockPos pos : betweens) {
+      if (resultSet.contains(pos.down()) || resultSet.contains(pos.up())) {
+        continue;
+      }
+
+      resultSet.add(pos.down());
+    }
+
+    List<BlockPos> sorted = new ArrayList<>(resultSet);
+    sorted.sort(Comparator.comparingDouble(e -> e.distanceSq(startVec.x, startVec.y, startVec.z)));
+
+    return sorted;
+  }
+
   public static List<BlockPos> getBlocksBetween(Vec3d startVec, Vec3d endVec) {
     List<BlockPos> blocks = new ArrayList<>();
 
