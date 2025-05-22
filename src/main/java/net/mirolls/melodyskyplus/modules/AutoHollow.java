@@ -51,6 +51,7 @@ public class AutoHollow extends ModulePlus {
   public AutoHollow() {
     super("AutoHollow", ModuleType.Mining);
     this.setModInfo("Auto dig a hollow to use AutoGemstone. ");
+    this.addValues(pickaxeSlot, aotvSold, blatant);
     this.except();
   }
 
