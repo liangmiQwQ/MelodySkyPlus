@@ -34,18 +34,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class AutoHollow extends ModulePlus {
+  // static & final
   public static AutoHollow INSTANCE;
+  private final PacketManager packetManager = new PacketManager();
+  private final List<BlockPos> posesMined = new ArrayList<>();
+  // public
   public Stage stage;
   public boolean started = false;
   public int currentIndex;
-  public List<BlockPos> stones = new ArrayList<>();
-  public List<BlockPos> etherWarpPoints = new ArrayList<>();
-  public TimerUtil packetSendTimer = new TimerUtil();
-  public List<BlockPos> posesMined = new ArrayList<>();
-
+  // settings
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public Numbers<Double> aotvSold = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
   public Option<Boolean> blatant = new Option<>("Blatant", false);
+  // privates
+  private List<BlockPos> stones = new ArrayList<>();
+  private List<BlockPos> stonesToMineThisTime = new ArrayList<>();
+  private List<BlockPos> etherWarpPoints = new ArrayList<>();
 
   public AutoHollow() {
     super("AutoHollow", ModuleType.Mining);
@@ -105,7 +109,7 @@ public class AutoHollow extends ModulePlus {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
         }
 
-        if (packetSendTimer.hasReached(1000)) {
+        if (packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) {
           stones = filterAir(stones);
           stage = Stage.PACKET_MINE_FIRST;
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
@@ -139,13 +143,14 @@ public class AutoHollow extends ModulePlus {
   @SubscribeEvent
   public void onSendPacket(ClientPacketEvent event) {
     if (event.packet instanceof C07PacketPlayerDigging) {
-      packetSendTimer.reset();
+      packetManager.packetSendTimer.reset();
+      packetManager.firstMined = true;
     }
   }
 
   public void packetMine(Stage nextStage) {
     if (!stones.isEmpty()) {
-      BlockPos pos = stones.get(0);
+      BlockPos pos = stonesToMineThisTime.get(0);
 
       if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
         Rotation rotation = RotationUtil.posToRotation(pos);
@@ -182,12 +187,11 @@ public class AutoHollow extends ModulePlus {
         end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(0));
       }
 
-      stones = filterAir(BlockUtils.getBlocksBetween(eyes, end));
+      stones = filterAir(BlockUtils.getDoubleHeightBlocksBetween(eyes, end));
       posesMined.clear();
       started = true;
-      stage = Stage.LEFT_CLICK_MINE;
       currentIndex = index;
-      packetSendTimer.reset().pause();
+      next();
     } else {
       Helper.sendMessage("Please stand on a point to start AutoHollow. ");
     }
@@ -201,7 +205,7 @@ public class AutoHollow extends ModulePlus {
 
   public void clear() {
     stage = null;
-    packetSendTimer.reset();
+    packetManager.reset();
     started = false;
     stones.clear();
     posesMined.clear();
@@ -209,10 +213,19 @@ public class AutoHollow extends ModulePlus {
   }
 
   public void next() {
-    // 对比start 减少了stones的设置 并且started也变成了条件
+    // next指的是在一个current中完成一个轮回后运行的代码
     if (started) {
       stage = Stage.LEFT_CLICK_MINE;
-      packetSendTimer.reset().pause();
+      packetManager.reset();
+      // 生成 stonesToMineThisTime
+      stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 25).collect(Collectors.toList());
+      // 在stones里移除这些
+      stones.removeAll(stonesToMineThisTime);
+
+      if (stonesToMineThisTime.isEmpty()) {
+        Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+        clear();
+      }
     }
   }
 
@@ -233,3 +246,12 @@ public class AutoHollow extends ModulePlus {
   }
 }
 
+class PacketManager {
+  public final TimerUtil packetSendTimer = new TimerUtil();
+  public boolean firstMined = false;
+
+  public void reset() {
+    firstMined = false;
+    packetSendTimer.reset();
+  }
+}
