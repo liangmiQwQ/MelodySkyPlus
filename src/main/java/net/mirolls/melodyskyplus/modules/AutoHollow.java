@@ -85,6 +85,9 @@ public class AutoHollow extends ModulePlus {
       for (BlockPos pos : etherWarpPoints) {
         RenderUtil.drawFullBlockESP(pos, new Color(101, 4, 131, 108), event.getPartialTicks());
       }
+      for (BlockPos pos : stonesToMineThisTime) {
+        RenderUtil.drawFullBlockESP(pos, new Color(0, 255, 244, 40), event.getPartialTicks());
+      }
     }
   }
 
