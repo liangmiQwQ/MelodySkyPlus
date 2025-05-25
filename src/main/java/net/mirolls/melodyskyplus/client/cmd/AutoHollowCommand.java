@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.client.cmd;
 
 import net.mirolls.melodyskyplus.modules.AutoHollow;
 import xyz.Melody.System.Commands.Command;
+import xyz.Melody.Utils.Helper;
 
 import java.util.Objects;
 
@@ -16,8 +17,10 @@ public class AutoHollowCommand extends Command {
 
     if (args.length >= 1) {
       if (args[0].toLowerCase().contains("start")) {
+        Helper.sendMessage("AutoHollow: Started.");
         autoHollow.start();
       } else if (args[0].toLowerCase().contains("stop")) {
+        Helper.sendMessage("AutoHollow: Stopped.");
         autoHollow.clear();
       }
     }
