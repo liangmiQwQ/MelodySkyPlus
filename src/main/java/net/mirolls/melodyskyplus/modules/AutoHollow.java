@@ -112,13 +112,13 @@ public class AutoHollow extends ModulePlus {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
         }
 
-        if (packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) {
-          stones = filterAir(stones);
+        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) || packetManager.packetSendTimer.hasReached(5000)) {
+          stonesToMineThisTime = filterAir(stonesToMineThisTime);
           stage = Stage.PACKET_MINE_FIRST;
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
         }
       } else if (stage == Stage.PACKET_MINE_FIRST) {
-        packetMine(Stage.WALK);
+        packetMine(false);
       } else if (stage == Stage.WALK) {
         // 暴力: 使用AOTV移动
         // 非暴力: 走路过去
@@ -151,8 +151,8 @@ public class AutoHollow extends ModulePlus {
     }
   }
 
-  public void packetMine(Stage nextStage) {
-    if (!stones.isEmpty()) {
+  public void packetMine(boolean next) {
+    if (!stonesToMineThisTime.isEmpty()) {
       BlockPos pos = stonesToMineThisTime.get(0);
 
       if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
@@ -161,15 +161,24 @@ public class AutoHollow extends ModulePlus {
         mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
         mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
 
-        if (RotationUtil.isLookingAtBlock(pos)) {
-          if (!posesMined.contains(pos)) {
-            mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
-            posesMined.add(pos);
+        if (mc.theWorld.getBlockState(pos).getBlock() != Blocks.air) {
+          if (RotationUtil.isLookingAtBlock(pos)) {
+            if (!posesMined.contains(pos)) {
+              mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
+              posesMined.add(pos);
+            }
+            mc.thePlayer.swingItem();
           }
-          mc.thePlayer.swingItem();
+        } else {
+          stonesToMineThisTime = filterAir(stonesToMineThisTime);
         }
+
       } else {
-        stage = nextStage;
+        if (next) {
+          next();
+        } else {
+          stage = Stage.WALK;
+        }
       }
     } else {
       stage = Stage.GO_TO_END;
@@ -190,7 +199,7 @@ public class AutoHollow extends ModulePlus {
         end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(0));
       }
 
-      stones = filterAir(BlockUtils.getDoubleHeightBlocksBetween(eyes, end));
+      stones = BlockUtils.getDoubleHeightBlocksBetween(eyes, end);
       posesMined.clear();
       started = true;
       currentIndex = index;
@@ -220,6 +229,9 @@ public class AutoHollow extends ModulePlus {
     if (started) {
       stage = Stage.LEFT_CLICK_MINE;
       packetManager.reset();
+
+      // filter air
+      stones = filterAir(stones);
       // 生成 stonesToMineThisTime
       stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 25).collect(Collectors.toList());
       // 在stones里移除这些
