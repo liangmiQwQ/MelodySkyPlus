@@ -106,4 +106,12 @@ public class BlockUtils {
 
     return blocks;
   }
+
+  public static double calcDistanceSq(Vec3d start, Vec3d end) {
+    double xSq = Math.pow(start.getX() - end.getX(), 2);
+    double ySq = Math.pow(start.getY() - end.getY(), 2);
+    double zSq = Math.pow(start.getZ() - end.getZ(), 2);
+
+    return xSq + ySq + zSq;
+  }
 }

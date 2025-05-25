@@ -128,11 +128,14 @@ public class AutoHollow extends ModulePlus {
 
         BlockStateStoreUtils store = new BlockStateStoreUtils();
         BlockPos target = PlayerUtils.getPlayerLocation();
+        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), new Vec3d(stones.get(0)));
 
         for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
           if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
             if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
-              if (target.distanceSq(stones.get(0)) > pos.distanceSq(stones.get(0))) {
+
+              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), new Vec3d(stones.get(0)));
+              if (targetDistanceSq > posDistanceSq) {
                 target = pos;
               }
             }
@@ -140,7 +143,9 @@ public class AutoHollow extends ModulePlus {
         }
 
         if (blatant.getValue()) {
-          etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 5, 10);
+          if (etherWarpPoints.isEmpty()) {
+            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 5, 8);
+          }
         }
       }
     }
