@@ -5,6 +5,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.event.ClientPacketEvent;
 import net.mirolls.melodyskyplus.utils.BlockStateStoreUtils;
@@ -94,6 +95,8 @@ public class AutoHollow extends ModulePlus {
   @EventHandler
   public void onTick(EventPreUpdate event) {
     AutoRuby ar = AutoRuby.getINSTANCE();
+    MelodySkyPlus.LOGGER.info("current stage: {}", stage.name());
+
     if (started && ar != null) {
       if (stage == Stage.LEFT_CLICK_MINE) {
         Vec3d next;
@@ -152,6 +155,14 @@ public class AutoHollow extends ModulePlus {
   }
 
   public void packetMine(boolean next) {
+    Runnable onFinished = () -> {
+      if (next) {
+        next();
+      } else {
+        stage = Stage.WALK;
+      }
+    };
+
     if (!stonesToMineThisTime.isEmpty()) {
       BlockPos pos = stonesToMineThisTime.get(0);
 
@@ -174,14 +185,14 @@ public class AutoHollow extends ModulePlus {
         }
 
       } else {
-        if (next) {
-          next();
-        } else {
-          stage = Stage.WALK;
-        }
+        onFinished.run();
       }
     } else {
-      stage = Stage.GO_TO_END;
+      if (stones.isEmpty()) {
+        stage = Stage.GO_TO_END;
+      } else {
+        onFinished.run();
+      }
     }
   }
 
@@ -211,7 +222,7 @@ public class AutoHollow extends ModulePlus {
 
   public List<BlockPos> filterAir(List<BlockPos> pos) {
     return pos.stream().filter((e) ->
-        mc.theWorld.getBlockState(e).getBlock() == Blocks.stone
+        mc.theWorld.getBlockState(e).getBlock() != Blocks.air
     ).collect(Collectors.toList());
   }
 
