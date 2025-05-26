@@ -3,8 +3,10 @@ package net.mirolls.melodyskyplus.utils;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 public class EtherWarpUtils {
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius) {
@@ -12,68 +14,51 @@ public class EtherWarpUtils {
   }
 
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils) {
-    return find(1, end, maxLayer, radius, blockStateStoreUtils);
-  }
+    HashSet<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
 
-  private static List<BlockPos> find(int layer, BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils) {
-    List<BlockPos> routes = findRoutesWithLayer(layer, end, radius, blockStateStoreUtils);
-    if (routes.isEmpty() && layer <= maxLayer) {
-      return find(layer + 1, end, maxLayer, radius, blockStateStoreUtils);
+    EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer);
+
+    List<BlockPos> route = new ArrayList<>();
+
+    if (lastPos != null) {
+      buildRoute(lastPos, route);
+      Collections.reverse(route);
     }
 
-    return routes;
+    // 如果找不到路径返回空数组
+    return route;
   }
 
-  private static List<BlockPos> findRoutesWithLayer(int layer, BlockPos end, int radius, BlockStateStoreUtils blockStateStoreUtils) {
-    Map<Integer, Set<EtherWarpPos>> layerMap = new HashMap<>();
+  private static void buildRoute(EtherWarpPos pos, List<BlockPos> route) {
+    route.add(pos.pos);
 
-    // 先加入第0层
-    layerMap.put(0, new HashSet<>());
-    layerMap.get(0).add(new EtherWarpPos(end, null));
+    if (pos.parent != null) {
+      buildRoute(pos.parent, route);
+    }
+  }
 
-    Set<BlockPos> allInBlock = getBlocksInArea(end, radius, blockStateStoreUtils);
+  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, HashSet<BlockPos> blockInArea, int layer, int maxLayer) {
+    if (layer > maxLayer) return null;
 
-    for (int i = 1; i < layer; i++) { // 这里特意少做一层 最后直接用PlayerUtils.rayTrace获取
-      // 每一层单独处理
-      Set<EtherWarpPos> thisLayer = new HashSet<>();
-
-      for (EtherWarpPos lastPos : layerMap.get(i - 1)) {
-        // 面对上一层的所有点展开搜查
-        for (BlockPos pos : allInBlock) {
-          if (PlayerUtils.rayTrace(pos, lastPos.pos)) {
-            // 存入当前层
-            thisLayer.add(new EtherWarpPos(pos, lastPos));
+    if (lastPos == null ? PlayerUtils.rayTrace(end) : PlayerUtils.rayTrace(lastPos.pos, end)) {
+      // 如果该点可以直接到达终点 则立即返回
+      return new EtherWarpPos(end, lastPos);
+    } else {
+      // 如果不可以 开始寻找中间点
+      for (BlockPos pos : blockInArea) {
+        if (lastPos == null ? PlayerUtils.rayTrace(pos) : PlayerUtils.rayTrace(lastPos.pos, pos)) {
+          // 如果可以etherWarp到
+          EtherWarpPos loopResult = getLastEtherWarpPos(new EtherWarpPos(pos, lastPos), end, blockInArea, layer + 1, maxLayer);
+          if (loopResult != null) {
+            return loopResult;
           }
         }
       }
-
-      layerMap.put(i, thisLayer);
-    }
-
-    // 获取最后一层
-    for (EtherWarpPos etherWarpPos : layerMap.get(layer - 1)) {
-      if (PlayerUtils.rayTrace(etherWarpPos.pos)) {
-        // 找到path了 进行构建
-        List<EtherWarpPos> path = new ArrayList<>();
-        path.add(etherWarpPos);
-
-        List<EtherWarpPos> builtPath = buildPath(path);
-
-        return builtPath.stream().map((e) -> e.pos).collect(Collectors.toList());
-      }
-    }
-
-    return new ArrayList<>();
-  }
-
-  private static List<EtherWarpPos> buildPath(List<EtherWarpPos> currentPath) {
-    if (currentPath.get(currentPath.size() - 1).parent != null) {
-      currentPath.add(currentPath.get(currentPath.size() - 1).parent);
-      return buildPath(currentPath);
-    } else {
-      return currentPath;
+      // 如果完毕之后还没有返回 则无法找到路径 返回null
+      return null;
     }
   }
+
 
   private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
     BlockPos player = PlayerUtils.getPlayerLocation();
