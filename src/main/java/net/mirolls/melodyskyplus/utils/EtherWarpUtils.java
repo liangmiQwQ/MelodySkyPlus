@@ -9,14 +9,14 @@ import java.util.HashSet;
 import java.util.List;
 
 public class EtherWarpUtils {
-  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius) {
-    return findWayToEtherWarp(end, maxLayer, radius, new BlockStateStoreUtils());
+  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, int maxRetryChance) {
+    return findWayToEtherWarp(end, maxLayer, radius, new BlockStateStoreUtils(), maxRetryChance);
   }
 
-  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils) {
+  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils, int maxRetryChance) {
     HashSet<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
 
-    EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer);
+    EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer, maxRetryChance);
 
     List<BlockPos> route = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class EtherWarpUtils {
     }
   }
 
-  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, HashSet<BlockPos> blockInArea, int layer, int maxLayer) {
+  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, HashSet<BlockPos> blockInArea, int layer, int maxLayer, int maxRetryChance) {
     if (layer > maxLayer) return null;
 
     if (lastPos == null ? PlayerUtils.rayTrace(end) : PlayerUtils.rayTrace(lastPos.pos, end)) {
@@ -45,12 +45,17 @@ public class EtherWarpUtils {
       return new EtherWarpPos(end, lastPos);
     } else {
       // 如果不可以 开始寻找中间点
+      int retryTime = 0;
       for (BlockPos pos : blockInArea) {
-        if (lastPos == null ? PlayerUtils.rayTrace(pos) : PlayerUtils.rayTrace(lastPos.pos, pos)) {
-          // 如果可以etherWarp到
-          EtherWarpPos loopResult = getLastEtherWarpPos(new EtherWarpPos(pos, lastPos), end, blockInArea, layer + 1, maxLayer);
-          if (loopResult != null) {
-            return loopResult;
+        if (retryTime > maxRetryChance) {
+          if (lastPos == null ? PlayerUtils.rayTrace(pos) : PlayerUtils.rayTrace(lastPos.pos, pos)) {
+            // 如果可以etherWarp到
+            EtherWarpPos loopResult = getLastEtherWarpPos(new EtherWarpPos(pos, lastPos), end, blockInArea, layer + 1, maxLayer, maxRetryChance);
+            if (loopResult != null) {
+              return loopResult;
+            } else {
+              retryTime++;
+            }
           }
         }
       }

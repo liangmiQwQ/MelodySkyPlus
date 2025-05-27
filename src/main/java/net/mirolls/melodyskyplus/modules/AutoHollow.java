@@ -5,7 +5,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.event.ClientPacketEvent;
 import net.mirolls.melodyskyplus.utils.BlockStateStoreUtils;
@@ -29,8 +28,7 @@ import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +47,7 @@ public class AutoHollow extends ModulePlus {
   public Option<Boolean> blatant = new Option<>("Blatant", false);
   // privates
   private List<BlockPos> stones = new ArrayList<>();
+  private Set<BlockPos> completeStones = new HashSet<>();
   private List<BlockPos> stonesToMineThisTime = new ArrayList<>();
   private List<BlockPos> etherWarpPoints = new ArrayList<>();
 
@@ -95,8 +94,6 @@ public class AutoHollow extends ModulePlus {
   @EventHandler
   public void onTick(EventPreUpdate event) {
     AutoRuby ar = AutoRuby.getINSTANCE();
-    MelodySkyPlus.LOGGER.info("current stage: {}", stage.name());
-
     if (started && ar != null) {
       if (stage == Stage.LEFT_CLICK_MINE) {
         Vec3d next;
@@ -135,7 +132,7 @@ public class AutoHollow extends ModulePlus {
             if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
 
               double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), new Vec3d(stones.get(0)));
-              if (targetDistanceSq > posDistanceSq) {
+              if (targetDistanceSq > posDistanceSq * (completeStones.contains(pos.up()) ? 0.5 : 1)) {
                 target = pos;
               }
             }
@@ -144,7 +141,7 @@ public class AutoHollow extends ModulePlus {
 
         if (blatant.getValue()) {
           if (etherWarpPoints.isEmpty()) {
-            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 5, 8);
+            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 15);
           }
         }
       }
@@ -216,6 +213,7 @@ public class AutoHollow extends ModulePlus {
       }
 
       stones = BlockUtils.getDoubleHeightBlocksBetween(eyes, end);
+      completeStones = new HashSet<>(stones);
       posesMined.clear();
       started = true;
       currentIndex = index;
@@ -236,6 +234,7 @@ public class AutoHollow extends ModulePlus {
     packetManager.reset();
     started = false;
     stones.clear();
+    completeStones.clear();
     posesMined.clear();
     currentIndex = -1;
   }
