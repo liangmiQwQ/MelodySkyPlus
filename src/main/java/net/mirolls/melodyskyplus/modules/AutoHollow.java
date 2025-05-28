@@ -37,13 +37,14 @@ public class AutoHollow extends ModulePlus {
   public static AutoHollow INSTANCE;
   private final PacketManager packetManager = new PacketManager();
   private final List<BlockPos> posesMined = new ArrayList<>();
+  private final TimerUtil lastRightClick = new TimerUtil();
   // public
   public Stage stage;
   public boolean started = false;
   public int currentIndex;
   // settings
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
-  public Numbers<Double> aotvSold = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
+  public Numbers<Double> aotvSlot = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
   public Option<Boolean> blatant = new Option<>("Blatant", false);
   // privates
   private List<BlockPos> stones = new ArrayList<>();
@@ -54,7 +55,7 @@ public class AutoHollow extends ModulePlus {
   public AutoHollow() {
     super("AutoHollow", ModuleType.Mining);
     this.setModInfo("Auto dig a hollow to use AutoGemstone. ");
-    this.addValues(pickaxeSlot, aotvSold, blatant);
+    this.addValues(pickaxeSlot, aotvSlot, blatant);
     this.except();
   }
 
@@ -122,27 +123,66 @@ public class AutoHollow extends ModulePlus {
       } else if (stage == Stage.WALK) {
         // 暴力: 使用AOTV移动
         // 非暴力: 走路过去
+        if (blatant.getValue()) {
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+          mc.thePlayer.inventory.currentItem = aotvSlot.getValue().intValue() - 1;
 
-        BlockStateStoreUtils store = new BlockStateStoreUtils();
-        BlockPos target = PlayerUtils.getPlayerLocation();
-        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), new Vec3d(stones.get(0)));
+          if (etherWarpPoints.isEmpty()) {
+            BlockStateStoreUtils store = new BlockStateStoreUtils();
+            BlockPos target = PlayerUtils.getPlayerLocation();
+            double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(stones.get(0)));
 
-        for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
-          if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
-            if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+            for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
+              if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
+                if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
 
-              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), new Vec3d(stones.get(0)));
-              if (targetDistanceSq > posDistanceSq * (completeStones.contains(pos.up()) ? 0.5 : 1)) {
-                target = pos;
+                  double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(stones.get(0))) * (completeStones.contains(pos.up()) ? 0.5 : 1.2);
+                  if (targetDistanceSq > posDistanceSq) {
+                    targetDistanceSq = posDistanceSq;
+                    target = pos;
+                  }
+                }
               }
             }
-          }
-        }
 
-        if (blatant.getValue()) {
-          if (etherWarpPoints.isEmpty()) {
-            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 15);
+            long startTime = System.currentTimeMillis();
+
+//            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 15);
+            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 2, 6, 5);
+
+            if (etherWarpPoints.isEmpty()) {
+              Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+            } else {
+              long finishTime = System.currentTimeMillis();
+              Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms; Path size: " + etherWarpPoints.size());
+            }
           }
+
+          /* BlockPos nextPos = etherWarpPoints.get(0);
+          Rotation rotation = RotationUtil.posToRotation(nextPos);
+
+          mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
+          mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
+
+          if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
+            // 如果正在看着这个点
+            if (lastRightClick.hasReached(500)) {
+              lastRightClick.reset();
+              Client.rightClick();
+            }
+          }
+
+          if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
+            // 脚下的点位是目标点位
+            etherWarpPoints.remove(0);
+
+            if (etherWarpPoints.isEmpty()) {
+              KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+              Helper.sendMessage("Finished warping");
+              this.clear();
+            }
+          }
+           */
         }
       }
     }
