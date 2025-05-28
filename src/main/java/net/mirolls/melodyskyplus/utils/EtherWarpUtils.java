@@ -2,12 +2,8 @@ package net.mirolls.melodyskyplus.utils;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class EtherWarpUtils {
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, int maxRetryChance) {
@@ -15,9 +11,7 @@ public class EtherWarpUtils {
   }
 
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils, int maxRetryChance) {
-    MelodySkyPlus.LOGGER.info("findWayToEtherWarp has been called");
-    HashSet<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
-    MelodySkyPlus.LOGGER.info("Blocks In Area Size: {}", blockInArea.size());
+    Set<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
 
     EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer, maxRetryChance);
 
@@ -40,7 +34,7 @@ public class EtherWarpUtils {
     }
   }
 
-  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, HashSet<BlockPos> blockInArea, int layer, int maxLayer, int maxRetryChance) {
+  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, Set<BlockPos> blockInArea, int layer, int maxLayer, int maxRetryChance) {
     if (layer > maxLayer) return null;
 
     if (lastPos == null ? PlayerUtils.rayTrace(end) : PlayerUtils.rayTrace(lastPos.pos, end)) {
@@ -68,8 +62,12 @@ public class EtherWarpUtils {
   }
 
 
-  private static HashSet<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
+  private static Set<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
     BlockPos player = PlayerUtils.getPlayerLocation();
+
+    if (target.equals(player)) {
+      return new HashSet<>();
+    }
 
     int x = target.getX() - player.getX() == 0 ? 0 : target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
     int y = target.getY() - player.getY() == 0 ? 0 : target.getY() - player.getY() / Math.abs(target.getY() - player.getY());
