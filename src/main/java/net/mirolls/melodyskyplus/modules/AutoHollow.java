@@ -5,6 +5,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import net.mirolls.melodyskyplus.event.ClientPacketEvent;
 import net.mirolls.melodyskyplus.utils.BlockStateStoreUtils;
@@ -125,10 +126,12 @@ public class AutoHollow extends ModulePlus {
         // 暴力: 使用AOTV移动
         // 非暴力: 走路过去
         if (blatant.getValue()) {
+          // 按下shift 切换到aotv
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
           mc.thePlayer.inventory.currentItem = aotvSlot.getValue().intValue() - 1;
 
           if (etherWarpPoints.isEmpty()) {
+            // 生成路径 先找到target
             BlockStateStoreUtils store = new BlockStateStoreUtils();
             BlockPos target = PlayerUtils.getPlayerLocation();
             double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(stones.get(0)));
@@ -146,19 +149,19 @@ public class AutoHollow extends ModulePlus {
               }
             }
 
+            // 生成路径
             long startTime = System.currentTimeMillis();
-
-//            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 15);
-            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 2, 6, 5);
+            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 10);
 
             if (etherWarpPoints.isEmpty()) {
               Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
             } else {
               long finishTime = System.currentTimeMillis();
-              Helper.sendMessage("Finish path finding in " + (finishTime - startTime) + "ms; Path size: " + etherWarpPoints.size());
+              MelodySkyPlus.LOGGER.info("Finish path(for ether warp) finding in {}ms; Path size: {}", finishTime - startTime, etherWarpPoints.size());
             }
           }
 
+          // 执行
           BlockPos nextPos = etherWarpPoints.get(0);
           Rotation rotation = RotationUtil.posToRotation(nextPos);
 
@@ -173,17 +176,20 @@ public class AutoHollow extends ModulePlus {
             }
           }
 
+          // 切换到下一个点
           if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
             // 脚下的点位是目标点位
             etherWarpPoints.remove(0);
 
+            // 如果是最后一个点 则进入后续状态
             if (etherWarpPoints.isEmpty()) {
               KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-              Helper.sendMessage("Finished warping");
-              this.clear();
+              stage = Stage.PACKET_MINE_SECOND;
             }
           }
         }
+      } else if (stage == Stage.PACKET_MINE_SECOND) {
+        packetMine(true);
       }
     }
   }
