@@ -240,26 +240,30 @@ public class AutoHollow extends ModulePlus {
 
 
   public void start() {
-    int index = AutoRuby.getINSTANCE().wps.indexOf(PlayerUtils.getPlayerLocation().down());
-    if (index != -1) {
-      // 存在
-      Vec3d start = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index));
-      Vec3d eyes = new Vec3d(start.getX(), start.getY() + 0.5 + mc.thePlayer.getEyeHeight(), start.getZ());
-      Vec3d end;
-      if (index + 1 < AutoRuby.getINSTANCE().wps.size()) {
-        end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index + 1));
-      } else {
-        end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(0));
-      }
+    if (!started) {
+      int index = AutoRuby.getINSTANCE().wps.indexOf(PlayerUtils.getPlayerLocation().down());
+      if (index != -1) {
+        // 存在
+        Vec3d start = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index));
+        Vec3d eyes = new Vec3d(start.getX(), start.getY() + 0.5 + mc.thePlayer.getEyeHeight(), start.getZ());
+        Vec3d end;
+        if (index + 1 < AutoRuby.getINSTANCE().wps.size()) {
+          end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index + 1));
+        } else {
+          end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(0));
+        }
 
-      stones = BlockUtils.getDoubleHeightBlocksBetween(eyes, end);
-      completeStones = new HashSet<>(stones);
-      posesMined.clear();
-      started = true;
-      currentIndex = index;
-      next();
+        stones = BlockUtils.getDoubleHeightBlocksBetween(eyes, end);
+        completeStones = new HashSet<>(stones);
+        posesMined.clear();
+        started = true;
+        currentIndex = index;
+        next();
+      } else {
+        Helper.sendMessage("Please stand on a point to start AutoHollow. ");
+      }
     } else {
-      Helper.sendMessage("Please stand on a point to start AutoHollow. ");
+      Helper.sendMessage("AutoHollow has already started, please run `.ah stop` first.");
     }
   }
 
@@ -276,6 +280,7 @@ public class AutoHollow extends ModulePlus {
     stones.clear();
     completeStones.clear();
     posesMined.clear();
+    etherWarpPoints.clear();
     currentIndex = -1;
   }
 
