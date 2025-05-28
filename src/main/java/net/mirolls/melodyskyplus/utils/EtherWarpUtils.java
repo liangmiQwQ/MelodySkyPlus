@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.utils;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +15,9 @@ public class EtherWarpUtils {
   }
 
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils, int maxRetryChance) {
+    MelodySkyPlus.LOGGER.info("findWayToEtherWarp has been called");
     HashSet<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
+    MelodySkyPlus.LOGGER.info("Blocks In Area Size: {}", blockInArea.size());
 
     EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer, maxRetryChance);
 
