@@ -123,73 +123,79 @@ public class AutoHollow extends ModulePlus {
       } else if (stage == Stage.PACKET_MINE_FIRST) {
         packetMine(false);
       } else if (stage == Stage.WALK) {
-        // 暴力: 使用AOTV移动
-        // 非暴力: 走路过去
-        if (blatant.getValue()) {
-          // 按下shift 切换到aotv
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-          mc.thePlayer.inventory.currentItem = aotvSlot.getValue().intValue() - 1;
+        walk(true);
+      } else if (stage == Stage.PACKET_MINE_SECOND) {
+        packetMine(true);
+      } else if (stage == Stage.GO_TO_END) {
+        walk(false);
+      }
+    }
+  }
 
-          if (etherWarpPoints.isEmpty()) {
-            // 生成路径 先找到target
-            BlockStateStoreUtils store = new BlockStateStoreUtils();
-            BlockPos target = PlayerUtils.getPlayerLocation();
-            double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(stones.get(0)));
+  private void walk(boolean locationCheck) {
+    // 暴力: 使用AOTV移动
+    // 非暴力: 走路过去
+    if (blatant.getValue()) {
+      // 按下shift 切换到aotv
+      KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+      mc.thePlayer.inventory.currentItem = aotvSlot.getValue().intValue() - 1;
 
-            for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
-              if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
-                if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+      if (etherWarpPoints.isEmpty()) {
+        // 生成路径 先找到target
+        BlockStateStoreUtils store = new BlockStateStoreUtils();
+        BlockPos target = PlayerUtils.getPlayerLocation();
+        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(stones.get(0)));
 
-                  double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(stones.get(0))) * (completeStones.contains(pos.up()) ? 0.5 : 1.2);
-                  if (targetDistanceSq > posDistanceSq) {
-                    targetDistanceSq = posDistanceSq;
-                    target = pos;
-                  }
-                }
+        for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
+          if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
+            if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+
+              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(stones.get(0))) * (locationCheck ? (completeStones.contains(pos.up()) ? 0.5 : 1.2) : 1);
+              if (targetDistanceSq > posDistanceSq) {
+                targetDistanceSq = posDistanceSq;
+                target = pos;
               }
-            }
-
-            // 生成路径
-            long startTime = System.currentTimeMillis();
-            etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 10);
-
-            if (etherWarpPoints.isEmpty()) {
-              Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
-            } else {
-              long finishTime = System.currentTimeMillis();
-              MelodySkyPlus.LOGGER.info("Finish path(for ether warp) finding in {}ms; Path size: {}", finishTime - startTime, etherWarpPoints.size());
-            }
-          }
-
-          // 执行
-          BlockPos nextPos = etherWarpPoints.get(0);
-          Rotation rotation = RotationUtil.posToRotation(nextPos);
-
-          mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
-          mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
-
-          if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
-            // 如果正在看着这个点
-            if (lastRightClick.hasReached(500)) {
-              lastRightClick.reset();
-              Client.rightClick();
-            }
-          }
-
-          // 切换到下一个点
-          if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
-            // 脚下的点位是目标点位
-            etherWarpPoints.remove(0);
-
-            // 如果是最后一个点 则进入后续状态
-            if (etherWarpPoints.isEmpty()) {
-              KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-              stage = Stage.PACKET_MINE_SECOND;
             }
           }
         }
-      } else if (stage == Stage.PACKET_MINE_SECOND) {
-        packetMine(true);
+
+        // 生成路径
+        long startTime = System.currentTimeMillis();
+        etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 10);
+
+        if (etherWarpPoints.isEmpty()) {
+          Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+        } else {
+          long finishTime = System.currentTimeMillis();
+          MelodySkyPlus.LOGGER.info("Finish path(for ether warp) finding in {}ms; Path size: {}", finishTime - startTime, etherWarpPoints.size());
+        }
+      }
+
+      // 执行
+      BlockPos nextPos = etherWarpPoints.get(0);
+      Rotation rotation = RotationUtil.posToRotation(nextPos);
+
+      mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
+      mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
+
+      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
+        // 如果正在看着这个点
+        if (lastRightClick.hasReached(500)) {
+          lastRightClick.reset();
+          Client.rightClick();
+        }
+      }
+
+      // 切换到下一个点
+      if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
+        // 脚下的点位是目标点位
+        etherWarpPoints.remove(0);
+
+        // 如果是最后一个点 则进入后续状态
+        if (etherWarpPoints.isEmpty()) {
+          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+          stage = Stage.PACKET_MINE_SECOND;
+        }
       }
     }
   }
