@@ -11,6 +11,7 @@ import net.mirolls.melodyskyplus.utils.BlockStateStoreUtils;
 import net.mirolls.melodyskyplus.utils.BlockUtils;
 import net.mirolls.melodyskyplus.utils.EtherWarpUtils;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
+import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.Event.events.rendering.EventRender3D;
@@ -158,7 +159,7 @@ public class AutoHollow extends ModulePlus {
             }
           }
 
-          /* BlockPos nextPos = etherWarpPoints.get(0);
+          BlockPos nextPos = etherWarpPoints.get(0);
           Rotation rotation = RotationUtil.posToRotation(nextPos);
 
           mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
@@ -182,7 +183,6 @@ public class AutoHollow extends ModulePlus {
               this.clear();
             }
           }
-           */
         }
       }
     }
