@@ -128,6 +128,8 @@ public class AutoHollow extends ModulePlus {
         packetMine(true);
       } else if (stage == Stage.GO_TO_END) {
         walk(false);
+      } else if (stage == Stage.PLACE_COBBLESTONE) {
+        // 从这附近找到最近的点 放石头
       }
     }
   }
@@ -171,20 +173,10 @@ public class AutoHollow extends ModulePlus {
         }
       }
 
+
       // 执行
       BlockPos nextPos = etherWarpPoints.get(0);
       Rotation rotation = RotationUtil.posToRotation(nextPos);
-
-      mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
-      mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
-
-      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
-        // 如果正在看着这个点
-        if (lastRightClick.hasReached(500)) {
-          lastRightClick.reset();
-          Client.rightClick();
-        }
-      }
 
       // 切换到下一个点
       if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
@@ -197,6 +189,20 @@ public class AutoHollow extends ModulePlus {
           stage = Stage.PACKET_MINE_SECOND;
         }
       }
+
+      // 移动
+      mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
+      mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
+
+      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
+        // 如果正在看着这个点
+        if (lastRightClick.hasReached(500)) {
+          lastRightClick.reset();
+          Client.rightClick();
+        }
+      }
+
+
     }
   }
 
@@ -330,6 +336,7 @@ public class AutoHollow extends ModulePlus {
     WALK,
     FALLING,
     GO_TO_END,
+    PLACE_COBBLESTONE,
   }
 }
 
