@@ -1,8 +1,11 @@
 package net.mirolls.melodyskyplus.modules;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
+import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -44,6 +47,7 @@ public class AutoHollow extends ModulePlus {
   public Stage stage;
   public boolean started = false;
   public int currentIndex;
+  public boolean warned = false;
   // settings
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public Numbers<Double> aotvSlot = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
@@ -247,7 +251,8 @@ public class AutoHollow extends ModulePlus {
 
   @SubscribeEvent
   public void onSendPacket(ClientPacketEvent event) {
-    if (event.packet instanceof C07PacketPlayerDigging) {
+    if (event.packet instanceof C0APacketAnimation) {
+      // 改为挥手动作 可以处理宝石 秘银等复杂情况
       packetManager.packetSendTimer.reset();
       packetManager.firstMined = true;
     }
@@ -325,8 +330,14 @@ public class AutoHollow extends ModulePlus {
   }
 
   public List<BlockPos> filterAir(List<BlockPos> pos) {
-    return pos.stream().filter((e) ->
-        mc.theWorld.getBlockState(e).getBlock() != Blocks.air
+    return pos.stream().filter((e) -> {
+          IBlockState state = mc.theWorld.getBlockState(e);
+          if (state.getBlock() == Blocks.prismarine || (state.getBlock() == Blocks.wool && EnumDyeColor.byMetadata(state.getBlock().getMetaFromState(state)) == EnumDyeColor.LIGHT_BLUE)) {
+            Helper.sendMessage("Program has found mithril in the route. Please run .ah stop and dig the route by yourself or the program won't use bob.");
+            warned = true;
+          }
+          return state.getBlock() != Blocks.air;
+        }
     ).collect(Collectors.toList());
   }
 
@@ -334,6 +345,7 @@ public class AutoHollow extends ModulePlus {
     stage = null;
     packetManager.reset();
     started = false;
+    warned = false;
     stones.clear();
     completeStones.clear();
     posesMined.clear();
