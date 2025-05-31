@@ -80,7 +80,13 @@ public class EtherWarpUtils {
     Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
     HashSet<BlockPos> set = new HashSet<>();
 
+    int loop = 0;
     for (BlockPos pos : iterable) {
+      loop++;
+      if (loop > 100000) {
+        MelodySkyPlus.LOGGER.info("Loop time is bigger than 100000, maybe meet infinite loop");
+        break;
+      }
       // 只有可到达的ether warp点
       if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
         if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
