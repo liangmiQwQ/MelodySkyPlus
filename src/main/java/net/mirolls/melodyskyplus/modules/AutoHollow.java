@@ -294,7 +294,7 @@ public class AutoHollow extends ModulePlus {
             if (mc.theWorld.getBlockState(pos).getBlock() == Blocks.chest) {
               if (lastRightClick.hasReached(500)) {
                 lastRightClick.reset();
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
                 Client.async(() -> {
                   try {
                     Thread.sleep(100);
@@ -303,7 +303,7 @@ public class AutoHollow extends ModulePlus {
                   }
 
                   mc.addScheduledTask(() -> {
-                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
                   });
                 });
               }
