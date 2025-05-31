@@ -47,6 +47,7 @@ public class AutoHollow extends ModulePlus {
   // settings
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public Numbers<Double> aotvSlot = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
+  public Numbers<Double> cobbleStoneSlot = new Numbers<>("Cobble Stones Slot", 2.0, 1.0, 9.0, 1.0);
   public Option<Boolean> blatant = new Option<>("Blatant", false);
   // privates
   private List<BlockPos> stones = new ArrayList<>();
@@ -57,7 +58,7 @@ public class AutoHollow extends ModulePlus {
   public AutoHollow() {
     super("AutoHollow", ModuleType.Mining);
     this.setModInfo("Auto dig a hollow to use AutoGemstone. ");
-    this.addValues(pickaxeSlot, aotvSlot, blatant);
+    this.addValues(pickaxeSlot, aotvSlot, cobbleStoneSlot, blatant);
     this.except();
   }
 
@@ -123,18 +124,54 @@ public class AutoHollow extends ModulePlus {
       } else if (stage == Stage.PACKET_MINE_FIRST) {
         packetMine(false);
       } else if (stage == Stage.WALK) {
-        walk(true);
+        walk(true, stones.get(0), Stage.PACKET_MINE_SECOND);
       } else if (stage == Stage.PACKET_MINE_SECOND) {
         packetMine(true);
       } else if (stage == Stage.GO_TO_END) {
-        walk(false);
+        BlockPos next;
+        if (currentIndex + 1 < AutoRuby.getINSTANCE().wps.size()) {
+          next = AutoRuby.getINSTANCE().wps.get(currentIndex + 1);
+        } else {
+          next = AutoRuby.getINSTANCE().wps.get(0);
+        }
+
+        walk(false, next, Stage.PLACE_COBBLESTONE);
       } else if (stage == Stage.PLACE_COBBLESTONE) {
         // 从这附近找到最近的点 放石头
+        BlockPos next;
+        final BlockPos[] offsets = new BlockPos[]{
+            new BlockPos(1, 0, 0),
+            new BlockPos(0, 1, 0),
+            new BlockPos(0, 0, 1),
+            new BlockPos(-1, 0, 0),
+            new BlockPos(0, -1, 0),
+            new BlockPos(0, 0, -1),
+        };
+        if (currentIndex + 1 < AutoRuby.getINSTANCE().wps.size()) {
+          next = AutoRuby.getINSTANCE().wps.get(currentIndex + 1);
+        } else {
+          next = AutoRuby.getINSTANCE().wps.get(0);
+        }
+
+        Map<BlockPos, BlockPos> posWithOffsetMap = new HashMap<>();
+
+        for (BlockPos offset : offsets) {
+          BlockPos bp = next.add(offset);
+          for (int i = 0; i < 5; i++) {
+            if (mc.theWorld.getBlockState(bp).getBlock().getMaterial().isSolid()) {
+              posWithOffsetMap.put(bp, new BlockPos(-offset.getX(), -offset.getY(), -offset.getZ()));
+              break;
+            }
+          }
+        }
+
+        Helper.sendMessage("Ready to place stone. cleared.");
+        clear();
       }
     }
   }
 
-  private void walk(boolean locationCheck) {
+  private void walk(boolean locationCheck, BlockPos next, Stage nextStage) {
     // 暴力: 使用AOTV移动
     // 非暴力: 走路过去
     if (blatant.getValue()) {
@@ -146,13 +183,13 @@ public class AutoHollow extends ModulePlus {
         // 生成路径 先找到target
         BlockStateStoreUtils store = new BlockStateStoreUtils();
         BlockPos target = PlayerUtils.getPlayerLocation();
-        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(stones.get(0)));
+        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(next));
 
         for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
           if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
             if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
 
-              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(stones.get(0))) * (locationCheck ? (completeStones.contains(pos.up()) ? 0.5 : 1.2) : 1);
+              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(next)) * (locationCheck ? (completeStones.contains(pos.up()) ? 0.5 : 1.2) : 1);
               if (targetDistanceSq > posDistanceSq) {
                 targetDistanceSq = posDistanceSq;
                 target = pos;
@@ -186,7 +223,7 @@ public class AutoHollow extends ModulePlus {
         // 如果是最后一个点 则进入后续状态
         if (etherWarpPoints.isEmpty()) {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
-          stage = Stage.PACKET_MINE_SECOND;
+          stage = nextStage;
         }
       }
 
@@ -325,7 +362,6 @@ public class AutoHollow extends ModulePlus {
   @Override
   public void onEnable() {
     super.onEnable();
-
     clear();
   }
 
