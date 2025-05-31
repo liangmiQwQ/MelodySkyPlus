@@ -86,7 +86,7 @@ public class AutoRubyMixin {
 
   private void melodySkyPlus$switchToJasper() {
     Minecraft mc = Minecraft.getMinecraft();
-    if (AntiBug.isBugRemoved()) {
+    if (AntiBug.isBugRemoved() && started) {
       if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
