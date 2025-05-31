@@ -7,6 +7,7 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.ModulePlus;
@@ -118,12 +119,37 @@ public class AutoHollow extends ModulePlus {
         mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
         mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
 
+        // 挖掘
         if (Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 5 && Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 5) {
-          mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+          // 考虑箱子的情况
+          MovingObjectPosition objectMouseOver = mc.objectMouseOver;
+          if (mc.theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock() == Blocks.chest) {
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+            if (lastRightClick.hasReached(500)) {
+              lastRightClick.reset();
+              KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+              Client.async(() -> {
+                try {
+                  Thread.sleep(100);
+                } catch (InterruptedException e) {
+                  throw new RuntimeException(e);
+                }
+
+                mc.addScheduledTask(() -> {
+                  KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+                });
+              });
+            }
+          } else {
+            mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
+          }
+
+
         }
 
-        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) || packetManager.packetSendTimer.hasReached(5000)) {
+        // 结束挖掘
+        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) || packetManager.packetSendTimer.hasReached(6000)) {
           stonesToMineThisTime = filterAir(stonesToMineThisTime);
           stage = Stage.PACKET_MINE_FIRST;
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
