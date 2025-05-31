@@ -5,8 +5,8 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.mirolls.melodyskyplus.wrapper.WorldWrapper;
 import xyz.Melody.Utils.Vec3d;
-import xyz.Melody.Utils.math.RotationUtil;
 
 interface RayTraceRunnable {
   MovingObjectPosition run(Vec3d target);
@@ -29,7 +29,11 @@ public class PlayerUtils {
   }
 
   public static boolean rayTrace(BlockPos end) {
-    return rayTrace(end, RotationUtil::rayTrace);
+    return rayTrace(end, target -> {
+      Minecraft mc = Minecraft.getMinecraft();
+      Vec3 eyesVec = mc.thePlayer.getPositionEyes(1.0F);
+      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+    });
   }
 
   public static boolean rayTrace(BlockPos start, BlockPos end) {
@@ -37,7 +41,7 @@ public class PlayerUtils {
       Minecraft mc = Minecraft.getMinecraft();
       Vec3d center = Vec3d.ofCenter(start);
       Vec3 eyesVec = new Vec3(center.getX(), center.getY() + 0.5 + mc.thePlayer.getEyeHeight(), center.getZ());
-      return mc.theWorld.rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
     });
   }
 
