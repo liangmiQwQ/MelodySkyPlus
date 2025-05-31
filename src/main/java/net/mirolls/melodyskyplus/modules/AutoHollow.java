@@ -278,14 +278,22 @@ public class AutoHollow extends ModulePlus {
 
         if (mc.theWorld.getBlockState(pos).getBlock() != Blocks.air) {
           if (RotationUtil.isLookingAtBlock(pos)) {
-            if (!posesMined.contains(pos)) {
-              mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
-              posesMined.add(pos);
+            if (mc.theWorld.getBlockState(pos).getBlock() == Blocks.chest) {
+              if (lastRightClick.hasReached(5000)) {
+                lastRightClick.reset();
+                Client.rightClick();
+              }
+            } else {
+              if (!posesMined.contains(pos)) {
+                mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
+                posesMined.add(pos);
+              }
+              mc.thePlayer.swingItem();
             }
-            mc.thePlayer.swingItem();
           }
         } else {
           stonesToMineThisTime = filterAir(stonesToMineThisTime);
+          posesMined.clear();
         }
 
       } else {
@@ -362,7 +370,7 @@ public class AutoHollow extends ModulePlus {
       // filter air
       stones = filterAir(stones);
       // 生成 stonesToMineThisTime
-      stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 25).collect(Collectors.toList());
+      stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 23).collect(Collectors.toList());
       // 在stones里移除这些
       stones.removeAll(stonesToMineThisTime);
 

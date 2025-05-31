@@ -83,8 +83,13 @@ public class EtherWarpUtils {
     int loop = 0;
     for (BlockPos pos : iterable) {
       loop++;
-      if (loop > 100000) {
-        MelodySkyPlus.LOGGER.info("Loop time is bigger than 100000, maybe meet infinite loop");
+      if (loop > 200000) {
+        MelodySkyPlus.LOGGER.info("Loop time is bigger than 200000, maybe meet infinite loop.");
+        MelodySkyPlus.LOGGER.info("========= Debug Information =========");
+        MelodySkyPlus.LOGGER.info("Two point: {}, {}", target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
+        MelodySkyPlus.LOGGER.info("PlayerLocation: {}", player);
+        MelodySkyPlus.LOGGER.info("Target: {}", target);
+        MelodySkyPlus.LOGGER.info("=====================================");
         break;
       }
       // 只有可到达的ether warp点
