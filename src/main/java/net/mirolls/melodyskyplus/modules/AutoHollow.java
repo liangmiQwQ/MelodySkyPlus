@@ -292,9 +292,20 @@ public class AutoHollow extends ModulePlus {
         if (mc.theWorld.getBlockState(pos).getBlock() != Blocks.air) {
           if (RotationUtil.isLookingAtBlock(pos)) {
             if (mc.theWorld.getBlockState(pos).getBlock() == Blocks.chest) {
-              if (lastRightClick.hasReached(5000)) {
+              if (lastRightClick.hasReached(500)) {
                 lastRightClick.reset();
-                Client.rightClick();
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), true);
+                Client.async(() -> {
+                  try {
+                    Thread.sleep(100);
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
+
+                  mc.addScheduledTask(() -> {
+                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(), false);
+                  });
+                });
               }
             } else {
               if (!posesMined.contains(pos)) {
