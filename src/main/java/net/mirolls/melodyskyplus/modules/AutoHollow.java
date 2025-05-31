@@ -212,6 +212,7 @@ public class AutoHollow extends ModulePlus {
 
         if (etherWarpPoints.isEmpty()) {
           Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+          clear();
         } else {
           long finishTime = System.currentTimeMillis();
           MelodySkyPlus.LOGGER.info("Finish path(for ether warp) finding in {}ms; Path size: {}", finishTime - startTime, etherWarpPoints.size());

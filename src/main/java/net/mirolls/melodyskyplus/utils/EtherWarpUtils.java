@@ -73,11 +73,13 @@ public class EtherWarpUtils {
       return new HashSet<>();
     }
 
-    int x = target.getX() - player.getX() == 0 ? 0 : target.getX() - player.getX() / Math.abs(target.getX() - player.getX());
-    int y = target.getY() - player.getY() == 0 ? 0 : target.getY() - player.getY() / Math.abs(target.getY() - player.getY());
-    int z = target.getZ() - player.getZ() == 0 ? 0 : target.getZ() - player.getZ() / Math.abs(target.getZ() - player.getZ());
+    int dx = Integer.compare(target.getX(), player.getX());
+    int dy = Integer.compare(target.getY(), player.getY());
+    int dz = Integer.compare(target.getZ(), player.getZ());
 
-    Iterable<BlockPos> iterable = BlockPos.getAllInBox(target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
+    BlockPos start = target.add(dx * radius, dy * radius, dz * radius);
+    BlockPos end = player.add(-dx * radius, -dy * radius, -dz * radius);
+    Iterable<BlockPos> iterable = BlockPos.getAllInBox(start, end);
     HashSet<BlockPos> set = new HashSet<>();
 
     int loop = 0;
@@ -86,7 +88,8 @@ public class EtherWarpUtils {
       if (loop > 200000) {
         MelodySkyPlus.LOGGER.info("Loop time is bigger than 200000, maybe meet infinite loop.");
         MelodySkyPlus.LOGGER.info("========= Debug Information =========");
-        MelodySkyPlus.LOGGER.info("Two point: {}, {}", target.add(x * radius, y * radius, z * radius), player.add((-x) * radius, (-y) * radius, (-z) * radius));
+        MelodySkyPlus.LOGGER.info("Two point: {}, {}", start, end);
+        MelodySkyPlus.LOGGER.info("Radius: {}", radius);
         MelodySkyPlus.LOGGER.info("PlayerLocation: {}", player);
         MelodySkyPlus.LOGGER.info("Target: {}", target);
         MelodySkyPlus.LOGGER.info("=====================================");
