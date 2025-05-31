@@ -103,6 +103,8 @@ public class AutoHollow extends ModulePlus {
   public void onTick(EventPreUpdate event) {
     AutoRuby ar = AutoRuby.getINSTANCE();
     if (started && ar != null) {
+
+      // 分阶段处理开点
       if (stage == Stage.LEFT_CLICK_MINE) {
         Vec3d next;
         if (currentIndex + 1 < AutoRuby.getINSTANCE().wps.size()) {
@@ -259,6 +261,9 @@ public class AutoHollow extends ModulePlus {
   }
 
   public void packetMine(boolean next) {
+    // 切换到稿子
+    mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
+
     Runnable onFinished = () -> {
       if (next) {
         next();
