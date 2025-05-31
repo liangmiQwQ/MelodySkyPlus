@@ -13,8 +13,9 @@ public class EtherWarpUtils {
 
   public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils, int maxRetryChance) {
     MelodySkyPlus.LOGGER.info("getBlocksInArea has been called");
+    long startTime = System.currentTimeMillis();
     Set<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
-    MelodySkyPlus.LOGGER.info("getBlocksInArea's return value size: {}", blockInArea.size());
+    MelodySkyPlus.LOGGER.info("getBlocksInArea's return value size: {} in {}ms", blockInArea.size(), System.currentTimeMillis() - startTime);
 
     EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer, maxRetryChance);
 
