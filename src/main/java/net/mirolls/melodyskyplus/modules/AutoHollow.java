@@ -43,6 +43,7 @@ public class AutoHollow extends ModulePlus {
   private final PacketManager packetManager = new PacketManager();
   private final List<BlockPos> posesMined = new ArrayList<>();
   private final TimerUtil lastRightClick = new TimerUtil();
+  private final TimerUtil lastChangeItem = new TimerUtil();
   // public
   public Stage stage;
   public boolean started = false;
@@ -52,7 +53,7 @@ public class AutoHollow extends ModulePlus {
   public Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
   public Numbers<Double> aotvSlot = new Numbers<>("Aotv Slot", 2.0, 1.0, 9.0, 1.0);
   public Numbers<Double> cobbleStoneSlot = new Numbers<>("Cobble Stones Slot", 2.0, 1.0, 9.0, 1.0);
-  public Option<Boolean> blatant = new Option<>("Blatant", false);
+  public Option<Boolean> blatant = new Option<>("Blatant", true);
   // privates
   private List<BlockPos> stones = new ArrayList<>();
   private Set<BlockPos> completeStones = new HashSet<>();
@@ -132,7 +133,9 @@ public class AutoHollow extends ModulePlus {
       } else if (stage == Stage.WALK) {
         walk(true, stones.get(0), Stage.PACKET_MINE_SECOND);
       } else if (stage == Stage.PACKET_MINE_SECOND) {
-        packetMine(true);
+        if (lastChangeItem.hasReached(500)) {
+          packetMine(true);
+        }
       } else if (stage == Stage.GO_TO_END) {
         BlockPos next;
         if (currentIndex + 1 < AutoRuby.getINSTANCE().wps.size()) {
@@ -233,6 +236,10 @@ public class AutoHollow extends ModulePlus {
         if (etherWarpPoints.isEmpty()) {
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
           stage = nextStage;
+          if (stage == Stage.PACKET_MINE_SECOND) {
+            lastChangeItem.reset();
+            mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
+          }
         }
       }
 
@@ -361,6 +368,7 @@ public class AutoHollow extends ModulePlus {
     started = false;
     warned = false;
     stones.clear();
+    stonesToMineThisTime.clear();
     completeStones.clear();
     posesMined.clear();
     etherWarpPoints.clear();
@@ -379,6 +387,7 @@ public class AutoHollow extends ModulePlus {
       stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 23).collect(Collectors.toList());
       // 在stones里移除这些
       stones.removeAll(stonesToMineThisTime);
+      posesMined.clear();
 
       if (stonesToMineThisTime.isEmpty()) {
         Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");

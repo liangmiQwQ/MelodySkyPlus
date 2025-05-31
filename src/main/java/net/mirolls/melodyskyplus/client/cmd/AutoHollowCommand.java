@@ -17,7 +17,6 @@ public class AutoHollowCommand extends Command {
 
     if (args.length >= 1) {
       if (args[0].toLowerCase().contains("start")) {
-        Helper.sendMessage("AutoHollow: Started.");
         autoHollow.start();
       } else if (args[0].toLowerCase().contains("stop")) {
         Helper.sendMessage("AutoHollow: Stopped.");
