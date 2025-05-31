@@ -332,7 +332,7 @@ public class AutoHollow extends ModulePlus {
   public List<BlockPos> filterAir(List<BlockPos> pos) {
     return pos.stream().filter((e) -> {
           IBlockState state = mc.theWorld.getBlockState(e);
-          if (state.getBlock() == Blocks.prismarine || (state.getBlock() == Blocks.wool && EnumDyeColor.byMetadata(state.getBlock().getMetaFromState(state)) == EnumDyeColor.LIGHT_BLUE)) {
+          if (!warned && state.getBlock() == Blocks.prismarine || (state.getBlock() == Blocks.wool && EnumDyeColor.byMetadata(state.getBlock().getMetaFromState(state)) == EnumDyeColor.LIGHT_BLUE)) {
             Helper.sendMessage("Program has found mithril in the route. Please run .ah stop and dig the route by yourself or the program won't use bob.");
             warned = true;
           }
