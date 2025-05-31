@@ -135,9 +135,12 @@ public class AutoHollow extends ModulePlus {
           next = AutoRuby.getINSTANCE().wps.get(0);
         }
 
-        walk(false, next, Stage.PLACE_COBBLESTONE);
-      } else if (stage == Stage.PLACE_COBBLESTONE) {
-        // 从这附近找到最近的点 放石头
+        walk(false, next, Stage.FINISHED);
+      } else if (stage == Stage.FINISHED) {
+        clear();
+        Helper.sendMessage("Finished digging a hollow, place a stone and run .ah start again to continue.");
+      } else if (stage == Stage.PLACE_COBBLESTONE) { // 永远不会触发
+        // 从这附近找到最近的点, 放石头
         BlockPos next;
         final BlockPos[] offsets = new BlockPos[]{
             new BlockPos(1, 0, 0),
@@ -166,7 +169,6 @@ public class AutoHollow extends ModulePlus {
         }
 
         Helper.sendMessage("Ready to place stone. cleared.");
-        clear();
       }
     }
   }
@@ -372,6 +374,7 @@ public class AutoHollow extends ModulePlus {
     WALK,
     FALLING,
     GO_TO_END,
+    FINISHED,
     PLACE_COBBLESTONE,
   }
 }
