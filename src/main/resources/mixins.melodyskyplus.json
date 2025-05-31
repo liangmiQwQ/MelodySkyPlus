@@ -12,6 +12,7 @@
     "GoldNukerMixin",
     "HUDManagerMixin",
     "MiningProtectMixin",
+    "MiningSkillMixin",
     "MithrilNukerMixin",
     "ModuleManagerMixin",
     "PinglessMiningMixin",
