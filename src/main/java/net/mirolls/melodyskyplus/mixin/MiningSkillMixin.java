@@ -13,7 +13,7 @@ import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
 import java.util.Arrays;
 
-@Mixin(MiningSkill.class)
+@Mixin(value = MiningSkill.class, remap = false)
 public class MiningSkillMixin {
   public Option<Boolean> melodySkyPlus$useRod = new Option<>("Use Rod", false);
 
@@ -32,7 +32,7 @@ public class MiningSkillMixin {
     return originalValues;
   }
 
-  @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true)
+  @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true, remap = false)
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
     if (AntiBug.isBugRemoved() && melodySkyPlus$useRod.getValue()) {
       MelodySkyPlus.miningSkillExecutor.start();
