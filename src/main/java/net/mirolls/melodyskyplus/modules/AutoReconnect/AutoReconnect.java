@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.modules.AutoReconnect;
 
+import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.module.Module;
@@ -7,7 +8,7 @@ import xyz.Melody.module.ModuleType;
 
 import java.util.Iterator;
 
-public class AutoReconnect extends Module {
+public class AutoReconnect extends ModulePlus {
 
   private static AutoReconnect INSTANCE;
   public String host;

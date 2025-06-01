@@ -4,8 +4,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.mirolls.melodyskyplus.wrapper.WorldWrapper;
 import xyz.Melody.Utils.Vec3d;
-import xyz.Melody.Utils.math.RotationUtil;
+
+interface RayTraceRunnable {
+  MovingObjectPosition run(Vec3d target);
+}
 
 public class PlayerUtils {
 
@@ -23,7 +28,24 @@ public class PlayerUtils {
     return MathHelper.wrapAngleTo180_float((current + deltaAngle / 2) % 360);
   }
 
-  public static boolean rayTrace(BlockPos blockPos) {
+  public static boolean rayTrace(BlockPos end) {
+    return rayTrace(end, target -> {
+      Minecraft mc = Minecraft.getMinecraft();
+      Vec3 eyesVec = mc.thePlayer.getPositionEyes(1.0F);
+      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+    });
+  }
+
+  public static boolean rayTrace(BlockPos start, BlockPos end) {
+    return rayTrace(end, (target) -> {
+      Minecraft mc = Minecraft.getMinecraft();
+      Vec3d center = Vec3d.ofCenter(start);
+      Vec3 eyesVec = new Vec3(center.getX(), center.getY() + 0.5 + mc.thePlayer.getEyeHeight(), center.getZ());
+      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+    });
+  }
+
+  private static boolean rayTrace(BlockPos blockPos, RayTraceRunnable rayTrace) {
     Vec3d target = null;
     Vec3d[] var2 = Vec3d.points(blockPos);
     int var3 = var2.length;
@@ -31,7 +53,7 @@ public class PlayerUtils {
 
     while (var4 < var3) {
       Vec3d vec = var2[var4];
-      MovingObjectPosition trajectory = RotationUtil.rayTrace(vec);
+      MovingObjectPosition trajectory = rayTrace.run(vec);
       if (trajectory == null) {
         target = vec;
         break;
@@ -63,6 +85,7 @@ public class PlayerUtils {
     return target != null;
   }
 
+
   public static BlockPos getPlayerLocation() {
     Minecraft mc = Minecraft.getMinecraft();
     return getPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
@@ -85,7 +108,14 @@ public class PlayerUtils {
       yaw1 = (yaw1 - (-180) + 180);
       diff = yaw1 - yaw2;
     }
-    
+
     return diff;
+  }
+
+  public static double distanceToPos(BlockPos pos) {
+    Vec3d center = Vec3d.ofCenter(pos);
+    Vec3d player = new Vec3d(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ);
+
+    return center.distanceTo(player);
   }
 }
