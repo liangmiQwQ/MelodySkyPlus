@@ -31,6 +31,7 @@ public class MelodySkyPlus {
   public static PathRenderer pathRenderer;
   public static PathExec pathExec;
   public static PackRecord packRecord;
+  public static MiningSkillExecutor miningSkillExecutor;
 
 
   public static String verify(String text) {
@@ -56,6 +57,7 @@ public class MelodySkyPlus {
     pathExec = new PathExec();
     pathRenderer = new PathRenderer();
     packRecord = new PackRecord();
+    miningSkillExecutor = new MiningSkillExecutor();
     // events
 
     try {
