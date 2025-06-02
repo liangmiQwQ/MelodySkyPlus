@@ -149,7 +149,8 @@ public class AutoHollow extends ModulePlus {
         }
 
         // 结束挖掘
-        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(1000)) || packetManager.packetSendTimer.hasReached(6000)) {
+        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(500)) || packetManager.packetSendTimer.hasReached(1000)) {
+          // 由于是检测动画 可以用更短的时间 以提高效率
           stonesToMineThisTime = filterAir(stonesToMineThisTime);
           stage = Stage.PACKET_MINE_FIRST;
           KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
