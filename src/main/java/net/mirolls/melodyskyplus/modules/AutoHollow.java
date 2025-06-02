@@ -117,6 +117,11 @@ public class AutoHollow extends ModulePlus {
         }
         Rotation rotation = RotationUtil.vec3ToRotation(next);
 
+        if (Math.abs(rotation.getPitch()) > 75) {
+          // 保护机制 避免垂直向上或者垂直向下挖掘
+          stage = Stage.PACKET_MINE_FIRST;
+        }
+
         mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
         mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
 
