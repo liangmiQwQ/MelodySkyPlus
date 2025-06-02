@@ -45,6 +45,7 @@ public class AutoHollow extends ModulePlus {
   private final List<BlockPos> posesMined = new ArrayList<>();
   private final TimerUtil lastRightClick = new TimerUtil();
   private final TimerUtil lastChangeItem = new TimerUtil();
+  private final TimerUtil finishedRotate = new TimerUtil();
   // public
   public Stage stage;
   public boolean started = false;
@@ -255,9 +256,13 @@ public class AutoHollow extends ModulePlus {
       Rotation rotation = RotationUtil.posToRotation(nextPos);
 
       // 切换到下一个点
-      if (PlayerUtils.getPlayerLocation().down().equals(nextPos)) {
+      if (PlayerUtils.getPlayerLocation().down().equals(nextPos) || PlayerUtils.getPlayerLocation().equals(nextPos)) {
+        // 有的时候可能会出现该点被挖掘, 还未反应过来的情况
         // 脚下的点位是目标点位
         etherWarpPoints.remove(0);
+        // 移除点的时候重置转头计时器
+        finishedRotate.reset().pause();
+
 
         // 如果是最后一个点 则进入后续状态
         if (etherWarpPoints.isEmpty()) {
@@ -275,8 +280,14 @@ public class AutoHollow extends ModulePlus {
       mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
 
       if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
+        // 适当增加延迟 防止弱智hypixel无法检测到
+        if (finishedRotate.getCurrentMS() == 0) {
+          finishedRotate.reset();
+        }
+
         // 如果正在看着这个点
-        if (lastRightClick.hasReached(500)) {
+        if (finishedRotate.hasReached(150) && lastRightClick.hasReached(500)) {
+          // 要求距离转头完毕有150ms, 防止hypixel延迟
           lastRightClick.reset();
           Client.rightClick();
         }
@@ -403,6 +414,7 @@ public class AutoHollow extends ModulePlus {
   public void clear() {
     stage = null;
     packetManager.reset();
+    finishedRotate.reset().pause();
     started = false;
     warned = false;
     stones.clear();
@@ -426,6 +438,7 @@ public class AutoHollow extends ModulePlus {
       // 在stones里移除这些
       stones.removeAll(stonesToMineThisTime);
       posesMined.clear();
+      finishedRotate.reset().pause();
 
       if (stonesToMineThisTime.isEmpty()) {
         Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
