@@ -7,10 +7,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import xyz.Melody.Client;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
 import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 @Mixin(value = MiningSkill.class, remap = false)
@@ -36,6 +38,19 @@ public class MiningSkillMixin {
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
     if (AntiBug.isBugRemoved() && melodySkyPlus$useRod.getValue()) {
       MelodySkyPlus.miningSkillExecutor.start();
+
+      try {
+        Class<?> client = Class.forName("xyz.Melody.Client");
+        Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");
+        pickaxeField.setAccessible(true);
+
+        pickaxeField.set(Client.class, false);
+
+      } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
+        MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
+        throw new RuntimeException(e);
+      }
+
       cir.cancel();
       cir.setReturnValue(false);
     }
