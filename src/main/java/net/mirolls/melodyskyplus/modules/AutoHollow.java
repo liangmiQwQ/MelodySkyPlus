@@ -291,10 +291,11 @@ public class AutoHollow extends ModulePlus {
         }
 
         // 如果正在看着这个点
-        if (finishedRotate.hasReached(150) && lastRightClick.hasReached(500)) {
+        if ((finishedRotate.getCurrentMS() - finishedRotate.getLastMS()) > 150 && (lastRightClick.getCurrentMS() - lastRightClick.getLastMS()) > 500) {
           // 要求距离转头完毕有150ms, 防止hypixel延迟
           lastRightClick.reset();
           Client.rightClick();
+          MelodySkyPlus.LOGGER.info("1");
         }
       }
 
