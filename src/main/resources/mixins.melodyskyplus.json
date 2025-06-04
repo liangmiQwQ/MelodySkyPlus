@@ -16,6 +16,7 @@
     "MithrilNukerMixin",
     "ModuleManagerMixin",
     "PinglessMiningMixin",
+    "RouteHelperMixin",
     "minecraft.NetWorkManagerMixin"
   ],
   "client": [
