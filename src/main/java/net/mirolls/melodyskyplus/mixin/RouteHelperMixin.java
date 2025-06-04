@@ -69,7 +69,7 @@ public class RouteHelperMixin {
       routeVecs.clear();
       for (int i = 0; i < ar.wps.size(); ++i) {
         Vec3d foot = Vec3d.ofCenter(ar.wps.get(i));
-        Vec3d cur = new Vec3d(foot.getX(), ar.wps.get(i).getY() + mc.thePlayer.getEyeHeight(), foot.getZ());
+        Vec3d cur = new Vec3d(foot.getX(), ar.wps.get(i).getY() + 1 + mc.thePlayer.getEyeHeight(), foot.getZ());
         Vec3d next = Vec3d.ofCenter(i + 1 == ar.wps.size() ? ar.wps.get(0) : ar.wps.get(i + 1));
 
         this.routeVecs.add(cur);
