@@ -62,8 +62,6 @@ public class RouteHelperMixin {
   @Inject(method = "calculate", at = @At("HEAD"), remap = false, cancellable = true)
   private void calculate(CallbackInfo ci) {
     if (AntiBug.isBugRemoved() && melodySkyPlus$liteMode.getValue()) {
-      long startTime = System.currentTimeMillis();
-
       Minecraft mc = Minecraft.getMinecraft();
       AutoRuby ar = Objects.requireNonNull(AutoRuby.getINSTANCE());
 
