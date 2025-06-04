@@ -6,7 +6,15 @@ import xyz.Melody.Utils.Vec3d;
 import java.util.*;
 
 public class BlockUtils {
+  private static final Map<StartEndInfo, List<BlockPos>> doubleHeightStoreMap = new HashMap<>();
+  private static final Map<StartEndInfo, List<BlockPos>> normalStoreMap = new HashMap<>();
+
   public static List<BlockPos> getDoubleHeightBlocksBetween(Vec3d startVec, Vec3d endVec) {
+    StartEndInfo info = new StartEndInfo(startVec, endVec);
+    List<BlockPos> storeValue = doubleHeightStoreMap.get(info);
+
+    if (storeValue != null) return storeValue;
+
     List<BlockPos> betweens = getBlocksBetween(startVec, endVec);
     Set<BlockPos> resultSet = new HashSet<>(betweens);
 
@@ -21,10 +29,16 @@ public class BlockUtils {
     List<BlockPos> sorted = new ArrayList<>(resultSet);
     sorted.sort(Comparator.comparingDouble(e -> e.distanceSq(startVec.x, startVec.y, startVec.z)));
 
+    doubleHeightStoreMap.put(info, sorted);
     return sorted;
   }
 
   public static List<BlockPos> getBlocksBetween(Vec3d startVec, Vec3d endVec) {
+    StartEndInfo info = new StartEndInfo(startVec, endVec);
+    List<BlockPos> storeValue = normalStoreMap.get(info);
+
+    if (storeValue != null) return storeValue;
+
     List<BlockPos> blocks = new ArrayList<>();
 
     double startX = startVec.x;
@@ -104,6 +118,7 @@ public class BlockUtils {
       }
     }
 
+    normalStoreMap.put(info, blocks);
     return blocks;
   }
 
@@ -113,5 +128,27 @@ public class BlockUtils {
     double zSq = Math.pow(start.getZ() - end.getZ(), 2);
 
     return xSq + ySq + zSq;
+  }
+}
+
+class StartEndInfo {
+  Vec3d start;
+  Vec3d end;
+
+  public StartEndInfo(Vec3d start, Vec3d end) {
+    this.start = start;
+    this.end = end;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof StartEndInfo)) return false;
+    StartEndInfo info = (StartEndInfo) o;
+    return Objects.equals(start, info.start) && Objects.equals(end, info.end);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(start, end);
   }
 }

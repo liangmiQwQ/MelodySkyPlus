@@ -11,6 +11,7 @@ import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
 import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 @Mixin(value = MiningSkill.class, remap = false)
@@ -35,9 +36,29 @@ public class MiningSkillMixin {
   @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true, remap = false)
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
     if (AntiBug.isBugRemoved() && melodySkyPlus$useRod.getValue()) {
-      MelodySkyPlus.miningSkillExecutor.start();
-      cir.cancel();
-      cir.setReturnValue(false);
+      try {
+        // 读 看是否应该执行
+        Class<?> client = Class.forName("xyz.Melody.Client");
+        Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");
+        pickaxeField.setAccessible(true);
+
+        // 若应该执行
+        if ((boolean) pickaxeField.get(null)) {
+          MelodySkyPlus.miningSkillExecutor.start();
+
+          pickaxeField.set(null, false);
+
+          cir.cancel();
+          cir.setReturnValue(true);
+        } else {
+          // 否则
+          cir.setReturnValue(false);
+        }
+      } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
+        MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
+        throw new RuntimeException(e);
+      }
+
     }
   }
 }

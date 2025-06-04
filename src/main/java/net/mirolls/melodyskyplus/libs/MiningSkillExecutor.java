@@ -3,6 +3,7 @@ package net.mirolls.melodyskyplus.libs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.mirolls.melodyskyplus.MelodySkyPlus;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventBus;
 import xyz.Melody.Event.EventHandler;
@@ -51,6 +52,7 @@ public class MiningSkillExecutor {
   }
 
   public void start() {
+    MelodySkyPlus.LOGGER.info("has run start.");
     if (tick > 10) {
       disableMacros();
       tick = 0;
