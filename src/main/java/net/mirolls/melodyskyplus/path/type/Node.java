@@ -2,6 +2,7 @@ package net.mirolls.melodyskyplus.path.type;
 
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.client.task.TaskHelper;
 import net.mirolls.melodyskyplus.path.find.PathPos;
@@ -54,7 +55,7 @@ public class Node {
 
 
       if (pos.getType() == PathPos.PathNodeType.WALK) {
-        if (AntiBug.isBugRemoved()) {
+        if (Verify.isVerified()) {
           Walk node = new Walk(pos.getPos(), rotation, distance, -1);
 
           values.add(node);

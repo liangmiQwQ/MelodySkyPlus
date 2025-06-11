@@ -1,6 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
-import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.cmd.AutoHollowCommand;
 import net.mirolls.melodyskyplus.client.cmd.RayTraceCommand;
 import net.mirolls.melodyskyplus.client.cmd.SmartyPathFinderCommand;
@@ -23,7 +23,7 @@ public class CommandManagerMixin {
       at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
   )
   public void init(CallbackInfo ci) {
-    if (AntiBug.isBugRemoved()) {
+    if (Verify.isVerified()) {
       this.commands.add(new SmartyPathFinderCommand());
       this.commands.add(new AutoHollowCommand());
       this.commands.add(new RayTraceCommand());

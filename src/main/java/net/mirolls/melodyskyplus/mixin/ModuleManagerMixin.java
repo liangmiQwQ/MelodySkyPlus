@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.MelodyPlusModules;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
@@ -28,7 +29,7 @@ public class ModuleManagerMixin {
 
   @Inject(method = "init", remap = false, at = @At("RETURN"))
   public void initReturn(CallbackInfo ci) {
-    if (AntiBug.isBugRemoved()) {
+    if (AntiBug.isBugRemoved() && Verify.isVerified()) {
       Objects.requireNonNull(SmartyPathFinder.getINSTANCE()).setEnabled(true);
     }
   }
