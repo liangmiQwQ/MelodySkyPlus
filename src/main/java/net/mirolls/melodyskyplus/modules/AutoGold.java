@@ -55,7 +55,7 @@ public class AutoGold extends ModulePlus {
   public AutoGold() {
     super("AutoGold", new String[]{""}, ModuleType.Mining);
 
-    this.addValues(walkTime, findGoldRadius);
+    this.addValues(walkTime, findGoldRadius, usePathFinder);
     walkTimer = (new TimerUtil()).reset();
 
     this.setModInfo("Auto mine gold and find path in Mines of Divan");
