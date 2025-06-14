@@ -4,41 +4,113 @@ import net.minecraft.util.BlockPos;
 import xyz.Melody.Utils.Vec3d;
 
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class BlockUtils {
-  private static final Map<StartEndInfo, List<BlockPos>> doubleHeightStoreMap = new HashMap<>();
-  private static final Map<StartEndInfo, List<BlockPos>> normalStoreMap = new HashMap<>();
+  // 使用LRU缓存限制内存增长 (最大512条路径)
+  private static final int MAX_CACHE_SIZE = 512;
+  private static final Map<StartEndInfo, List<BlockPos>> doubleHeightStoreMap =
+      Collections.synchronizedMap(new LruCache<>(MAX_CACHE_SIZE));
+  private static final Map<StartEndInfo, List<BlockPos>> normalStoreMap =
+      Collections.synchronizedMap(new LruCache<>(MAX_CACHE_SIZE));
+
+  // 线程安全优化
+  private static final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+  // 手动清空缓存的API
+  public static void clearCaches() {
+    doubleHeightStoreMap.clear();
+    normalStoreMap.clear();
+  }
 
   public static List<BlockPos> getDoubleHeightBlocksBetween(Vec3d startVec, Vec3d endVec) {
-    StartEndInfo info = new StartEndInfo(startVec, endVec);
-    List<BlockPos> storeValue = doubleHeightStoreMap.get(info);
-
-    if (storeValue != null) return storeValue;
-
-    List<BlockPos> betweens = getBlocksBetween(startVec, endVec);
-    Set<BlockPos> resultSet = new HashSet<>(betweens);
-
-    for (BlockPos pos : betweens) {
-      if (resultSet.contains(pos.down()) || resultSet.contains(pos.up())) {
-        continue;
-      }
-
-      resultSet.add(pos.down());
+    // 超长路径直接计算不缓存 (距离平方>1,000,000)
+    if (calcDistanceSq(startVec, endVec) > 1_000_000) {
+      return calculateDoubleHeightWithoutCache(startVec, endVec);
     }
 
-    List<BlockPos> sorted = new ArrayList<>(resultSet);
-    sorted.sort(Comparator.comparingDouble(e -> e.distanceSq(startVec.x, startVec.y, startVec.z)));
+    StartEndInfo info = new StartEndInfo(startVec, endVec);
 
-    doubleHeightStoreMap.put(info, sorted);
+    // 读缓存
+    lock.readLock().lock();
+    try {
+      List<BlockPos> cached = doubleHeightStoreMap.get(info);
+      if (cached != null) return new ArrayList<>(cached); // 返回副本防止外部修改
+    } finally {
+      lock.readLock().unlock();
+    }
+
+    // 缓存未命中时计算
+    List<BlockPos> result = calculateDoubleHeightWithoutCache(startVec, endVec);
+
+    // 写缓存
+    lock.writeLock().lock();
+    try {
+      doubleHeightStoreMap.put(info, new ArrayList<>(result)); // 存储副本
+      return result;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  private static List<BlockPos> calculateDoubleHeightWithoutCache(Vec3d startVec, Vec3d endVec) {
+    List<BlockPos> betweens = getBlocksBetween(startVec, endVec);
+    Set<BlockPos> resultSet = new HashSet<>(betweens.size() * 2);
+
+    // 添加原始路径块
+    resultSet.addAll(betweens);
+
+    // 添加下层块（如果相邻块不存在）
+    for (BlockPos pos : betweens) {
+      BlockPos downPos = pos.down();
+      if (!resultSet.contains(downPos) && !resultSet.contains(downPos.down()) &&
+          !resultSet.contains(downPos.up())) {
+        resultSet.add(downPos);
+      }
+    }
+
+    // 按距离排序
+    List<BlockPos> sorted = new ArrayList<>(resultSet);
+    final Vec3d finalStart = startVec;
+    sorted.sort(Comparator.comparingDouble(
+        pos -> pos.distanceSq(finalStart.x, finalStart.y, finalStart.z)
+    ));
+
     return sorted;
   }
 
   public static List<BlockPos> getBlocksBetween(Vec3d startVec, Vec3d endVec) {
+    // 超长路径直接计算不缓存
+    if (calcDistanceSq(startVec, endVec) > 1_000_000) {
+      return calculateBlocksWithoutCache(startVec, endVec);
+    }
+
     StartEndInfo info = new StartEndInfo(startVec, endVec);
-    List<BlockPos> storeValue = normalStoreMap.get(info);
 
-    if (storeValue != null) return storeValue;
+    // 读缓存
+    lock.readLock().lock();
+    try {
+      List<BlockPos> cached = normalStoreMap.get(info);
+      if (cached != null) return new ArrayList<>(cached);
+    } finally {
+      lock.readLock().unlock();
+    }
 
+    // 缓存未命中时计算
+    List<BlockPos> result = calculateBlocksWithoutCache(startVec, endVec);
+
+    // 写缓存
+    lock.writeLock().lock();
+    try {
+      normalStoreMap.put(info, new ArrayList<>(result));
+      return result;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  private static List<BlockPos> calculateBlocksWithoutCache(Vec3d startVec, Vec3d endVec) {
     List<BlockPos> blocks = new ArrayList<>();
 
     double startX = startVec.x;
@@ -88,7 +160,7 @@ public class BlockUtils {
 
     while (true) {
       double minT = Math.min(Math.min(tMaxX, tMaxY), tMaxZ);
-      List<Integer> axes = new ArrayList<>();
+      List<Integer> axes = new ArrayList<>(3);
       if (tMaxX == minT) axes.add(0);
       if (tMaxY == minT) axes.add(1);
       if (tMaxZ == minT) axes.add(2);
@@ -118,22 +190,36 @@ public class BlockUtils {
       }
     }
 
-    normalStoreMap.put(info, blocks);
     return blocks;
   }
 
   public static double calcDistanceSq(Vec3d start, Vec3d end) {
-    double xSq = Math.pow(start.getX() - end.getX(), 2);
-    double ySq = Math.pow(start.getY() - end.getY(), 2);
-    double zSq = Math.pow(start.getZ() - end.getZ(), 2);
-
-    return xSq + ySq + zSq;
+    double dx = start.x - end.x;
+    double dy = start.y - end.y;
+    double dz = start.z - end.z;
+    return dx * dx + dy * dy + dz * dz;
   }
 }
 
+// LRU缓存实现 (最近最少使用淘汰)
+class LruCache<K, V> extends LinkedHashMap<K, V> {
+  private final int maxSize;
+
+  public LruCache(int maxSize) {
+    super(16, 0.75f, true);
+    this.maxSize = maxSize;
+  }
+
+  @Override
+  protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+    return size() > maxSize;
+  }
+}
+
+// 路径信息键
 class StartEndInfo {
-  Vec3d start;
-  Vec3d end;
+  final Vec3d start;
+  final Vec3d end;
 
   public StartEndInfo(Vec3d start, Vec3d end) {
     this.start = start;
@@ -142,9 +228,11 @@ class StartEndInfo {
 
   @Override
   public boolean equals(Object o) {
+    if (this == o) return true;
     if (!(o instanceof StartEndInfo)) return false;
-    StartEndInfo info = (StartEndInfo) o;
-    return Objects.equals(start, info.start) && Objects.equals(end, info.end);
+    StartEndInfo that = (StartEndInfo) o;
+    return Objects.equals(start, that.start) &&
+        Objects.equals(end, that.end);
   }
 
   @Override

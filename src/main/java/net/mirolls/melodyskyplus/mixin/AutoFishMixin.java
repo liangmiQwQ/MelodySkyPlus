@@ -5,7 +5,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.util.StringUtils;
-import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.Verify;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import xyz.Melody.System.Managers.Client.FriendManager;
@@ -26,7 +26,7 @@ public class AutoFishMixin {
   private boolean filterateEntity(EntityLivingBase e, Vec3d player, double dist) {
     Minecraft mc = Minecraft.getMinecraft();
 
-    if (AntiBug.isBugRemoved()) {
+    if (Verify.isVerified()) {
       Vec3d eVec = Vec3d.of(e.getPositionVector());
       if (e != mc.thePlayer && !(player.distanceTo(eVec) > dist)) {
         if (e instanceof EntityLivingBase && e.isEntityAlive()) {

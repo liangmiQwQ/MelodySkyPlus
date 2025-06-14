@@ -10,6 +10,7 @@
     "CommandManagerMixin",
     "GemstoneNukerMixin",
     "GoldNukerMixin",
+    "HardStoneNukerMixin",
     "HUDManagerMixin",
     "MiningProtectMixin",
     "MiningSkillMixin",

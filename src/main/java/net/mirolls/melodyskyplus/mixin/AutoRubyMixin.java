@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.StringUtils;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
+import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
@@ -86,7 +87,7 @@ public class AutoRubyMixin {
 
   private void melodySkyPlus$switchToJasper() {
     Minecraft mc = Minecraft.getMinecraft();
-    if (AntiBug.isBugRemoved() && started) {
+    if (Verify.isVerified() && started) {
       if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
@@ -101,7 +102,7 @@ public class AutoRubyMixin {
 
   @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
-    if (AntiBug.isBugRemoved()) {
+    if (Verify.isVerified()) {
       melodySkyPlus$reactingTick = -1;
 
       melodySkyPlus$autoHeat = new Option<>("AutoHeat", false, val -> {

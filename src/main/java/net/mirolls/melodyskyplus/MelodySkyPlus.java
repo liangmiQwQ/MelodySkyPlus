@@ -17,7 +17,7 @@ import java.io.IOException;
 @Mod(modid = MelodySkyPlus.MODID, version = MelodySkyPlus.VERSION)
 public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
-  public static final String VERSION = "1.3.1";
+  public static final String VERSION = "1.3.2";
   public static final String MELODY_VERSION = "2.14.5";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
   public static RotationLib rotationLib;
