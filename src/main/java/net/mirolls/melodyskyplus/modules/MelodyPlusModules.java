@@ -19,7 +19,6 @@ public class MelodyPlusModules {
       newModules.add(new AutoGold());
       newModules.add(new AutoLobby());
       newModules.add(new AutoHollow());
-      newModules.add(new RouteNuker());
     }
 
     return newModules;

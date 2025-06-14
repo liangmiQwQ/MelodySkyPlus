@@ -41,7 +41,7 @@ public class AutoGold extends ModulePlus {
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
   private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
-  private final Option<Boolean> usePathFinder = new Option<>("UsePathFinder", true);
+  private final Option<Boolean> usePathFinder = new Option<>("UsePathFinder", false);
 
   private int findingGoldTick = -1;
   private int rotateDoneTick = -2147483647;
@@ -473,6 +473,9 @@ public class AutoGold extends ModulePlus {
 
   @Override
   public void onEnable() {
+    if (usePathFinder.getValue()) {
+      Helper.sendMessage("[WARN] You're using AutoGold with SmartyPathFinder, it's unstable, it may cause some problems.");
+    }
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
     rotateToGoldDoneTick = -2147483647;
