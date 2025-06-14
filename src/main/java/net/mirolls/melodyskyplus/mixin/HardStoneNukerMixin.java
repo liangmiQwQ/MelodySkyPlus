@@ -9,6 +9,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.util.Vec3i;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +30,10 @@ import java.util.Comparator;
 
 @Mixin(value = HardStoneNuker.class, remap = false)
 public class HardStoneNukerMixin {
-  private final Option<Boolean> melodySkyPlus$routeMiner = new Option<>("RouteMiner", true);
+  // 配置
+  private final Option<Boolean> melodySkyPlus$ignoreWall = new Option<>("IgnoreWall", false);
+  private Option<Boolean> melodySkyPlus$routeMiner;
+
   @Shadow
   private Numbers<Double> range;
   @Shadow
@@ -44,9 +48,14 @@ public class HardStoneNukerMixin {
       at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/HardStoneNuker;addValues([Lxyz/Melody/Event/value/Value;)V"),
       index = 0)
   public Value[] addValueArgs(Value[] originalValues) {
+    melodySkyPlus$routeMiner = new Option<>("RouteMiner", true, (val) -> {
+      melodySkyPlus$routeMiner.setEnabled(val);
+    });
+
     if (Verify.isVerified() && AntiBug.isBugRemoved()) {
-      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 1);
-      returnValues[returnValues.length - 1] = melodySkyPlus$routeMiner;
+      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
+      returnValues[returnValues.length - 2] = melodySkyPlus$routeMiner;
+      returnValues[returnValues.length - 1] = melodySkyPlus$ignoreWall;
 
       return returnValues;
     }
@@ -72,7 +81,7 @@ public class HardStoneNukerMixin {
         // 水平方向：range格
         // 垂直方向：height格（向上）和1格（向下）
         Vec3i searchArea = new Vec3i(range, height, range);
-        Vec3i depthArea = new Vec3i(range, 1.0F, range);  // 向下搜索1格
+        Vec3i depthArea = new Vec3i(range, 2.0F, range);  // 向下搜索2格 以便挖掘脚下的方块
 
         // 存储找到的符合条件的方块位置
         ArrayList<Vec3> foundBlocks = new ArrayList<>();
@@ -96,7 +105,8 @@ public class HardStoneNukerMixin {
                 @SuppressWarnings("unchecked")
                 ArrayList<BlockPos> routes = (ArrayList<BlockPos>) field.get(routeHelper);
 
-                if (routes.contains(blockPos)) {
+                // 在BlockList中的
+                if (routes.contains(blockPos) && (melodySkyPlus$ignoreWall.getValue() || PlayerUtils.rayTrace(blockPos))) {
                   // 基础检查通过
                   // 获取该位置的方块状态
                   IBlockState blockState = mc.theWorld.getBlockState(blockPos);
