@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemPickaxe;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
 import net.minecraft.util.Vec3i;
@@ -15,11 +17,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import xyz.Melody.Event.events.rendering.EventRender2D;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
 import xyz.Melody.System.Managers.Client.ModuleManager;
+import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.module.modules.macros.Mining.HardStoneNuker;
 import xyz.Melody.module.modules.macros.Mining.RouteHelper;
 
@@ -32,6 +37,8 @@ import java.util.Comparator;
 public class HardStoneNukerMixin {
   // 配置
   private final Option<Boolean> melodySkyPlus$ignoreWall = new Option<>("IgnoreWall", false);
+  private final Option<Boolean> melodySkyPlus$pickaxe = new Option<>("Pickaxe", true);
+
   private Option<Boolean> melodySkyPlus$routeMiner;
 
   @Shadow
@@ -43,24 +50,60 @@ public class HardStoneNukerMixin {
   @Shadow
   private Option<Boolean> ores;
 
+  @Shadow
+  private int ticks;
+
   @SuppressWarnings("rawtypes")
   @ModifyArg(method = "<init>",
       at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/HardStoneNuker;addValues([Lxyz/Melody/Event/value/Value;)V"),
       index = 0)
   public Value[] addValueArgs(Value[] originalValues) {
     melodySkyPlus$routeMiner = new Option<>("RouteMiner", true, (val) -> {
-      melodySkyPlus$routeMiner.setEnabled(val);
+      melodySkyPlus$ignoreWall.setEnabled(val);
+      melodySkyPlus$pickaxe.setEnabled(val);
     });
 
     if (Verify.isVerified() && AntiBug.isBugRemoved()) {
-      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
-      returnValues[returnValues.length - 2] = melodySkyPlus$routeMiner;
-      returnValues[returnValues.length - 1] = melodySkyPlus$ignoreWall;
+      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 3);
+      returnValues[returnValues.length - 3] = melodySkyPlus$routeMiner;
+      returnValues[returnValues.length - 1] = melodySkyPlus$pickaxe;
+      returnValues[returnValues.length - 2] = melodySkyPlus$ignoreWall;
 
       return returnValues;
     }
 
     return originalValues;
+  }
+
+  @Inject(method = "onTick", at = @At("HEAD"), remap = false, cancellable = true)
+  public void onTick(EventRender2D event, CallbackInfo ci) {
+    Minecraft mc = Minecraft.getMinecraft();
+    Runnable cancel = () -> {
+      ++this.ticks;
+      if (this.broken.size() > 10) {
+        this.broken.clear();
+      }
+
+      if (this.ticks > 20) {
+        this.broken.clear();
+        this.ticks = 0;
+      }
+      ci.cancel();
+    };
+
+    if (melodySkyPlus$pickaxe.getValue()) {
+      if (mc.thePlayer.getHeldItem() == null) {
+        cancel.run();
+      }
+
+      String id = ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem());
+      if (mc.thePlayer.getHeldItem().getItem() != Items.prismarine_shard && !id.contains("GEMSTONE_GAUNTLET") && !(mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe)) {
+        cancel.run();
+
+      }
+
+
+    }
   }
 
 
