@@ -25,6 +25,7 @@ import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.Utils.game.item.ItemUtils;
+import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 import xyz.Melody.module.modules.macros.Mining.HardStoneNuker;
 import xyz.Melody.module.modules.macros.Mining.RouteHelper;
 
@@ -77,32 +78,33 @@ public class HardStoneNukerMixin {
 
   @Inject(method = "onTick", at = @At("HEAD"), remap = false, cancellable = true)
   public void onTick(EventRender2D event, CallbackInfo ci) {
-    Minecraft mc = Minecraft.getMinecraft();
-    Runnable cancel = () -> {
-      ++this.ticks;
-      if (this.broken.size() > 10) {
-        this.broken.clear();
+    if (Verify.isVerified() && AntiBug.isBugRemoved()) {
+      Minecraft mc = Minecraft.getMinecraft();
+      Runnable cancel = () -> {
+        ++this.ticks;
+        if (this.broken.size() > 10) {
+          this.broken.clear();
+        }
+
+        if (this.ticks > 20) {
+          this.broken.clear();
+          this.ticks = 0;
+        }
+        ci.cancel();
+      };
+
+      if (melodySkyPlus$pickaxe.getValue()) {
+        if (mc.thePlayer.getHeldItem() == null) {
+          cancel.run();
+        }
+
+        String id = ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem());
+        if (mc.thePlayer.getHeldItem().getItem() != Items.prismarine_shard && !id.contains("GEMSTONE_GAUNTLET") && !(mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe)) {
+          cancel.run();
+
+        }
+
       }
-
-      if (this.ticks > 20) {
-        this.broken.clear();
-        this.ticks = 0;
-      }
-      ci.cancel();
-    };
-
-    if (melodySkyPlus$pickaxe.getValue()) {
-      if (mc.thePlayer.getHeldItem() == null) {
-        cancel.run();
-      }
-
-      String id = ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem());
-      if (mc.thePlayer.getHeldItem().getItem() != Items.prismarine_shard && !id.contains("GEMSTONE_GAUNTLET") && !(mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe)) {
-        cancel.run();
-
-      }
-
-
     }
   }
 
@@ -135,7 +137,7 @@ public class HardStoneNukerMixin {
               playerPos.add(searchArea),     // 最大坐标（+x, +y, +z）
               playerPos.subtract(depthArea))) // 最小坐标（-x, -y, -z）
           {
-
+            if (AutoRuby.getINSTANCE().wps.contains(blockPos)) continue;
             RouteHelper routeHelper = (RouteHelper) new ModuleManager().getModuleByClass(RouteHelper.class);
             if (routeHelper != null) {
               // 反射获取blocksList
