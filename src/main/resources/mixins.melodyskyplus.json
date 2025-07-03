@@ -4,7 +4,6 @@
   "refmap": "refmap.melodyskyplus.json",
   "mixins": [
     "AuthManagerMixin",
-    "AutoFishMixin",
     "AutoRubyCMDMixin",
     "AutoRubyMixin",
     "CommandManagerMixin",
@@ -14,10 +13,8 @@
     "HUDManagerMixin",
     "MiningProtectMixin",
     "MiningSkillMixin",
-    "MithrilNukerMixin",
     "ModuleManagerMixin",
     "PinglessMiningMixin",
-    "RouteHelperMixin",
     "minecraft.NetWorkManagerMixin"
   ],
   "client": [
