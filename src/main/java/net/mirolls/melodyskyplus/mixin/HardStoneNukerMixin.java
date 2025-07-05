@@ -54,6 +54,19 @@ public class HardStoneNukerMixin {
   @Shadow
   private int ticks;
 
+  private static boolean melodySkyPlus$isIsOre(IBlockState blockState) {
+    Block block = blockState.getBlock();
+    // 检查各种矿石类型
+    return block == Blocks.diamond_ore ||
+        block == Blocks.gold_ore ||
+        block == Blocks.iron_ore ||
+        block == Blocks.coal_ore ||
+        block == Blocks.lapis_ore ||
+        block == Blocks.redstone_ore ||
+        block == Blocks.emerald_ore ||
+        block == Blocks.quartz_ore;
+  }
+
   @SuppressWarnings("rawtypes")
   @ModifyArg(method = "<init>",
       at = @At(value = "INVOKE", remap = false, target = "Lxyz/Melody/module/modules/macros/Mining/HardStoneNuker;addValues([Lxyz/Melody/Event/value/Value;)V"),
@@ -107,7 +120,6 @@ public class HardStoneNukerMixin {
       }
     }
   }
-
 
   @Inject(method = "closestStone", at = @At("HEAD"), remap = false, cancellable = true)
   private void closestStone(CallbackInfoReturnable<BlockPos> cir) {
@@ -167,16 +179,7 @@ public class HardStoneNukerMixin {
 
                   // 如果开启了矿石搜索，检查是否是各种矿石方块
                   if (ores.getValue()) {
-                    Block block = blockState.getBlock();
-                    // 检查各种矿石类型
-                    boolean isOre = block == Blocks.diamond_ore ||
-                        block == Blocks.gold_ore ||
-                        block == Blocks.iron_ore ||
-                        block == Blocks.coal_ore ||
-                        block == Blocks.lapis_ore ||
-                        block == Blocks.redstone_ore ||
-                        block == Blocks.emerald_ore ||
-                        block == Blocks.quartz_ore;
+                    boolean isOre = melodySkyPlus$isIsOre(blockState);
 
                     if (isOre && !this.broken.contains(blockPos)) {
                       foundBlocks.add(new Vec3(
