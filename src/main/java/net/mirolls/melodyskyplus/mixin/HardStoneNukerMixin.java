@@ -24,7 +24,7 @@ import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.Value;
 import xyz.Melody.System.Managers.Client.ModuleManager;
-import xyz.Melody.Utils.game.item.ItemUtils;
+import xyz.Melody.Utils.Item.ItemUtils;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 import xyz.Melody.module.modules.macros.Mining.HardStoneNuker;
 import xyz.Melody.module.modules.macros.Mining.RouteHelper;
