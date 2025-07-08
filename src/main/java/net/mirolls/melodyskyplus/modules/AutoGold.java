@@ -24,6 +24,7 @@ import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
+import xyz.Melody.Utils.render.ColorUtils;
 import xyz.Melody.Utils.render.RenderUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
@@ -260,7 +261,7 @@ public class AutoGold extends ModulePlus {
   @EventHandler
   public void onRender(EventRender3D event) {
     if (this.targetBlock != null) {
-      RenderUtil.drawFullBlockESP(this.targetBlock, new Color(44, 125, 173, 200), event.getPartialTicks());
+      RenderUtil.drawFullBlockESP(this.targetBlock, ColorUtils.transparency(new Color(44, 125, 173).getRGB(), 0.8), event.getPartialTicks());
     }
   }
 

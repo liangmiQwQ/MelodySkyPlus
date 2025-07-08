@@ -18,6 +18,7 @@ import net.minecraft.util.StringUtils;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
+import net.mirolls.melodyskyplus.libs.AutoHeatStage;
 import net.mirolls.melodyskyplus.modules.Failsafe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -49,6 +50,7 @@ import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 @SuppressWarnings("rawtypes")
 @Mixin(value = AutoRuby.class, remap = false)
@@ -83,6 +85,7 @@ public class AutoRubyMixin {
   private Option<Boolean> aim;
   private Option<Boolean> melodySkyPlus$autoHeat = null;
   private int melodySkyPlus$reactingTick = -1;
+  private AutoHeatStage melodySkyPlus$stage = AutoHeatStage.WORKING;
   private int melodySkyPlus$prevItem;
 
   private void melodySkyPlus$switchToJasper() {
@@ -358,6 +361,7 @@ public class AutoRubyMixin {
               Helper.sendMessage("Found heat too high (" + heat + "), start to junk some water.");
               if (AutoRuby.getINSTANCE().started) {
                 melodySkyPlus$reactingTick = 0;
+                melodySkyPlus$stage = AutoHeatStage.DRINKING;
                 AutoRuby.getINSTANCE().started = false;
                 MelodySkyPlus.jasperUsed.setJasperUsed(false);
               }
@@ -369,112 +373,152 @@ public class AutoRubyMixin {
       if (melodySkyPlus$reactingTick > -1) {
         melodySkyPlus$reactingTick++;
 
-        if (melodySkyPlus$reactingTick == 5) {
-          for (int i = 0; i < 9; ++i) {
-            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+        // 喝水处理
+        if (melodySkyPlus$stage == AutoHeatStage.DRINKING) {
+          if (melodySkyPlus$reactingTick == 5) {
+            // 切换物品
+            for (int i = 0; i < 9; ++i) {
+              ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+              if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
+                melodySkyPlus$prevItem = mc.thePlayer.inventory.currentItem;
+                mc.thePlayer.inventory.currentItem = i;
+              }
+            }
+          } else if (melodySkyPlus$reactingTick == 15) {
+            // 喝水
+            ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+
             if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
-              melodySkyPlus$prevItem = mc.thePlayer.inventory.currentItem;
-              mc.thePlayer.inventory.currentItem = i;
+              KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+              MelodySkyPlus.drinkingLib.register(() -> {
+                melodySkyPlus$reactingTick = 0;
+                melodySkyPlus$stage = AutoHeatStage.CALLING;
+              });
+            } else {
+              Helper.sendMessage("Missing Water Bottle in hotbar.");
+              melodySkyPlus$reactingTick = -1;
+              AutoRuby.getINSTANCE().started = true;
             }
           }
-        } else if (melodySkyPlus$reactingTick == 15) {
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+        }
 
-          if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-          } else {
-            Helper.sendMessage("Missing Water Bottle in hotbar.");
-            melodySkyPlus$reactingTick = -1;
-            AutoRuby.getINSTANCE().started = true;
-          }
-        } else if (melodySkyPlus$reactingTick == 160) {
 
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-        } else if (melodySkyPlus$reactingTick == 170) {
-          for (int i = 0; i < 9; ++i) {
-            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-            if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
-              mc.thePlayer.inventory.currentItem = i;
+        // 打电话
+        if (melodySkyPlus$stage == AutoHeatStage.CALLING) {
+          if (melodySkyPlus$reactingTick == 5) {
+            // 找手机
+            for (int i = 0; i < 9; ++i) {
+              ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+              if (item != null && ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
+                mc.thePlayer.inventory.currentItem = i;
+              }
             }
-          }
-        } else if (melodySkyPlus$reactingTick == 180) {
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
-          if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
-            mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
-          } else {
-            Helper.sendMessage("Missing AbiPhone in hotbar.");
-            melodySkyPlus$reactingTick = -1;
-            AutoRuby.getINSTANCE().started = true;
-          }
-        } else if (melodySkyPlus$reactingTick == 190) {
-          GuiScreen gui = mc.currentScreen;
-          if (gui instanceof GuiChest) {
-            Container container = ((GuiChest) gui).inventorySlots;
-            if (container instanceof ContainerChest) {
-              String chestName = this.melodySkyPlus$getGuiName(gui);
-              if (chestName.startsWith("Abiphone")) {
-                for (Slot slot : container.inventorySlots) {
-                  ItemStack item = slot.getStack(); // 获取item
-                  if (StringUtils.stripControlCodes(item.getDisplayName()).equals("Alchemist")) {
-                    // 找到对应的人了
-                    melodySkyPlus$clickSlot(slot.slotNumber, 0, 0);
-                    break;
+          } else if (melodySkyPlus$reactingTick == 15) {
+            // 打电话
+            ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+            if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
+              mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
+            } else {
+              Helper.sendMessage("Missing AbiPhone in hotbar.");
+              melodySkyPlus$reactingTick = -1;
+              AutoRuby.getINSTANCE().started = true;
+            }
+          } else if (melodySkyPlus$reactingTick == 35) {
+            // 找人
+            GuiScreen gui = mc.currentScreen;
+            if (gui instanceof GuiChest) {
+              Container container = ((GuiChest) gui).inventorySlots;
+              if (container instanceof ContainerChest) {
+                String chestName = this.melodySkyPlus$getGuiName(gui);
+                if (chestName.startsWith("Abiphone")) {
+                  for (Slot slot : container.inventorySlots) {
+                    ItemStack item = slot.getStack(); // 获取item
+                    if (StringUtils.stripControlCodes(item.getDisplayName()).equals("Alchemist")) {
+                      // 找到对应的人了
+                      melodySkyPlus$clickSlot(slot.slotNumber, 0, 0);
+                      break;
+                    }
                   }
                 }
               }
+            } else {
+              melodySkyPlus$reactingTick = 14; // 重新返回上一步 打开电话
             }
-          } else {
-            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
-          }
-        } else if (melodySkyPlus$reactingTick == 450) {
-          // 卖水
-          GuiScreen gui = mc.currentScreen;
-          if (gui instanceof GuiChest) {
-            Container container = ((GuiChest) gui).inventorySlots;
-            if (container instanceof ContainerChest) {
-              String chestName = this.melodySkyPlus$getGuiName(gui);
-              if (chestName.startsWith("Alchemist")) {
-                for (int i = 0; i < 9; ++i) {
-                  ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-                  if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
-                    melodySkyPlus$clickSlot(i + 81, 0, 0);
-                  }
+          } else if (melodySkyPlus$reactingTick > 35) {
+            // 跳转下一个阶段
+
+            GuiScreen gui = mc.currentScreen;
+            if (gui instanceof GuiChest) {
+              Container container = ((GuiChest) gui).inventorySlots;
+              if (container instanceof ContainerChest) {
+                String chestName = this.melodySkyPlus$getGuiName(gui);
+                if (chestName.startsWith("Alchemist")) {
+                  // 下个阶段
+                  melodySkyPlus$reactingTick = 0;
+                  melodySkyPlus$stage = AutoHeatStage.TRADING;
                 }
               }
             }
-          } else {
-            mc.thePlayer.closeScreen();
-            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
+
           }
-        } else if (melodySkyPlus$reactingTick == 470) {
-          GuiScreen gui = mc.currentScreen;
-          if (gui instanceof GuiChest) {
-            Container container = ((GuiChest) gui).inventorySlots;
-            if (container instanceof ContainerChest) {
-              String chestName = this.melodySkyPlus$getGuiName(gui);
-              if (chestName.startsWith("Alchemist")) {
-                for (Slot slot : container.inventorySlots) {
-                  // 买水
-                  ItemStack item = slot.getStack(); // 获取item
-                  if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
-                    melodySkyPlus$clickSlot(slot.getSlotIndex(), 0, 0);
+        }
+
+
+        // 交易
+        if (melodySkyPlus$stage == AutoHeatStage.TRADING) {
+          if (melodySkyPlus$reactingTick == 10) {
+            // 卖水
+            GuiScreen gui = mc.currentScreen;
+            if (gui instanceof GuiChest) {
+              Container container = ((GuiChest) gui).inventorySlots;
+              if (container instanceof ContainerChest) {
+                String chestName = this.melodySkyPlus$getGuiName(gui);
+                if (chestName.startsWith("Alchemist")) {
+                  for (int i = 0; i < 9; ++i) {
+                    ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
+                    if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
+                      melodySkyPlus$clickSlot(i + 81, 0, 0);
+                    }
+                  }
+                }
+              }
+            } else {
+              mc.thePlayer.closeScreen();
+              melodySkyPlus$stage = AutoHeatStage.CALLING;
+              melodySkyPlus$reactingTick = 14; // 重新返回上一步 打开电话
+            }
+          } else if (melodySkyPlus$reactingTick == 20) {
+            GuiScreen gui = mc.currentScreen;
+            if (gui instanceof GuiChest) {
+              Container container = ((GuiChest) gui).inventorySlots;
+              if (container instanceof ContainerChest) {
+                String chestName = this.melodySkyPlus$getGuiName(gui);
+                if (chestName.startsWith("Alchemist")) {
+                  for (Slot slot : container.inventorySlots) {
                     // 买水
-                    break;
+                    ItemStack item = slot.getStack(); // 获取item
+                    if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
+                      melodySkyPlus$clickSlot(slot.getSlotIndex(), 0, 0);
+                      // 买水
+                      break;
+                    }
                   }
                 }
               }
+            } else {
+              mc.thePlayer.closeScreen();
+              melodySkyPlus$stage = AutoHeatStage.CALLING;
+              melodySkyPlus$reactingTick = 14; // 重新返回上一步 打开电话
             }
-          } else {
+          } else if (melodySkyPlus$reactingTick == 30) {
             mc.thePlayer.closeScreen();
-            melodySkyPlus$reactingTick = 169; // 重新返回上一步 打开电话
+            Helper.sendMessage("Bought water and drank successfully");
+          } else if (melodySkyPlus$reactingTick == 40) {
+            mc.thePlayer.inventory.currentItem = melodySkyPlus$prevItem;
+            melodySkyPlus$reactingTick = -1;
+            AutoRuby.getINSTANCE().started = true;
+            melodySkyPlus$stage = AutoHeatStage.WORKING;
           }
-        } else if (melodySkyPlus$reactingTick == 490) {
-          mc.thePlayer.closeScreen();
-          Helper.sendMessage("Bought water and drank successfully");
-        } else if (melodySkyPlus$reactingTick == 510) {
-          mc.thePlayer.inventory.currentItem = melodySkyPlus$prevItem;
-          melodySkyPlus$reactingTick = -1;
-          AutoRuby.getINSTANCE().started = true;
         }
       }
     }

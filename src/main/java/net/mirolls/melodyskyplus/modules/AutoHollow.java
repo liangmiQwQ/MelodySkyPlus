@@ -27,6 +27,7 @@ import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
+import xyz.Melody.Utils.render.ColorUtils;
 import xyz.Melody.Utils.render.RenderUtil;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
@@ -91,13 +92,13 @@ public class AutoHollow extends ModulePlus {
   public void onRender(EventRender3D event) {
     if (AutoRuby.getINSTANCE().wps.size() > 1) {
       for (BlockPos pos : stones) {
-        RenderUtil.drawFullBlockESP(pos, new Color(8, 125, 13, 40), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(8, 125, 13).getRGB(), (double) 40 / 256), event.getPartialTicks());
       }
       for (BlockPos pos : etherWarpPoints) {
-        RenderUtil.drawFullBlockESP(pos, new Color(101, 4, 131, 108), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(101, 4, 131).getRGB(), (double) 108 / 256), event.getPartialTicks());
       }
       for (BlockPos pos : stonesToMineThisTime) {
-        RenderUtil.drawFullBlockESP(pos, new Color(0, 255, 244, 40), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(0, 255, 244).getRGB(), (double) 40 / 256), event.getPartialTicks());
       }
     }
   }
@@ -134,7 +135,7 @@ public class AutoHollow extends ModulePlus {
             if (lastRightClick.hasReached(500)) {
               lastRightClick.reset();
               KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-              Client.async(() -> {
+              new Thread(() -> {
                 try {
                   Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -144,7 +145,7 @@ public class AutoHollow extends ModulePlus {
                 mc.addScheduledTask(() -> {
                   KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
                 });
-              });
+              }).start();
             }
           } else {
             mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
@@ -339,7 +340,7 @@ public class AutoHollow extends ModulePlus {
               if (lastRightClick.hasReached(500)) {
                 lastRightClick.reset();
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-                Client.async(() -> {
+                new Thread(() -> {
                   try {
                     Thread.sleep(100);
                   } catch (InterruptedException e) {
@@ -349,7 +350,7 @@ public class AutoHollow extends ModulePlus {
                   mc.addScheduledTask(() -> {
                     KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
                   });
-                });
+                }).start();
               }
             } else {
               if (!posesMined.contains(pos)) {
