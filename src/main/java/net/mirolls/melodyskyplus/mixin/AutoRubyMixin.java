@@ -216,7 +216,7 @@ public class AutoRubyMixin {
 
       for (Entity entity : mc.theWorld.loadedEntityList) {
         if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityMagmaCube && (double) mc.thePlayer.getDistanceToEntity(entity) < this.yogRange.getValue()) {
-          this.yogs.add((EntityMagmaCube) entity);
+          this.yogs.add(entity);
         }
       }
 
@@ -278,7 +278,7 @@ public class AutoRubyMixin {
         this.attackTimer.reset();
       }
     } else {
-      if ((Boolean) this.rcKill.getValue()) {
+      if (this.rcKill.getValue()) {
         this.loadYogs();
       } else if (!this.yogs.isEmpty()) {
         this.yogs.clear();
@@ -295,21 +295,21 @@ public class AutoRubyMixin {
 
         if (mcube != null && mcube.isEntityAlive() && this.killingYogs) {
           mc.thePlayer.inventory.currentItem = this.weaponSlot.getValue().intValue() - 1;
-          if ((Boolean) this.rcKill.getValue()) {
-            if ((Boolean) this.faceDown.getValue()) {
+          if (this.rcKill.getValue()) {
+            if (this.faceDown.getValue()) {
               event.setPitch(90.0F);
-              if (this.attackTimer.hasReached((double) 180.0F)) {
+              if (this.attackTimer.hasReached(180.0F)) {
                 Client.rightClick();
                 this.attackTimer.reset();
               }
             } else {
-              if ((Boolean) this.aim.getValue()) {
+              if (this.aim.getValue()) {
                 float[] r = RotationUtil.getPredictedRotations(mcube);
                 event.setYaw(r[0]);
                 event.setPitch(r[1]);
               }
 
-              if (this.attackTimer.hasReached((double) 180.0F)) {
+              if (this.attackTimer.hasReached(180.0F)) {
                 Client.rightClick();
                 this.attackTimer.reset();
               }
