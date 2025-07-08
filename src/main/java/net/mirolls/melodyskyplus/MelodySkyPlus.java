@@ -17,8 +17,8 @@ import java.io.IOException;
 @Mod(modid = MelodySkyPlus.MODID, version = MelodySkyPlus.VERSION)
 public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
-  public static final String VERSION = "1.3.3";
-  public static final String MELODY_VERSION = "2.14.7";
+  public static final String VERSION = "1.3.4";
+  public static final String MELODY_VERSION = "2.14.9";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
@@ -32,6 +32,7 @@ public class MelodySkyPlus {
   public static PathExec pathExec;
   public static PackRecord packRecord;
   public static MiningSkillExecutor miningSkillExecutor;
+  public static DrinkingLib drinkingLib;
 
 
   public static String verify(String text) {
@@ -58,6 +59,7 @@ public class MelodySkyPlus {
     pathRenderer = new PathRenderer();
     packRecord = new PackRecord();
     miningSkillExecutor = new MiningSkillExecutor();
+    drinkingLib = new DrinkingLib();
     // events
 
     try {
