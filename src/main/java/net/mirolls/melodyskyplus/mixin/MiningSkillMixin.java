@@ -30,8 +30,6 @@ public class MiningSkillMixin {
   public TextValue<String> expire;
   public Option<Boolean> melodySkyPlus$useRod = new Option<>("Use Rod", false);
   public Option<Boolean> melodySkyPlus$autoMode;
-  public boolean melodySkyPlus$lastReady = false;
-  public int melodySkyPlus$tick = 0;
 
 
   @SuppressWarnings("rawtypes")
