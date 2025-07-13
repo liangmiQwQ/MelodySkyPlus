@@ -1,5 +1,8 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemPickaxe;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.Melody.Event.value.Option;
 import xyz.Melody.Event.value.TextValue;
 import xyz.Melody.Event.value.Value;
+import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
 import java.lang.reflect.Field;
@@ -26,6 +30,8 @@ public class MiningSkillMixin {
   public TextValue<String> expire;
   public Option<Boolean> melodySkyPlus$useRod = new Option<>("Use Rod", false);
   public Option<Boolean> melodySkyPlus$autoMode;
+  public boolean melodySkyPlus$lastReady = false;
+  public int melodySkyPlus$tick = 0;
 
 
   @SuppressWarnings("rawtypes")
@@ -38,7 +44,7 @@ public class MiningSkillMixin {
       melodySkyPlus$autoMode = new Option<>("Auto Mode", true, (val) -> {
         if (MiningSkill.getINSTANCE() != null) {
           MelodySkyPlus.pickaxeAbility.check = true;
-          
+
           ready.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Mining Speed Boost is now available!");
           ready.setEnabled(val);
           used.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "You used your Mining Speed Boost Pickaxe Ability!");
@@ -60,6 +66,19 @@ public class MiningSkillMixin {
 
   @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true, remap = false)
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
+    Minecraft mc = Minecraft.getMinecraft();
+    if (System.currentTimeMillis() % 140 * 1000 == 0) {
+      // 140秒尝试重新处理一次
+
+      if (mc.thePlayer.getHeldItem() != null) {
+        String id = ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem());
+        if (mc.thePlayer.getHeldItem().getItem() == Items.prismarine_shard || id.contains("GEMSTONE_GAUNTLET") || mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe) {
+          mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
+        }
+      }
+
+
+    }
     if (AntiBug.isBugRemoved() && melodySkyPlus$useRod.getValue()) {
       try {
         // 读 看是否应该执行
