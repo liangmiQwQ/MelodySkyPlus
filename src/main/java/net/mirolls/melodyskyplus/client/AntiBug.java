@@ -302,6 +302,7 @@ public class AntiBug {
         return "";
       }
     } catch (NoSuchAlgorithmException | IOException e) {
+      MelodySkyPlus.LOGGER.info("SomeMessage: " + e.getMessage());
       llIIIl();
       return "";
     }
