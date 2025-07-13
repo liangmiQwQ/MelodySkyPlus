@@ -42,10 +42,10 @@ public class MiningSkillExecutor {
     if (tick == 5) {
       mc.thePlayer.inventory.currentItem = oldItem;
     }
-    if (tick == 8) {
+    if (tick == 15) {
       Client.rightClick();
     }
-    if (tick == 10) {
+    if (tick == 20) {
       reEnableMacros();
     }
     tick++;
