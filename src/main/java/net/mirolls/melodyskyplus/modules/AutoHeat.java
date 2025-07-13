@@ -36,7 +36,7 @@ public class AutoHeat extends ModulePlus {
 
 
   public AutoHeat() {
-    super("AutoFilet", ModuleType.Mining);
+    super("AutoHeat", ModuleType.Mining);
     this.mods = new ArrayList<>();
     this.reactingTick = -1;
     this.stage = AutoHeatStage.WORKING;
@@ -181,7 +181,7 @@ public class AutoHeat extends ModulePlus {
 
       // 交易
       if (stage == AutoHeatStage.TRADING) {
-        if (reactingTick == 10) {
+        if (reactingTick == 20) {
           // 卖水
           GuiScreen gui = mc.currentScreen;
           if (gui instanceof GuiChest) {
@@ -202,7 +202,7 @@ public class AutoHeat extends ModulePlus {
             stage = AutoHeatStage.CALLING;
             reactingTick = 14; // 重新返回上一步 打开电话
           }
-        } else if (reactingTick == 20) {
+        } else if (reactingTick == 50) {
           GuiScreen gui = mc.currentScreen;
           if (gui instanceof GuiChest) {
             Container container = ((GuiChest) gui).inventorySlots;
@@ -225,10 +225,10 @@ public class AutoHeat extends ModulePlus {
             stage = AutoHeatStage.CALLING;
             reactingTick = 14; // 重新返回上一步 打开电话
           }
-        } else if (reactingTick == 30) {
+        } else if (reactingTick == 60) {
           mc.thePlayer.closeScreen();
           Helper.sendMessage("Bought water and drank successfully");
-        } else if (reactingTick == 40) {
+        } else if (reactingTick == 70) {
           mc.thePlayer.inventory.currentItem = prevItem;
           reactingTick = -1;
           // 开启马口
@@ -245,6 +245,7 @@ public class AutoHeat extends ModulePlus {
 
     reactingTick = -1;
     stage = AutoHeatStage.WORKING;
+    this.mods.clear();
   }
 
   private void disbandOneMacro(Module mod) {
