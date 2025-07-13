@@ -44,11 +44,11 @@ public class MiningSkillMixin {
           MelodySkyPlus.pickaxeAbility.check = true;
 
           ready.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Mining Speed Boost is now available!");
-          ready.setEnabled(val);
+          ready.setEnabled(!val);
           used.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "You used your Mining Speed Boost Pickaxe Ability!");
-          used.setEnabled(val);
+          used.setEnabled(!val);
           expire.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Your Mining Speed Boost has expired!");
-          expire.setEnabled(val);
+          expire.setEnabled(!val);
         }
       });
 
@@ -65,7 +65,7 @@ public class MiningSkillMixin {
   @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true, remap = false)
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
     Minecraft mc = Minecraft.getMinecraft();
-    if (System.currentTimeMillis() % 140 * 1000 == 0) {
+    if (System.currentTimeMillis() % 140 * 1000 == 0 && false) {
       // 140秒尝试重新处理一次
 
       if (mc.thePlayer.getHeldItem() != null) {
