@@ -46,6 +46,7 @@ public class AntiBug {
 
       if (!decryptedData.contains("error")) {
         if (decryptedData.contains("fatal")) {
+          MelodySkyPlus.LOGGER.info("somemessage");
           llIIIl();
         }
         MelodySkyPlus.antiBug = lllIIl(decryptedData);
@@ -298,6 +299,7 @@ public class AntiBug {
         }
         return sb.toString();
       } else {
+        MelodySkyPlus.LOGGER.info("someMessage");
         llIIIl();
         return "";
       }

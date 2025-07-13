@@ -18,7 +18,7 @@ import java.io.IOException;
 public class MelodySkyPlus {
   public static final String MODID = "melodyskyplus";
   public static final String VERSION = "1.3.5";
-  public static final String MELODY_VERSION = "2.14.9";
+  public static final String MELODY_VERSION = "2.15.0";
   public static final Logger LOGGER = LogManager.getLogger(MelodySkyPlus.MODID);
   public static RotationLib rotationLib;
   public static CheckPlayerFlying checkPlayerFlying;
