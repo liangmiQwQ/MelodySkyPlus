@@ -41,7 +41,7 @@ public class MiningSkillMixin {
 
       melodySkyPlus$autoMode = new Option<>("Auto Mode", true, (val) -> {
         if (MiningSkill.getINSTANCE() != null) {
-          MelodySkyPlus.pickaxeAbility.check = true;
+          MelodySkyPlus.pickaxeAbility.check = val;
 
           ready.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Mining Speed Boost is now available!");
           ready.setEnabled(!val);
@@ -64,6 +64,9 @@ public class MiningSkillMixin {
 
   @Inject(method = "tryPerformSkill", at = @At("HEAD"), cancellable = true, remap = false)
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
+    MelodySkyPlus.pickaxeAbility.check = melodySkyPlus$autoMode.getValue();
+
+
     Minecraft mc = Minecraft.getMinecraft();
     if (System.currentTimeMillis() % 140 * 1000 == 0 && false) {
       // 140秒尝试重新处理一次
