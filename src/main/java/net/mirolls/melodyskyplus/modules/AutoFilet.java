@@ -62,14 +62,15 @@ public class AutoFilet extends ModulePlus {
 
   @EventHandler
   public void tick(EventTick event) {
-    if (tick >= 50) {
+    if (tick >= 50 && this.ticksTimer.hasReached(1000)) {
       SkyblockArea area = new SkyblockArea();
       area.updateCurrentArea();
       if (!area.isIn(Areas.NULL)) {
         // 在skyblock里面
 
-        if (this.ticksTimer.hasReached(1000) && isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
+        if (isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
           String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
+          
           if (!footer.toLowerCase().contains("effects")) {
             Helper.sendMessage("You need to add the information of effects to tab to enable AutoFilet.");
             Objects.requireNonNull(AutoFilet.getINSTANCE()).setEnabled(false);
@@ -81,8 +82,6 @@ public class AutoFilet extends ModulePlus {
             disableMacros();
             fishTick = 0;
           }
-
-          this.ticksTimer.reset();
         }
 
         // 吃鱼核心逻辑
@@ -122,6 +121,8 @@ public class AutoFilet extends ModulePlus {
       if (fishTick != -1) {
         fishTick++;
       }
+
+      this.ticksTimer.reset();
     }
     tick++;
   }
