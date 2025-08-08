@@ -308,10 +308,13 @@ public class AutoRubyMixin {
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
   private void idk(EventTick event, CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
+
       Minecraft mc = Minecraft.getMinecraft();
 
-      if (mc.currentScreen instanceof GuiChest) {
-        mc.thePlayer.closeScreen();
+      if (started) {
+        if (mc.currentScreen instanceof GuiChest) {
+          mc.thePlayer.closeScreen();
+        }
       }
 
       if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
