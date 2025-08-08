@@ -89,6 +89,8 @@ public class AutoHeat extends ModulePlus {
       // 喝水处理
       if (stage == AutoHeatStage.DRINKING) {
         if (reactingTick == 5) {
+          // 关闭当前gui
+          mc.thePlayer.closeScreen();
           // 切换物品
           for (int i = 0; i < 9; ++i) {
             ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);

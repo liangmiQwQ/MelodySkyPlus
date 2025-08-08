@@ -1,6 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityIronGolem;
@@ -47,6 +48,7 @@ import java.util.Objects;
 @Mixin(value = AutoRuby.class, remap = false)
 public class AutoRubyMixin {
 
+  private final Option<Boolean> melodySkyPlus$autoCloseGui = new Option<>("Auto Close GUI", true);
   @Shadow
   public boolean started;
   @Shadow
@@ -92,9 +94,10 @@ public class AutoRubyMixin {
   @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
     if (Verify.isVerified()) {
-      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 1);
+      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
 
-      returnValues[returnValues.length - 1] = MelodySkyPlus.jasperUsed.autoUseJasper;
+      returnValues[returnValues.length - 2] = MelodySkyPlus.jasperUsed.autoUseJasper;
+      returnValues[returnValues.length - 1] = melodySkyPlus$autoCloseGui;
 
       return returnValues;
     } else {
@@ -306,6 +309,10 @@ public class AutoRubyMixin {
   private void idk(EventTick event, CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
       Minecraft mc = Minecraft.getMinecraft();
+
+      if (mc.currentScreen instanceof GuiChest) {
+        mc.thePlayer.closeScreen();
+      }
 
       if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
         Objects.requireNonNull(Failsafe.getINSTANCE()).lastTeleport = System.currentTimeMillis();
