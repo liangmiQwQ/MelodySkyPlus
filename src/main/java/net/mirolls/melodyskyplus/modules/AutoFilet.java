@@ -62,67 +62,70 @@ public class AutoFilet extends ModulePlus {
 
   @EventHandler
   public void tick(EventTick event) {
-    if (tick >= 50 && this.ticksTimer.hasReached(1000)) {
-      SkyblockArea area = new SkyblockArea();
-      area.updateCurrentArea();
-      if (!area.isIn(Areas.NULL)) {
-        // 在skyblock里面
+    if (tick >= 50) {
+      if (ticksTimer.hasReached(1000)) {
+        ticksTimer.reset();
+        SkyblockArea area = new SkyblockArea();
+        area.updateCurrentArea();
+        if (!area.isIn(Areas.NULL)) {
+          // 在skyblock里面
 
-        if (isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
-          String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
-          
-          if (!footer.toLowerCase().contains("effects")) {
-            Helper.sendMessage("You need to add the information of effects to tab to enable AutoFilet.");
-            Objects.requireNonNull(AutoFilet.getINSTANCE()).setEnabled(false);
-          }
+          if (isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
+            String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
 
-          if (!footer.contains("Filet O' Fortune")) {
-            Helper.sendMessage("Found Filet O' Fortune Buff Expired! Ready to eat fish!");
-            // 要吃鱼了
-            disableMacros();
-            fishTick = 0;
-          }
-        }
+            if (!footer.toLowerCase().contains("effects")) {
+              Helper.sendMessage("You need to add the information of effects to tab to enable AutoFilet.");
+              Objects.requireNonNull(AutoFilet.getINSTANCE()).setEnabled(false);
+            }
 
-        // 吃鱼核心逻辑
-        if (fishTick == 10) {
-          prevItem = -1;
-          for (int i = 0; i < 9; ++i) {
-            ItemStack item = this.mc.thePlayer.inventory.getStackInSlot(i);
-            if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
-              prevItem = this.mc.thePlayer.inventory.currentItem;
-              this.mc.thePlayer.inventory.currentItem = i;
-              break;
+            if (!footer.contains("Filet O' Fortune")) {
+              Helper.sendMessage("Found Filet O' Fortune Buff Expired! Ready to eat fish!");
+              // 要吃鱼了
+              disableMacros();
+              fishTick = 0;
             }
           }
-          if (prevItem == -1) {
-            Helper.sendMessage("Cannot find Filet O' Fortune to eat. continue to mine (>_<)");
-            reEnableMacros();
-            coolDownTimer.reset();
-            fishTick = -1;
-            prevItem = -1;
+        }
+      }
+
+      // 吃鱼核心逻辑
+      if (fishTick == 10) {
+        prevItem = -1;
+        for (int i = 0; i < 9; ++i) {
+          ItemStack item = this.mc.thePlayer.inventory.getStackInSlot(i);
+          if (item != null && ItemUtils.getSkyBlockID(item).contains("FILET_O_FORTUNE")) {
+            prevItem = this.mc.thePlayer.inventory.currentItem;
+            this.mc.thePlayer.inventory.currentItem = i;
+            break;
           }
         }
-        if (fishTick == 20) {
-          this.mc.playerController.sendUseItem(
-              this.mc.thePlayer, this.mc.theWorld,
-              this.mc.thePlayer.inventory.getStackInSlot(this.mc.thePlayer.inventory.currentItem)
-          );
-        }
-        if (fishTick == 30) {
-          this.mc.thePlayer.inventory.currentItem = prevItem;
+        if (prevItem == -1) {
+          Helper.sendMessage("Cannot find Filet O' Fortune to eat. continue to mine (>_<)");
           reEnableMacros();
           coolDownTimer.reset();
           fishTick = -1;
           prevItem = -1;
         }
       }
+      if (fishTick == 20) {
+        this.mc.playerController.sendUseItem(
+            this.mc.thePlayer, this.mc.theWorld,
+            this.mc.thePlayer.inventory.getStackInSlot(this.mc.thePlayer.inventory.currentItem)
+        );
+      }
+      if (fishTick == 30) {
+        this.mc.thePlayer.inventory.currentItem = prevItem;
+        reEnableMacros();
+        coolDownTimer.reset();
+        fishTick = -1;
+        prevItem = -1;
+      }
+
 
       if (fishTick != -1) {
         fishTick++;
       }
 
-      this.ticksTimer.reset();
     }
     tick++;
   }
