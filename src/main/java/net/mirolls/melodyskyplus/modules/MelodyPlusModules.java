@@ -20,6 +20,7 @@ public class MelodyPlusModules {
       newModules.add(new AutoLobby());
       newModules.add(new AutoHollow());
       newModules.add(new AutoHeat());
+      newModules.add(new AutoHeal());
     }
 
     return newModules;
