@@ -1,20 +1,13 @@
 package net.mirolls.melodyskyplus.path.type;
 
 import net.minecraft.util.BlockPos;
-import net.mirolls.melodyskyplus.MelodySkyPlus;
 import net.mirolls.melodyskyplus.Verify;
-import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.client.task.TaskHelper;
 import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,35 +57,12 @@ public class Node {
 
             taskHelper.addTask(() -> {
               if (values.contains(node) && node.advanceFraction == -1) {
-                try {
-                  URL url = new URL(AntiBug.ROOT_URL + "hack/path/?bug=" + MelodySkyPlus.antiBug.getBug()
-                      + "&speed=1&max=75&angle="
-                      + Math.abs(PlayerUtils.getYawDiff(prevNode.nextRotation.getYaw(), node.nextRotation.getYaw()))
-                  );
+                double angle = Math.abs(PlayerUtils.getYawDiff(
+                    prevNode.nextRotation.getYaw(),
+                    node.nextRotation.getYaw()
+                ));
 
-                  HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                  conn.setRequestMethod("GET");
-                  conn.setRequestProperty("Content-Type", "application/json");
-                  conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                  conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-                  conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-                  conn.setRequestProperty("Connection", "keep-alive");
-
-                  BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                  String inputLine;
-                  StringBuilder response = new StringBuilder();
-
-                  while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                  }
-
-                  in.close();
-
-                  node.advanceFraction = Double.parseDouble(response.toString());
-                } catch (IOException e) {
-                  MelodySkyPlus.LOGGER.info(e);
-                  throw new RuntimeException(e);
-                }
+                node.advanceFraction = calculateAdvanceFraction(angle, 1.0, 75.0);
               }
             });
           }
@@ -218,6 +188,53 @@ public class Node {
       }
     }
     return yaw;
+  }
+
+  private static double calculateAdvanceFraction(double angleNeed, double speedTick, double maxAngle) {
+    double angleSum = 0.0;
+    double currentDirection = 90.0;
+    double x = 0.0;
+    double y = 0.0;
+
+    while (true) {
+      double diff = angleNeed - angleSum;
+
+      if (Math.abs(diff) <= 0.1) {
+        angleSum += diff;
+        currentDirection += diff;
+        break;
+      } else {
+        double newAngle;
+        if (diff > 0) {
+          newAngle = Math.min(diff / 2, maxAngle);
+        } else {
+          newAngle = -Math.min(Math.abs(diff) / 2, maxAngle);
+        }
+
+        angleSum += newAngle;
+        currentDirection += newAngle;
+        double radian = Math.toRadians(currentDirection);
+        double dx = speedTick * Math.cos(radian);
+        double dy = speedTick * Math.sin(radian);
+        x += dx;
+        y += dy;
+      }
+    }
+
+    double a = x;
+    double thetaRed = 90 + angleNeed;
+    double radianRed = Math.toRadians(thetaRed);
+    double sinAngleNeed = Math.sin(Math.toRadians(angleNeed));
+
+    if (Math.abs(sinAngleNeed) < 1e-10) {
+      return 0;
+    }
+
+    double c = -a / sinAngleNeed;
+    double yRed = c * Math.sin(radianRed);
+
+    double result = y - yRed;
+    return result;
   }
 
   public Vec3d toVec3d() {
