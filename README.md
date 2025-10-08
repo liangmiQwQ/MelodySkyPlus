@@ -23,7 +23,6 @@ Before starting your contribution, you need to do the follow steps to setup your
 2. run the following command to install melodysky in your local maven
 
 ```bash
-cd ./melody
 mvn install:install-file -Dfile=/path/to/your/jar -DgroupId=xyz.melody -DartifactId=melodySky -Dversion=[the version of melodysky] -Dpackaging=jar
 ```
 
