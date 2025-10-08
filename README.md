@@ -31,3 +31,7 @@ make sure the **MelodySky** version is the same as [gradle.properties](./gradle.
 ## License
 
 MelodySky+ project is following [MIT LICENSE](./LICENSE)
+
+## Credits
+
+- [NMSLAndy](https://github.com/NMSLAndy) for his great [MelodySky](https://melodysky.xyz) mod
