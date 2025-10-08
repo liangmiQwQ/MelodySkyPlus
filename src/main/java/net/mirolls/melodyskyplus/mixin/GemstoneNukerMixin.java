@@ -30,7 +30,7 @@ import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 public abstract class GemstoneNukerMixin {
   public Option<Boolean> melodySkyPlus$advanced = null;
   public Option<Boolean> melodySkyPlus$adaptive = null;
-  public Numbers<Double> melodySkyPlus$tryFaster = new Numbers<>("TryFaster(s)", 60.0, 10.0, 300.0, 5.0);
+  public Numbers<Double> melodySkyPlus$tryFaster = new Numbers<>("TryFaster(s)", 60.0, 2.0, 300.0, 2.0);
   public Numbers<Double> melodySkyPlus$trySlowerBlocks = new Numbers<>("TrySlowerBlocks", 5.0, 1.0, 60.0, 1.0);
 
   public TimerUtil melodySkyPlus$tryFasterTimer = new TimerUtil();
