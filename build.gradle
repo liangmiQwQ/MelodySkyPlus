@@ -1,5 +1,3 @@
-import java.security.MessageDigest
-
 buildscript {
     repositories {
         mavenCentral()
@@ -112,69 +110,5 @@ tasks.register('exportDependencies', Copy) {
     into "$buildDir/libs/dependencies"
     from configurations.runtimeClasspath
 }
-
-tasks.register('obfuscate', Exec) {
-    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
-            "-jar", "melody/obfuscator-1.9.3.jar",
-            "--jarIn", "build/libs/${mod_id}-${mod_version}-${melody_version}.jar",
-            "--jarOut", "build/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar",
-            "--config", "melody/mld-obf-config.json"
-//            "--scriptFile", "melody/script.js"
-
-}
-
-static def getMD5(File file) {
-    MessageDigest md = MessageDigest.getInstance("MD5")
-    file.withInputStream { is ->
-        byte[] buffer = new byte[8192]
-        int bytesRead
-        while ((bytesRead = is.read(buffer)) != -1) {
-            md.update(buffer, 0, bytesRead)
-        }
-    }
-    return md.digest().collect { String.format("%02x", it) }.join()
-}
-
-
-tasks.register("pushMD5") {
-    doLast {
-        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar"))
-
-        def urlStr = "https://url-to-my-server"
-
-        try {
-            URL url = new URL(urlStr)
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection()
-            connection.setRequestMethod("GET")
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-
-            def returnText = connection.inputStream.text
-            if (returnText.contains("success")) {
-                println "Success Put the file md5 (${md5}) into server"
-            } else {
-                throw new Exception("Cannot put the file md5 into server: " + returnText)
-            }
-        } catch (Exception e) {
-            throw new Exception("######## Server die down! ######## " + e)
-        }
-    }
-}
-
-
-tasks.named("build").configure {
-    finalizedBy("obfuscate")
-}
-tasks.named("obfuscate").configure {
-    // R.I.P. AntiRat
-    /*
-    finalizedBy("rat")
-}
-tasks.named("rat").configure {
-    finalizedBy("obfuscateRat")
-}
-tasks.named("obfuscateRat").configure {*/
-    finalizedBy("pushMD5")
-}
-
 
 assemble.dependsOn jar
