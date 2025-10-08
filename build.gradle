@@ -32,7 +32,7 @@ minecraft {
 }
 
 repositories {
-    mavenLocal() // 添加本地 maven 以加载melodySky
+    mavenLocal()
     mavenCentral()
     maven { url = 'https://repo.spongepowered.org/maven' }
 }
@@ -79,9 +79,6 @@ sourceSets {
     main {
         ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
     }
-//    mixin {
-//        add("main", "refmap.melodyskyplus.json")
-//    }
 }
 
 jar {
