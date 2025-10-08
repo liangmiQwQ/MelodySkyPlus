@@ -28,3 +28,7 @@ mvn install:install-file -Dfile=/path/to/your/jar -DgroupId=xyz.melody -Dartifac
 ```
 
 make sure the **MelodySky** version is the same as [gradle.properties](./gradle.properties)
+
+## License
+
+MelodySky+ project is following [MIT LICENSE](./LICENSE)
