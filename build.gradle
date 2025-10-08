@@ -1,0 +1,180 @@
+import java.security.MessageDigest
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = 'http://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+    }
+    dependencies {
+        classpath files('forgegradle/ForgeGradle-2.1.2.jar')
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'eclipse'
+
+version = mod_version
+group = mod_group
+archivesBaseName = mod_id
+
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+minecraft {
+    version = "${minecraft_version}-${forge_version}"
+    runDir = "run"
+    mappings = mappings_version
+    String resolved_core_config = mod_mixin_configs.replace('${mod_id}', mod_id)
+    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
+    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
+}
+
+repositories {
+    mavenLocal() // 添加本地 maven 以加载melodySky
+    mavenCentral()
+    maven { url = 'https://repo.spongepowered.org/maven' }
+}
+
+configurations {
+    embed
+    compile.extendsFrom(embed)
+}
+
+dependencies {
+    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
+    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+
+    implementation('xyz.melody:melodySky:' + melody_version) {
+        exclude module: 'mixin'
+        exclude group: 'org.spongepowered'
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        expand 'mod_id': mod_id, 'mod_name': mod_name, 'version': project.version,
+                'mcversion': project.minecraft.version, 'mod_description': mod_description,
+                'mod_author': mod_author
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+
+
+}
+
+sourceSets {
+    main {
+        ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
+    }
+//    mixin {
+//        add("main", "refmap.melodyskyplus.json")
+//    }
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(configurations.embed.collect {
+        it.isDirectory() ? it : zipTree(it)
+    }) {
+        exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
+
+    }
+
+    archiveName = "${mod_id}-${mod_version}-${melody_version}.jar"
+
+    manifest.attributes(
+            'ForceLoadAsMod': 'true',
+            'FMLCorePluginContainsFMLMod': 'true',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            'TweakOrder': '0',
+            'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
+    )
+}
+
+tasks.register('exportDependencies', Copy) {
+    configurations.compileClasspath.setCanBeResolved(true)
+    into "$buildDir/libs/dependencies"
+    from configurations.runtimeClasspath
+}
+
+tasks.register('obfuscate', Exec) {
+    commandLine "/Users/liangmi/Library/Java/JavaVirtualMachines/corretto-1.8.0_432/Contents/Home/bin/java",
+            "-jar", "melody/obfuscator-1.9.3.jar",
+            "--jarIn", "build/libs/${mod_id}-${mod_version}-${melody_version}.jar",
+            "--jarOut", "build/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar",
+            "--config", "melody/mld-obf-config.json"
+//            "--scriptFile", "melody/script.js"
+
+}
+
+static def getMD5(File file) {
+    MessageDigest md = MessageDigest.getInstance("MD5")
+    file.withInputStream { is ->
+        byte[] buffer = new byte[8192]
+        int bytesRead
+        while ((bytesRead = is.read(buffer)) != -1) {
+            md.update(buffer, 0, bytesRead)
+        }
+    }
+    return md.digest().collect { String.format("%02x", it) }.join()
+}
+
+
+tasks.register("pushMD5") {
+    doLast {
+        def md5 = getMD5(file("${buildDir}/libs/${mod_id}-${mod_version}-finished-${melody_version}.jar"))
+
+        def urlStr = "https://url-to-my-server"
+
+        try {
+            URL url = new URL(urlStr)
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection()
+            connection.setRequestMethod("GET")
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+            def returnText = connection.inputStream.text
+            if (returnText.contains("success")) {
+                println "Success Put the file md5 (${md5}) into server"
+            } else {
+                throw new Exception("Cannot put the file md5 into server: " + returnText)
+            }
+        } catch (Exception e) {
+            throw new Exception("######## Server die down! ######## " + e)
+        }
+    }
+}
+
+
+tasks.named("build").configure {
+    finalizedBy("obfuscate")
+}
+tasks.named("obfuscate").configure {
+    // R.I.P. AntiRat
+    /*
+    finalizedBy("rat")
+}
+tasks.named("rat").configure {
+    finalizedBy("obfuscateRat")
+}
+tasks.named("obfuscateRat").configure {*/
+    finalizedBy("pushMD5")
+}
+
+
+assemble.dependsOn jar
