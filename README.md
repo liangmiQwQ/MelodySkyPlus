@@ -35,3 +35,6 @@ MelodySky+ project is following [MIT LICENSE](./LICENSE)
 ## Credits
 
 - [NMSLAndy](https://github.com/NMSLAndy) for his great [MelodySky](https://melodysky.xyz) mod
+
+## Sponsors (past paying users)
+- topazxuemengyou
