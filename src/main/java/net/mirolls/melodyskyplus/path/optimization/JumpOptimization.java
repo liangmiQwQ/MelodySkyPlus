@@ -1,5 +1,10 @@
 package net.mirolls.melodyskyplus.path.optimization;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
@@ -7,12 +12,6 @@ import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.path.type.Jump;
 import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Utils.Vec3d;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class JumpOptimization {
   // 优化跳跃
@@ -118,7 +117,6 @@ public class JumpOptimization {
     double xPos = startVec.getX();
     // double yPos = startVec.getY();
     double zPos = startVec.getZ();
-
 
     for (int huh = 1; (double) huh <= maxDist; ++huh) {
       xPos += incX;

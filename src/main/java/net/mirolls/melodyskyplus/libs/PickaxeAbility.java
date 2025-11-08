@@ -1,11 +1,10 @@
 package net.mirolls.melodyskyplus.libs;
 
+import java.lang.reflect.Field;
+import java.util.regex.Pattern;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-import java.lang.reflect.Field;
-import java.util.regex.Pattern;
 
 public class PickaxeAbility {
   public boolean check = false;
@@ -16,7 +15,8 @@ public class PickaxeAbility {
   }
 
   @SubscribeEvent
-  public void onPickaxeAbility(ClientChatReceivedEvent event) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
+  public void onPickaxeAbility(ClientChatReceivedEvent event)
+      throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
     String message = event.message.getUnformattedText();
 
     if (message.contains("You used your Mining Speed Boost Pickaxe Ability!")) {
@@ -32,7 +32,9 @@ public class PickaxeAbility {
         Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");
         pickaxeField.setAccessible(true);
         pickaxeField.set(client, true);
-      } else if (Pattern.compile("^You used your (.*?) Pickaxe Ability!$").matcher(message).matches()) {
+      } else if (Pattern.compile("^You used your (.*?) Pickaxe Ability!$")
+          .matcher(message)
+          .matches()) {
         // used
         Class<?> client = Class.forName("xyz.Melody.Client");
         Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");

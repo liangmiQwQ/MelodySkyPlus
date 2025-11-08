@@ -1,11 +1,10 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.modules.AutoReconnect.AutoReconnect;
 import xyz.Melody.module.Module;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MelodyPlusModules {
   public static List<Module> newModules() {

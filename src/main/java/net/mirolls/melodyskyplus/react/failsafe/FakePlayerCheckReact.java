@@ -9,19 +9,21 @@ public class FakePlayerCheckReact {
   public static void react(Run run, String message) {
     Helper.sendMessage("Staff checked you with FakePlayer, start to react.");
 
-    new Thread(() -> {
-      try {
-        Thread.sleep(1500);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(1500);
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
 
-      MelodySkyPlus.rotationLib.setSpeedCoefficient(1F);
-      MelodySkyPlus.rotationLib.startRotating();
-      MelodySkyPlus.rotationLib.setTargetRotation(new Rotation(Minecraft.getMinecraft().thePlayer.rotationYaw, -90F));
+              MelodySkyPlus.rotationLib.setSpeedCoefficient(1F);
+              MelodySkyPlus.rotationLib.startRotating();
+              MelodySkyPlus.rotationLib.setTargetRotation(
+                  new Rotation(Minecraft.getMinecraft().thePlayer.rotationYaw, -90F));
 
-      GeneralReact.react(run, message);
-    }).start();
+              GeneralReact.react(run, message);
+            })
+        .start();
   }
-
 }

@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.util.List;
+import java.util.Objects;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import net.mirolls.melodyskyplus.modules.MelodyPlusModules;
@@ -12,13 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.module.Module;
 
-import java.util.List;
-import java.util.Objects;
-
 @Mixin(value = ModuleManager.class, remap = false)
 public class ModuleManagerMixin {
-  @Shadow
-  public static List<Module> modules;
+  @Shadow public static List<Module> modules;
 
   @Inject(method = "init", remap = false, at = @At("HEAD"))
   public void initHead(CallbackInfo ci) {

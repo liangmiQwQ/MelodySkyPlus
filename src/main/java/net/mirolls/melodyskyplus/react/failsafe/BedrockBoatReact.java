@@ -1,5 +1,8 @@
 package net.mirolls.melodyskyplus.react.failsafe;
 
+import java.util.Objects;
+import java.util.Random;
+import java.util.regex.Pattern;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
@@ -13,10 +16,6 @@ import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.RotationUtil;
 
-import java.util.Objects;
-import java.util.Random;
-import java.util.regex.Pattern;
-
 public class BedrockBoatReact extends React {
 
   public static void react(String message) {
@@ -25,76 +24,89 @@ public class BedrockBoatReact extends React {
     Minecraft mc = Minecraft.getMinecraft();
     Random random = new Random();
 
-    new Thread(() -> {
-      long sleepTime = 5000;
+    new Thread(
+            () -> {
+              long sleepTime = 5000;
 
-      try {
-        Thread.sleep((long) (sleepTime / 1.5));
-        // 强力转头
-        rotate(mc, () -> true, sleepTime, random, 8);
+              try {
+                Thread.sleep((long) (sleepTime / 1.5));
+                // 强力转头
+                rotate(mc, () -> true, sleepTime, random, 8);
 
-        Thread.sleep((long) (sleepTime / 1.5));
+                Thread.sleep((long) (sleepTime / 1.5));
 
-        String[] messages = message.split(Pattern.quote(","));
+                String[] messages = message.split(Pattern.quote(","));
 
-        SkyblockArea mySkyblockArea = new SkyblockArea();// 这里新建而不是用Client下的原因是裤头的混淆
-        mySkyblockArea.updateCurrentArea();
-        Areas currentArea = mySkyblockArea.getCurrentArea();
-        if (currentArea != Areas.NULL && currentArea != Areas.Dungeon_HUB && currentArea != Areas.HUB
-            && currentArea != Areas.In_Dungeon) {
-          if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
-            mc.thePlayer.sendChatMessage("/ac " + messages[random.nextInt(messages.length)].trim());
-          }
-        }
-
-        Thread.sleep(sleepTime / 5);
-        // 寻找木头位置
-        BlockPos woodBlockPos = findWoodBP().up();
-
-        if (MathUtil.distanceToPos(woodBlockPos, mc.thePlayer.getPosition()) > 3) {
-          // 走路走到这
-          MelodySkyPlus.walkLib.setCallBack(() -> {
-                // 挖掘同时也要保证没问题
-                MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
-                try {
-                  MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
-                } catch (NullPointerException e) {
-                  MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(woodBlockPos.getX(), woodBlockPos.getY(), woodBlockPos.getZ())));
+                SkyblockArea mySkyblockArea = new SkyblockArea(); // 这里新建而不是用Client下的原因是裤头的混淆
+                mySkyblockArea.updateCurrentArea();
+                Areas currentArea = mySkyblockArea.getCurrentArea();
+                if (currentArea != Areas.NULL
+                    && currentArea != Areas.Dungeon_HUB
+                    && currentArea != Areas.HUB
+                    && currentArea != Areas.In_Dungeon) {
+                  if (ModuleManager.getModuleByName("Failsafe").isEnabled()) {
+                    mc.thePlayer.sendChatMessage(
+                        "/ac " + messages[random.nextInt(messages.length)].trim());
+                  }
                 }
-                MelodySkyPlus.rotationLib.startRotating();
 
-                MelodySkyPlus.miningUtil.setMining(true);
-                MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
-                MelodySkyPlus.miningUtil.setCallBack((result) -> {
-                });
+                Thread.sleep(sleepTime / 5);
+                // 寻找木头位置
+                BlockPos woodBlockPos = findWoodBP().up();
+
+                if (MathUtil.distanceToPos(woodBlockPos, mc.thePlayer.getPosition()) > 3) {
+                  // 走路走到这
+                  MelodySkyPlus.walkLib.setCallBack(
+                      () -> {
+                        // 挖掘同时也要保证没问题
+                        MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
+                        try {
+                          MelodySkyPlus.rotationLib.setTargetRotation(
+                              RotationUtil.posToRotation(woodBlockPos));
+                        } catch (NullPointerException e) {
+                          MelodySkyPlus.rotationLib.setTargetRotation(
+                              RotationUtil.vec3ToRotation(
+                                  new Vec3d(
+                                      woodBlockPos.getX(),
+                                      woodBlockPos.getY(),
+                                      woodBlockPos.getZ())));
+                        }
+                        MelodySkyPlus.rotationLib.startRotating();
+
+                        MelodySkyPlus.miningUtil.setMining(true);
+                        MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
+                        MelodySkyPlus.miningUtil.setCallBack((result) -> {});
+                      });
+                  MelodySkyPlus.walkLib.setTargetBlockPos(woodBlockPos);
+                  MelodySkyPlus.walkLib.startWalking();
+                } else {
+                  MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
+                  try {
+                    MelodySkyPlus.rotationLib.setTargetRotation(
+                        RotationUtil.posToRotation(woodBlockPos));
+                  } catch (NullPointerException e) {
+                    MelodySkyPlus.rotationLib.setTargetRotation(
+                        RotationUtil.vec3ToRotation(
+                            new Vec3d(
+                                woodBlockPos.getX(), woodBlockPos.getY(), woodBlockPos.getZ())));
+                  }
+                  MelodySkyPlus.rotationLib.startRotating();
+
+                  MelodySkyPlus.miningUtil.setMining(true);
+                  MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
+                  MelodySkyPlus.miningUtil.setCallBack((result) -> {});
+                }
+
+              } catch (InterruptedException e) {
+                MelodySkyPlus.LOGGER.error("Cannot sleep " + e);
+              } catch (Exception e) {
+                MelodySkyPlus.LOGGER.error("Cannot get wood BlockPos " + e);
+                // 触发通用failsafe
+
+                GeneralReact.react(() -> true, message);
               }
-          );
-          MelodySkyPlus.walkLib.setTargetBlockPos(woodBlockPos);
-          MelodySkyPlus.walkLib.startWalking();
-        } else {
-          MelodySkyPlus.rotationLib.setSpeedCoefficient(1.0F);
-          try {
-            MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(woodBlockPos));
-          } catch (NullPointerException e) {
-            MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(woodBlockPos.getX(), woodBlockPos.getY(), woodBlockPos.getZ())));
-          }
-          MelodySkyPlus.rotationLib.startRotating();
-
-          MelodySkyPlus.miningUtil.setMining(true);
-          MelodySkyPlus.miningUtil.setMiningBP(woodBlockPos);
-          MelodySkyPlus.miningUtil.setCallBack((result) -> {
-          });
-        }
-
-      } catch (InterruptedException e) {
-        MelodySkyPlus.LOGGER.error("Cannot sleep " + e);
-      } catch (Exception e) {
-        MelodySkyPlus.LOGGER.error("Cannot get wood BlockPos " + e);
-        // 触发通用failsafe
-
-        GeneralReact.react(() -> true, message);
-      }
-    }).start();
+            })
+        .start();
   }
 
   private static BlockPos findWoodBP() throws Exception {
@@ -126,7 +138,6 @@ public class BedrockBoatReact extends React {
     Block block = mc.theWorld.getBlockState(pos).getBlock();
     return Objects.equals(block.getRegistryName(), Blocks.log.getRegistryName());
   }
-
 
   /*private static BlockPos findWoodBP() throws Exception {
     Minecraft mc = Minecraft.getMinecraft();

@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.util.Objects;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.modules.AutoGold;
@@ -10,8 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.module.modules.macros.Mining.GoldNuker;
-
-import java.util.Objects;
 
 @Mixin(value = GoldNuker.class, remap = false)
 public class GoldNukerMixin {
@@ -27,7 +26,14 @@ public class GoldNukerMixin {
     }
   }
 
-  @Inject(method = "destoryBlock", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;func_71038_i()V", remap = false))
+  @Inject(
+      method = "destoryBlock",
+      remap = false,
+      at =
+          @At(
+              value = "INVOKE",
+              target = "Lnet/minecraft/client/entity/EntityPlayerSP;func_71038_i()V",
+              remap = false))
   public void destoryBlock(EventPreUpdate event, CallbackInfo ci) {
     if (Verify.isVerified()) {
       lastSwingHandTick = nowTick;
@@ -49,7 +55,6 @@ public class GoldNukerMixin {
   @Inject(method = "onEnable", remap = false, at = @At("HEAD"))
   public void onEnable(CallbackInfo ci) {
     if (Verify.isVerified()) {
-
 
       nowTick = 0;
       lastSwingHandTick = 0;

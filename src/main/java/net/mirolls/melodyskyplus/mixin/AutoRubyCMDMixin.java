@@ -34,9 +34,12 @@ public class AutoRubyCMDMixin {
             int yDiff = AutoRuby.getINSTANCE().wps.get(0).getY() - Integer.parseInt(args[2]);
             int zDiff = AutoRuby.getINSTANCE().wps.get(0).getZ() - Integer.parseInt(args[3]);
 
-            AutoRuby.getINSTANCE().wps.replaceAll(blockPos -> {
-              return blockPos.add(new BlockPos(-xDiff, -yDiff, -zDiff)); // 减去差值
-            });
+            AutoRuby.getINSTANCE()
+                .wps
+                .replaceAll(
+                    blockPos -> {
+                      return blockPos.add(new BlockPos(-xDiff, -yDiff, -zDiff)); // 减去差值
+                    });
             Helper.sendMessage("Successfully to set first. ");
           } catch (NumberFormatException e) {
             Helper.sendMessage("You must send a number to set the first block. ");

@@ -1,11 +1,10 @@
 package net.mirolls.melodyskyplus.path.find;
 
-import net.minecraft.util.BlockPos;
-import xyz.Melody.Utils.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.util.BlockPos;
+import xyz.Melody.Utils.Vec3d;
 
 public class PathPos {
   private PathNodeType type;
@@ -47,10 +46,7 @@ public class PathPos {
 
   @Override
   public String toString() {
-    return "PathPos{" +
-        "type=" + type +
-        ", pos=" + pos +
-        '}';
+    return "PathPos{" + "type=" + type + ", pos=" + pos + '}';
   }
 
   @Override

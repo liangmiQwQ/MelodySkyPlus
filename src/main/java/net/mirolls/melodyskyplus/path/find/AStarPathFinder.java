@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.path.find;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
@@ -8,26 +10,24 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 public class AStarPathFinder {
   private final BlockPos[] BASIC_OFFSETS = {
-      new BlockPos(1, 0, 0),  // 右
-      new BlockPos(-1, 0, 0), // 左
-      new BlockPos(0, 0, 1),  // 前
-      new BlockPos(0, 0, -1),  // 后
-      new BlockPos(0, -1, 0)
+    new BlockPos(1, 0, 0), // 右
+    new BlockPos(-1, 0, 0), // 左
+    new BlockPos(0, 0, 1), // 前
+    new BlockPos(0, 0, -1), // 后
+    new BlockPos(0, -1, 0)
   };
 
   private final Set<BlockPos> specialUnbreakableBlocks;
   // 一个BlockPos有3个状态
   /* 1. 没有被扫描过 toOpen
-     2. 被扫描过了 opened
-     3. 被扫描过了 并且以他为中心开展了新的节点 closed */
+  2. 被扫描过了 opened
+  3. 被扫描过了 并且以他为中心开展了新的节点 closed */
 
   //  private final Set<PathNode> openedBlocks = new HashSet<>();
-  private final PriorityQueue<PathNode> openedBlocks = new PriorityQueue<>(Comparator.comparingDouble(PathNode::fCost));
+  private final PriorityQueue<PathNode> openedBlocks =
+      new PriorityQueue<>(Comparator.comparingDouble(PathNode::fCost));
 
   private final Set<BlockPos> visitedPositions = new HashSet<>();
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
@@ -35,8 +35,8 @@ public class AStarPathFinder {
   private final Minecraft mc;
   private final boolean jumpBoost;
 
-
-  public AStarPathFinder(boolean canMineBlocks, boolean jumpBoost, Set<BlockPos> specialUnbreakableBlocks) {
+  public AStarPathFinder(
+      boolean canMineBlocks, boolean jumpBoost, Set<BlockPos> specialUnbreakableBlocks) {
     mc = Minecraft.getMinecraft();
     this.canMineBlocks = canMineBlocks;
     this.specialUnbreakableBlocks = specialUnbreakableBlocks;
@@ -57,7 +57,8 @@ public class AStarPathFinder {
 
   public List<PathPos> findPath(BlockPos start, BlockPos target, int length) {
 
-    PathNode root = new PathNode(0, distance(start, target), null, start, PathPos.PathNodeType.WALK);
+    PathNode root =
+        new PathNode(0, distance(start, target), null, start, PathPos.PathNodeType.WALK);
 
     if (start.equals(target)) {
       return new ArrayList<>();
@@ -76,7 +77,9 @@ public class AStarPathFinder {
         return null; // 找不到路径
       }
 
-      if (nodeToClose.gCost > length && length > -1 && nodeToClose.type != PathPos.PathNodeType.ABILITY) {
+      if (nodeToClose.gCost > length
+          && length > -1
+          && nodeToClose.type != PathPos.PathNodeType.ABILITY) {
         // 实现分段查询
         targetPathNode = nodeToClose;
         break;
@@ -90,7 +93,6 @@ public class AStarPathFinder {
       }
 
     } while (true);
-
 
     return buildPath(targetPathNode);
   }
@@ -123,7 +125,8 @@ public class AStarPathFinder {
       } else {
         if (abilityStartPos == null) {
           // 非技能情况
-          if (node.type == PathPos.PathNodeType.JUMP_END && node.pos.getY() <= node.posParent.getY() + 1) {
+          if (node.type == PathPos.PathNodeType.JUMP_END
+              && node.pos.getY() <= node.posParent.getY() + 1) {
             // 台阶支持
             IBlockState blockState = getBlockState(node.pos.down());
             if (blockState.getBlock().getRegistryName().contains("slab")) {
@@ -158,9 +161,7 @@ public class AStarPathFinder {
       returnPaths.add(new PathPos(PathPos.PathNodeType.ABILITY_END, lastNode.getPos()));
     }
 
-    return returnPaths.stream()
-        .distinct()
-        .collect(Collectors.toList());
+    return returnPaths.stream().distinct().collect(Collectors.toList());
   }
 
   /**
@@ -169,7 +170,8 @@ public class AStarPathFinder {
    */
   private int getWalkType(BlockPos pos) {
     Block block = getBlockState(pos.down()).getBlock(); // 找下面的那个方块
-    if (block.getMaterial().isLiquid() || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
+    if (block.getMaterial().isLiquid()
+        || (!block.getMaterial().isSolid() && Block.getIdFromBlock(block) != 78)) {
       Block blockFoot = getBlockState(pos).getBlock();
       Block blockHead = getBlockState(pos.add(0, 1, 0)).getBlock();
       if (blockFoot.getMaterial().isSolid() || blockHead.getMaterial().isSolid()) {
@@ -213,13 +215,15 @@ public class AStarPathFinder {
         if (node != null) return node;
       }
 
-      if (parent.type == PathPos.PathNodeType.WALK || parent.type == PathPos.PathNodeType.JUMP_END) {
+      if (parent.type == PathPos.PathNodeType.WALK
+          || parent.type == PathPos.PathNodeType.JUMP_END) {
         if (jumpBoost) {
           for (int i = 0; i < 5; i++) {
             BlockPos posFoot = parent.pos.add(0, i + 1, 0);
             BlockPos posHead = parent.pos.add(0, i + 2, 0);
 
-            if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
+            if (getBlockState(posFoot).getBlock() != Blocks.air
+                || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
 
@@ -232,7 +236,8 @@ public class AStarPathFinder {
           for (BlockPos offset : getJumpOffsets(1)) {
             BlockPos posFoot = parent.pos.add(0, 1, 0);
             BlockPos posHead = parent.pos.add(0, 2, 0);
-            if (getBlockState(posFoot).getBlock() != Blocks.air || getBlockState(posHead).getBlock() != Blocks.air) {
+            if (getBlockState(posFoot).getBlock() != Blocks.air
+                || getBlockState(posHead).getBlock() != Blocks.air) {
               break;
             }
             PathNode node = openBlock(parent, target, offset, true, false, false, true);
@@ -245,15 +250,22 @@ public class AStarPathFinder {
   }
 
   private BlockPos[] getJumpOffsets(int layer) {
-    return new BlockPos[]{
-        new BlockPos(1, layer, 0),
-        new BlockPos(0, layer, 1),
-        new BlockPos(-1, layer, 0),
-        new BlockPos(0, layer, -1)
+    return new BlockPos[] {
+      new BlockPos(1, layer, 0),
+      new BlockPos(0, layer, 1),
+      new BlockPos(-1, layer, 0),
+      new BlockPos(0, layer, -1)
     };
   }
 
-  private PathNode openBlock(PathNode parent, BlockPos target, BlockPos offset, boolean jumpEnd, boolean disableWalk, boolean disableMining, boolean disableAbility) {
+  private PathNode openBlock(
+      PathNode parent,
+      BlockPos target,
+      BlockPos offset,
+      boolean jumpEnd,
+      boolean disableWalk,
+      boolean disableMining,
+      boolean disableAbility) {
     BlockPos pos = parent.pos.add(offset);
 
     boolean posChecked = isPosChecked(pos);
@@ -262,7 +274,13 @@ public class AStarPathFinder {
       int walkType = getWalkType(pos);
       if (walkType == 0) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + getPenalty(pos), distance, parent, pos, jumpEnd ? PathPos.PathNodeType.JUMP_END : PathPos.PathNodeType.WALK);
+        PathNode node =
+            new PathNode(
+                parent.gCost + 1 + getPenalty(pos),
+                distance,
+                parent,
+                pos,
+                jumpEnd ? PathPos.PathNodeType.JUMP_END : PathPos.PathNodeType.WALK);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
@@ -270,7 +288,8 @@ public class AStarPathFinder {
         }
       } else if (walkType == 1 && !disableAbility) {
         int distance = distance(pos, target);
-        PathNode node = new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathPos.PathNodeType.ABILITY);
+        PathNode node =
+            new PathNode(parent.gCost + 1 + 2, distance, parent, pos, PathPos.PathNodeType.ABILITY);
         openedBlocks.add(node);
         visitedPositions.add(node.pos);
         if (distance == 0) {
@@ -280,7 +299,9 @@ public class AStarPathFinder {
         int breakable = getBreakable(pos);
         if (breakable != -1 && parent.type != PathPos.PathNodeType.ABILITY) {
           int distance = distance(pos, target);
-          PathNode node = new PathNode(parent.gCost + 1 + breakable, distance, parent, pos, PathPos.PathNodeType.MINE);
+          PathNode node =
+              new PathNode(
+                  parent.gCost + 1 + breakable, distance, parent, pos, PathPos.PathNodeType.MINE);
           openedBlocks.add(node);
           visitedPositions.add(node.pos);
           if (distance == 0) {
@@ -288,7 +309,6 @@ public class AStarPathFinder {
           }
         }
       }
-
     }
     return null;
   }
@@ -298,7 +318,9 @@ public class AStarPathFinder {
   }
 
   private int distance(BlockPos pos1, BlockPos pos2) {
-    return Math.abs(pos1.getX() - pos2.getX()) + Math.abs(pos1.getY() - pos2.getY()) + Math.abs(pos1.getZ() - pos2.getZ());
+    return Math.abs(pos1.getX() - pos2.getX())
+        + Math.abs(pos1.getY() - pos2.getY())
+        + Math.abs(pos1.getZ() - pos2.getZ());
   }
 
   private double getPenalty(BlockPos pos) {
@@ -315,16 +337,14 @@ public class AStarPathFinder {
   }
 
   public int getBreakable(BlockPos pos) {
-    if (!canMineBlocks) {// 如果不能挖掘方块
+    if (!canMineBlocks) { // 如果不能挖掘方块
       return -1;
     }
     Block footBlock = getBlockState(pos).getBlock();
     Block headBlock = getBlockState(pos.up()).getBlock();
 
-    List<Block> unbreakableBlocks = Arrays.asList(
-        Blocks.wool, Blocks.sand, Blocks.gravel, Blocks.rail,
-        Blocks.bedrock
-    );
+    List<Block> unbreakableBlocks =
+        Arrays.asList(Blocks.wool, Blocks.sand, Blocks.gravel, Blocks.rail, Blocks.bedrock);
 
     int returnValue = 0;
 

@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.path.type;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.task.TaskHelper;
@@ -7,9 +9,6 @@ import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.utils.PlayerUtils;
 import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Node {
   public BlockPos pos;
@@ -43,9 +42,11 @@ public class Node {
       if (i != path.size() - 1) {
         PathPos nextPos = path.get(i + 1);
         rotation = Node.calculateAngles(pos.getPos(), nextPos.getPos());
-        distance = Math.hypot(nextPos.getPos().getX() - pos.getPos().getX(), nextPos.getPos().getZ() - pos.getPos().getZ());
+        distance =
+            Math.hypot(
+                nextPos.getPos().getX() - pos.getPos().getX(),
+                nextPos.getPos().getZ() - pos.getPos().getZ());
       }
-
 
       if (pos.getType() == PathPos.PathNodeType.WALK) {
         if (Verify.isVerified()) {
@@ -55,18 +56,18 @@ public class Node {
           if (values.size() > 1) {
             Node prevNode = values.get(values.size() - 2);
 
-            taskHelper.addTask(() -> {
-              if (values.contains(node) && node.advanceFraction == -1) {
-                double angle = Math.abs(PlayerUtils.getYawDiff(
-                    prevNode.nextRotation.getYaw(),
-                    node.nextRotation.getYaw()
-                ));
+            taskHelper.addTask(
+                () -> {
+                  if (values.contains(node) && node.advanceFraction == -1) {
+                    double angle =
+                        Math.abs(
+                            PlayerUtils.getYawDiff(
+                                prevNode.nextRotation.getYaw(), node.nextRotation.getYaw()));
 
-                node.advanceFraction = calculateAdvanceFraction(angle, 1.0, 75.0);
-              }
-            });
+                    node.advanceFraction = calculateAdvanceFraction(angle, 1.0, 75.0);
+                  }
+                });
           }
-
         }
       } else if (pos.getType() == PathPos.PathNodeType.JUMP_END) {
         // 对于技能类型节点 (包括Jump, Fall, Ability) 需要修改A*返回的End模式变为start模式 下面是一个例子
@@ -100,7 +101,9 @@ public class Node {
         }
 
         // 把上一个点补回去
-        values.add(new Ability(prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, nodesBetween));
+        values.add(
+            new Ability(
+                prevNode.getPos(), prevNode.getNextRotation(), prevNode.distance, nodesBetween));
       } else if (pos.getType() == PathPos.PathNodeType.ABILITY_END) {
         values.add(new Walk(pos.getPos(), rotation, distance, 0));
       } else if (pos.getType() == PathPos.PathNodeType.MINE) {
@@ -125,7 +128,6 @@ public class Node {
 
     // 使用反正切函数进行计算 x/z(对边/邻边)
     double yaw = getYaw(dx, dz);
-
 
     // 再次使用反正切函数进行计算  y/直线距离(对边/邻边)
     double rawPitch = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(Math.hypot(dx, dz))));
@@ -190,7 +192,8 @@ public class Node {
     return yaw;
   }
 
-  private static double calculateAdvanceFraction(double angleNeed, double speedTick, double maxAngle) {
+  private static double calculateAdvanceFraction(
+      double angleNeed, double speedTick, double maxAngle) {
     double angleSum = 0.0;
     double currentDirection = 90.0;
     double x = 0.0;

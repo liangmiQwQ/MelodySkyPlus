@@ -1,11 +1,10 @@
 package net.mirolls.melodyskyplus.utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class BlockStateStoreUtils {
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();

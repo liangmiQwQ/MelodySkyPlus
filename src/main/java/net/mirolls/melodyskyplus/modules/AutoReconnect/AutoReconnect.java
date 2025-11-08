@@ -1,12 +1,11 @@
 package net.mirolls.melodyskyplus.modules.AutoReconnect;
 
+import java.util.Iterator;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Event.value.Numbers;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
-
-import java.util.Iterator;
 
 public class AutoReconnect extends ModulePlus {
 
@@ -46,20 +45,22 @@ public class AutoReconnect extends ModulePlus {
   }
 
   private void oneSecond(SetStringCallback callbackSetString, ReconnectCallback callbackReconnect) {
-    new Thread(() -> {
-      try {
-        if (second > 0) {
-          Thread.sleep(1000);
-          second -= 1;
-          oneSecond(callbackSetString, callbackReconnect);
-          callbackSetString.call(String.valueOf(second));
-        } else {
-          Thread.sleep(1000);
-          callbackReconnect.call();
-        }
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }).start();
+    new Thread(
+            () -> {
+              try {
+                if (second > 0) {
+                  Thread.sleep(1000);
+                  second -= 1;
+                  oneSecond(callbackSetString, callbackReconnect);
+                  callbackSetString.call(String.valueOf(second));
+                } else {
+                  Thread.sleep(1000);
+                  callbackReconnect.call();
+                }
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .start();
   }
 }

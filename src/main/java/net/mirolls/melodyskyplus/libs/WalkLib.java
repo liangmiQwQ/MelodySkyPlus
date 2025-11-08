@@ -17,7 +17,6 @@ public class WalkLib {
   private CallBack callBack;
   private boolean isForwardKeyPressed = false;
 
-
   public WalkLib() {
     MinecraftForge.EVENT_BUS.register(this);
   }
@@ -48,7 +47,9 @@ public class WalkLib {
         try {
           MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(targetBlockPos));
         } catch (NullPointerException e) {
-          MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.vec3ToRotation(new Vec3d(targetBlockPos.getX(), targetBlockPos.getY(), targetBlockPos.getZ())));
+          MelodySkyPlus.rotationLib.setTargetRotation(
+              RotationUtil.vec3ToRotation(
+                  new Vec3d(targetBlockPos.getX(), targetBlockPos.getY(), targetBlockPos.getZ())));
         }
         MelodySkyPlus.rotationLib.startRotating();
       }
@@ -77,5 +78,4 @@ public class WalkLib {
   public void setTargetBlockPos(BlockPos targetBlockPos) {
     this.targetBlockPos = targetBlockPos;
   }
-
 }

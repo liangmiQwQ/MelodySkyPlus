@@ -1,5 +1,9 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
@@ -33,11 +37,6 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
-
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class AutoHollow extends ModulePlus {
   // static & final
@@ -92,13 +91,22 @@ public class AutoHollow extends ModulePlus {
   public void onRender(EventRender3D event) {
     if (AutoRuby.getINSTANCE().wps.size() > 1) {
       for (BlockPos pos : stones) {
-        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(8, 125, 13).getRGB(), (double) 40 / 256), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(
+            pos,
+            ColorUtils.transparency(new Color(8, 125, 13).getRGB(), (double) 40 / 256),
+            event.getPartialTicks());
       }
       for (BlockPos pos : etherWarpPoints) {
-        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(101, 4, 131).getRGB(), (double) 108 / 256), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(
+            pos,
+            ColorUtils.transparency(new Color(101, 4, 131).getRGB(), (double) 108 / 256),
+            event.getPartialTicks());
       }
       for (BlockPos pos : stonesToMineThisTime) {
-        RenderUtil.drawFullBlockESP(pos, ColorUtils.transparency(new Color(0, 255, 244).getRGB(), (double) 40 / 256), event.getPartialTicks());
+        RenderUtil.drawFullBlockESP(
+            pos,
+            ColorUtils.transparency(new Color(0, 255, 244).getRGB(), (double) 40 / 256),
+            event.getPartialTicks());
       }
     }
   }
@@ -123,11 +131,14 @@ public class AutoHollow extends ModulePlus {
           stage = Stage.PACKET_MINE_FIRST;
         }
 
-        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
-        mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
+        mc.thePlayer.rotationYaw =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
+        mc.thePlayer.rotationPitch =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
 
         // 挖掘
-        if (Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 5 && Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 5) {
+        if (Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 5
+            && Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 5) {
           // 考虑箱子的情况
           MovingObjectPosition objectMouseOver = mc.objectMouseOver;
           if (mc.theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock() == Blocks.chest) {
@@ -135,28 +146,31 @@ public class AutoHollow extends ModulePlus {
             if (lastRightClick.hasReached(500)) {
               lastRightClick.reset();
               KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-              new Thread(() -> {
-                try {
-                  Thread.sleep(100);
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
+              new Thread(
+                      () -> {
+                        try {
+                          Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                          throw new RuntimeException(e);
+                        }
 
-                mc.addScheduledTask(() -> {
-                  KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-                });
-              }).start();
+                        mc.addScheduledTask(
+                            () -> {
+                              KeyBinding.setKeyBindState(
+                                  mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+                            });
+                      })
+                  .start();
             }
           } else {
             mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), true);
           }
-
-
         }
 
         // 结束挖掘
-        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(500)) || packetManager.packetSendTimer.hasReached(1000)) {
+        if ((packetManager.firstMined && packetManager.packetSendTimer.hasReached(500))
+            || packetManager.packetSendTimer.hasReached(1000)) {
           // 由于是检测动画 可以用更短的时间 以提高效率
           stonesToMineThisTime = filterAir(stonesToMineThisTime);
           stage = Stage.PACKET_MINE_FIRST;
@@ -181,18 +195,20 @@ public class AutoHollow extends ModulePlus {
         walk(false, next, Stage.FINISHED);
       } else if (stage == Stage.FINISHED) {
         clear();
-        Helper.sendMessage("Finished digging a hollow, place a stone and run .ah start again to continue.");
+        Helper.sendMessage(
+            "Finished digging a hollow, place a stone and run .ah start again to continue.");
       } else if (stage == Stage.PLACE_COBBLESTONE) { // 永远不会触发
         // 从这附近找到最近的点, 放石头
         BlockPos next;
-        final BlockPos[] offsets = new BlockPos[]{
-            new BlockPos(1, 0, 0),
-            new BlockPos(0, 1, 0),
-            new BlockPos(0, 0, 1),
-            new BlockPos(-1, 0, 0),
-            new BlockPos(0, -1, 0),
-            new BlockPos(0, 0, -1),
-        };
+        final BlockPos[] offsets =
+            new BlockPos[] {
+              new BlockPos(1, 0, 0),
+              new BlockPos(0, 1, 0),
+              new BlockPos(0, 0, 1),
+              new BlockPos(-1, 0, 0),
+              new BlockPos(0, -1, 0),
+              new BlockPos(0, 0, -1),
+            };
         if (currentIndex + 1 < AutoRuby.getINSTANCE().wps.size()) {
           next = AutoRuby.getINSTANCE().wps.get(currentIndex + 1);
         } else {
@@ -205,7 +221,8 @@ public class AutoHollow extends ModulePlus {
           BlockPos bp = next.add(offset);
           for (int i = 0; i < 5; i++) {
             if (mc.theWorld.getBlockState(bp).getBlock().getMaterial().isSolid()) {
-              posWithOffsetMap.put(bp, new BlockPos(-offset.getX(), -offset.getY(), -offset.getZ()));
+              posWithOffsetMap.put(
+                  bp, new BlockPos(-offset.getX(), -offset.getY(), -offset.getZ()));
               break;
             }
           }
@@ -228,13 +245,26 @@ public class AutoHollow extends ModulePlus {
         // 生成路径 先找到target
         BlockStateStoreUtils store = new BlockStateStoreUtils();
         BlockPos target = PlayerUtils.getPlayerLocation();
-        double targetDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()), Vec3d.ofCenter(next));
+        double targetDistanceSq =
+            BlockUtils.calcDistanceSq(
+                new Vec3d(
+                    target.getX(), target.getY() + mc.thePlayer.getEyeHeight(), target.getZ()),
+                Vec3d.ofCenter(next));
 
-        for (BlockPos pos : BlockPos.getAllInBox(PlayerUtils.getPlayerLocation().add(-10, -10, -10), PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
+        for (BlockPos pos :
+            BlockPos.getAllInBox(
+                PlayerUtils.getPlayerLocation().add(-10, -10, -10),
+                PlayerUtils.getPlayerLocation().add(10, 10, 10))) {
           if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
-            if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+            if (store.getBlockState(pos.up()).getBlock() == Blocks.air
+                && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
 
-              double posDistanceSq = BlockUtils.calcDistanceSq(new Vec3d(pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()), Vec3d.ofCenter(next)) * (locationCheck ? (completeStones.contains(pos.up()) ? 0.5 : 1.2) : 1);
+              double posDistanceSq =
+                  BlockUtils.calcDistanceSq(
+                          new Vec3d(
+                              pos.getX(), pos.getY() + mc.thePlayer.getEyeHeight(), pos.getZ()),
+                          Vec3d.ofCenter(next))
+                      * (locationCheck ? (completeStones.contains(pos.up()) ? 0.5 : 1.2) : 1);
               if (targetDistanceSq > posDistanceSq) {
                 targetDistanceSq = posDistanceSq;
                 target = pos;
@@ -248,27 +278,30 @@ public class AutoHollow extends ModulePlus {
         etherWarpPoints = EtherWarpUtils.findWayToEtherWarp(target, 3, 6, 10);
 
         if (etherWarpPoints.isEmpty()) {
-          Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+          Helper.sendMessage(
+              "Sorry, program has met some trouble, please dig to the next pos by yourself.");
           clear();
         } else {
           long finishTime = System.currentTimeMillis();
-          MelodySkyPlus.LOGGER.info("Finish path(for ether warp) finding in {}ms; Path size: {}", finishTime - startTime, etherWarpPoints.size());
+          MelodySkyPlus.LOGGER.info(
+              "Finish path(for ether warp) finding in {}ms; Path size: {}",
+              finishTime - startTime,
+              etherWarpPoints.size());
         }
       }
-
 
       // 执行
       BlockPos nextPos = etherWarpPoints.get(0);
       Rotation rotation = RotationUtil.posToRotation(nextPos);
 
       // 切换到下一个点
-      if (PlayerUtils.getPlayerLocation().down().equals(nextPos) || PlayerUtils.getPlayerLocation().equals(nextPos)) {
+      if (PlayerUtils.getPlayerLocation().down().equals(nextPos)
+          || PlayerUtils.getPlayerLocation().equals(nextPos)) {
         // 有的时候可能会出现该点被挖掘, 还未反应过来的情况
         // 脚下的点位是目标点位
         etherWarpPoints.remove(0);
         // 移除点的时候重置转头计时器
         finishedRotate.reset().pause();
-
 
         // 如果是最后一个点 则进入后续状态
         if (etherWarpPoints.isEmpty()) {
@@ -282,25 +315,27 @@ public class AutoHollow extends ModulePlus {
       }
 
       // 移动
-      mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
-      mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
+      mc.thePlayer.rotationYaw =
+          PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 50F);
+      mc.thePlayer.rotationPitch =
+          PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 40F);
 
-      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
+      if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.1
+          && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.1) {
         // 适当增加延迟 防止弱智hypixel无法检测到
         if (finishedRotate.getCurrentMS() == 0) {
           finishedRotate.reset();
         }
 
         // 如果正在看着这个点
-        if ((finishedRotate.getCurrentMS() - finishedRotate.getLastMS()) > 150 && (lastRightClick.getCurrentMS() - lastRightClick.getLastMS()) > 500) {
+        if ((finishedRotate.getCurrentMS() - finishedRotate.getLastMS()) > 150
+            && (lastRightClick.getCurrentMS() - lastRightClick.getLastMS()) > 500) {
           // 要求距离转头完毕有150ms, 防止hypixel延迟
           lastRightClick.reset();
           Client.rightClick();
           MelodySkyPlus.LOGGER.info("1");
         }
       }
-
-
     }
   }
 
@@ -317,13 +352,14 @@ public class AutoHollow extends ModulePlus {
     // 切换到稿子
     mc.thePlayer.inventory.currentItem = pickaxeSlot.getValue().intValue() - 1;
 
-    Runnable onFinished = () -> {
-      if (next) {
-        next();
-      } else {
-        stage = Stage.WALK;
-      }
-    };
+    Runnable onFinished =
+        () -> {
+          if (next) {
+            next();
+          } else {
+            stage = Stage.WALK;
+          }
+        };
 
     if (!stonesToMineThisTime.isEmpty()) {
       BlockPos pos = stonesToMineThisTime.get(0);
@@ -331,8 +367,10 @@ public class AutoHollow extends ModulePlus {
       if (PlayerUtils.distanceToPos(pos) < 5 && PlayerUtils.rayTrace(pos)) {
         Rotation rotation = RotationUtil.posToRotation(pos);
 
-        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
-        mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
+        mc.thePlayer.rotationYaw =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 40F);
+        mc.thePlayer.rotationPitch =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 30F);
 
         if (mc.theWorld.getBlockState(pos).getBlock() != Blocks.air) {
           if (RotationUtil.isLookingAtBlock(pos)) {
@@ -340,21 +378,29 @@ public class AutoHollow extends ModulePlus {
               if (lastRightClick.hasReached(500)) {
                 lastRightClick.reset();
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-                new Thread(() -> {
-                  try {
-                    Thread.sleep(100);
-                  } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                  }
+                new Thread(
+                        () -> {
+                          try {
+                            Thread.sleep(100);
+                          } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                          }
 
-                  mc.addScheduledTask(() -> {
-                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-                  });
-                }).start();
+                          mc.addScheduledTask(
+                              () -> {
+                                KeyBinding.setKeyBindState(
+                                    mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+                              });
+                        })
+                    .start();
               }
             } else {
               if (!posesMined.contains(pos)) {
-                mc.thePlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, mc.thePlayer.getHorizontalFacing()));
+                mc.thePlayer.sendQueue.addToSendQueue(
+                    new C07PacketPlayerDigging(
+                        C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                        pos,
+                        mc.thePlayer.getHorizontalFacing()));
                 posesMined.add(pos);
               }
               mc.thePlayer.swingItem();
@@ -377,14 +423,14 @@ public class AutoHollow extends ModulePlus {
     }
   }
 
-
   public void start() {
     if (!started) {
       int index = AutoRuby.getINSTANCE().wps.indexOf(PlayerUtils.getPlayerLocation().down());
       if (index != -1) {
         // 存在
         Vec3d start = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index));
-        Vec3d eyes = new Vec3d(start.getX(), start.getY() + 0.5 + mc.thePlayer.getEyeHeight(), start.getZ());
+        Vec3d eyes =
+            new Vec3d(start.getX(), start.getY() + 0.5 + mc.thePlayer.getEyeHeight(), start.getZ());
         Vec3d end;
         if (index + 1 < AutoRuby.getINSTANCE().wps.size()) {
           end = Vec3d.ofCenter(AutoRuby.getINSTANCE().wps.get(index + 1));
@@ -407,15 +453,21 @@ public class AutoHollow extends ModulePlus {
   }
 
   public List<BlockPos> filterAir(List<BlockPos> pos) {
-    return pos.stream().filter((e) -> {
-          IBlockState state = mc.theWorld.getBlockState(e);
-          if (!warned && state.getBlock() == Blocks.prismarine || (state.getBlock() == Blocks.wool && EnumDyeColor.byMetadata(state.getBlock().getMetaFromState(state)) == EnumDyeColor.LIGHT_BLUE)) {
-            Helper.sendMessage("Program has found mithril in the route. Please run .ah stop and dig the route by yourself or the program won't use bob.");
-            warned = true;
-          }
-          return state.getBlock() != Blocks.air;
-        }
-    ).collect(Collectors.toList());
+    return pos.stream()
+        .filter(
+            (e) -> {
+              IBlockState state = mc.theWorld.getBlockState(e);
+              if (!warned && state.getBlock() == Blocks.prismarine
+                  || (state.getBlock() == Blocks.wool
+                      && EnumDyeColor.byMetadata(state.getBlock().getMetaFromState(state))
+                          == EnumDyeColor.LIGHT_BLUE)) {
+                Helper.sendMessage(
+                    "Program has found mithril in the route. Please run .ah stop and dig the route by yourself or the program won't use bob.");
+                warned = true;
+              }
+              return state.getBlock() != Blocks.air;
+            })
+        .collect(Collectors.toList());
   }
 
   public void clear() {
@@ -441,14 +493,24 @@ public class AutoHollow extends ModulePlus {
       // filter air
       stones = filterAir(stones);
       // 生成 stonesToMineThisTime
-      stonesToMineThisTime = stones.stream().filter((e) -> e.distanceSq(mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ) < 23).collect(Collectors.toList());
+      stonesToMineThisTime =
+          stones.stream()
+              .filter(
+                  (e) ->
+                      e.distanceSq(
+                              mc.thePlayer.posX,
+                              mc.thePlayer.posY + mc.thePlayer.getEyeHeight(),
+                              mc.thePlayer.posZ)
+                          < 23)
+              .collect(Collectors.toList());
       // 在stones里移除这些
       stones.removeAll(stonesToMineThisTime);
       posesMined.clear();
       finishedRotate.reset().pause();
 
       if (stonesToMineThisTime.isEmpty()) {
-        Helper.sendMessage("Sorry, program has met some trouble, please dig to the next pos by yourself.");
+        Helper.sendMessage(
+            "Sorry, program has met some trouble, please dig to the next pos by yourself.");
         clear();
       }
     }
