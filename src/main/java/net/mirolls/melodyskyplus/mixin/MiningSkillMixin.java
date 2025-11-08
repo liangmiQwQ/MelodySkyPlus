@@ -11,9 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.Melody.Event.value.Option;
-import xyz.Melody.Event.value.TextValue;
-import xyz.Melody.Event.value.Value;
+import xyz.Melody.Event.value.*;
 import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
@@ -30,7 +28,8 @@ public class MiningSkillMixin {
   public TextValue<String> expire;
   public Option<Boolean> melodySkyPlus$useRod = new Option<>("Use Rod", false);
   public Option<Boolean> melodySkyPlus$autoMode;
-
+  public Option<Boolean> melodySkyPlus$newBlueEgg = new Option<>("New BlueEgg",false);
+  public Numbers<Double> melodySkyPlus$blueSlot = new Numbers("New EggDrill Slot", (double)5.0F, (double)1.0F, (double)8.0F, (double)1.0F, new IValAction[0]);
 
   @SuppressWarnings("rawtypes")
   @ModifyArg(method = "<init>",
@@ -52,7 +51,9 @@ public class MiningSkillMixin {
         }
       });
 
-      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
+      Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 4);
+      returnValues[returnValues.length - 4] = melodySkyPlus$newBlueEgg;
+      returnValues[returnValues.length - 3] = melodySkyPlus$blueSlot;
       returnValues[returnValues.length - 2] = melodySkyPlus$autoMode;
       returnValues[returnValues.length - 1] = melodySkyPlus$useRod;
 
@@ -103,6 +104,31 @@ public class MiningSkillMixin {
         MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
         throw new RuntimeException(e);
       }
+
+    }
+    if (AntiBug.isBugRemoved() && melodySkyPlus$newBlueEgg.getValue()) {
+        try {
+            // 读 看是否应该执行
+            Class<?> client = Class.forName("xyz.Melody.Client");
+            Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");
+            pickaxeField.setAccessible(true);
+
+            // 若应该执行
+            if ((boolean) pickaxeField.get(null)) {
+                MelodySkyPlus.newBlueEgg.start(melodySkyPlus$blueSlot.getValue().intValue() - 1);
+
+                pickaxeField.set(null, false);
+
+                cir.cancel();
+                cir.setReturnValue(true);
+            } else {
+                // 否则
+                cir.setReturnValue(false);
+            }
+        } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
+              MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
+              throw new RuntimeException(e);
+        }
 
     }
   }
