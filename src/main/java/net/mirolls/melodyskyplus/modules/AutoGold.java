@@ -1,5 +1,10 @@
 package net.mirolls.melodyskyplus.modules;
 
+import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
+
+import java.awt.*;
+import java.lang.reflect.Field;
+import java.util.*;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -31,17 +36,12 @@ import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.GoldNuker;
 
-import java.awt.*;
-import java.lang.reflect.Field;
-import java.util.*;
-
-import static net.mirolls.melodyskyplus.utils.PlayerUtils.rayTrace;
-
 public class AutoGold extends ModulePlus {
   private static AutoGold INSTANCE;
   private final TimerUtil walkTimer;
   private final Numbers<Double> walkTime = new Numbers<>("WalkTime(s)", 0.4, 0.0, 1.0, 0.05);
-  private final Numbers<Double> findGoldRadius = new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
+  private final Numbers<Double> findGoldRadius =
+      new Numbers<>("FindGoldRadius", 35.0, 0.0, 50.0, 1.0);
   private final Option<Boolean> usePathFinder = new Option<>("UsePathFinder", false);
 
   private int findingGoldTick = -1;
@@ -52,9 +52,8 @@ public class AutoGold extends ModulePlus {
 
   private int prevItem;
 
-
   public AutoGold() {
-    super("AutoGold", new String[]{""}, ModuleType.Mining);
+    super("AutoGold", new String[] {""}, ModuleType.Mining);
 
     this.addValues(walkTime, findGoldRadius, usePathFinder);
     walkTimer = (new TimerUtil()).reset();
@@ -81,7 +80,7 @@ public class AutoGold extends ModulePlus {
   }
 
   public void findGold() {
-//    rotateDoneTick = 0;
+    //    rotateDoneTick = 0;
     rotateDoneTick = -2147483647;
     pfTick = -2147483647;
 
@@ -96,10 +95,15 @@ public class AutoGold extends ModulePlus {
       }
 
       // 切换到AOTV物品
-      if (this.mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(this.mc.thePlayer.getHeldItem()).equals("ASPECT_OF_THE_VOID") || this.mc.thePlayer.getHeldItem() == null) {
+      if (this.mc.thePlayer.getHeldItem() != null
+              && !ItemUtils.getSkyBlockID(this.mc.thePlayer.getHeldItem())
+                  .equals("ASPECT_OF_THE_VOID")
+          || this.mc.thePlayer.getHeldItem() == null) {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = this.mc.thePlayer.inventory.mainInventory[i];
-          if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).equals("ASPECT_OF_THE_VOID")) {
+          if (itemStack != null
+              && itemStack.getItem() != null
+              && ItemUtils.getSkyBlockID(itemStack).equals("ASPECT_OF_THE_VOID")) {
             prevItem = this.mc.thePlayer.inventory.currentItem;
             this.mc.thePlayer.inventory.currentItem = i;
             break;
@@ -109,35 +113,45 @@ public class AutoGold extends ModulePlus {
 
       if (usePathFinder.getValue()) {
         // 启动新线程进行金矿查找
-        new Thread(() -> {
-          if (SmartyPathFinder.getINSTANCE() != null) {
-            SmartyPathFinder.getINSTANCE().strongClear(true);
-            SmartyPathFinder.getINSTANCE().go(findGoldToPF());
-            SmartyPathFinder.getINSTANCE().onFailed(() -> {
-              BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
-              if (gold == null) {
-                gotoGold();
-              } else {
-                rotateToGold(gold);
-              }
-            });
-            SmartyPathFinder.getINSTANCE().onFinished(() -> {
-              // 完成时
-              pfTick = findingGoldTick + 1;
-            });
-          } else {
-            Helper.sendMessage("Your Minecraft is bugged and your account is ratted! try to restart it.");
-          }
-        }).start();
+        new Thread(
+                () -> {
+                  if (SmartyPathFinder.getINSTANCE() != null) {
+                    SmartyPathFinder.getINSTANCE().strongClear(true);
+                    SmartyPathFinder.getINSTANCE().go(findGoldToPF());
+                    SmartyPathFinder.getINSTANCE()
+                        .onFailed(
+                            () -> {
+                              BlockPos gold =
+                                  GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+                              if (gold == null) {
+                                gotoGold();
+                              } else {
+                                rotateToGold(gold);
+                              }
+                            });
+                    SmartyPathFinder.getINSTANCE()
+                        .onFinished(
+                            () -> {
+                              // 完成时
+                              pfTick = findingGoldTick + 1;
+                            });
+                  } else {
+                    Helper.sendMessage(
+                        "Your Minecraft is bugged and your account is ratted! try to restart it.");
+                  }
+                })
+            .start();
       } else {
-        new Thread(() -> {
-          BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
-          if (gold == null) {
-            gotoGold();
-          } else {
-            rotateToGold(gold);
-          }
-        }).start();
+        new Thread(
+                () -> {
+                  BlockPos gold = GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue());
+                  if (gold == null) {
+                    gotoGold();
+                  } else {
+                    rotateToGold(gold);
+                  }
+                })
+            .start();
       }
     }
   }
@@ -146,7 +160,8 @@ public class AutoGold extends ModulePlus {
     MelodySkyPlus.rotationLib.setSpeedCoefficient(3.0F);
     MelodySkyPlus.rotationLib.setTargetRotation(gotoAir());
     MelodySkyPlus.rotationLib.startRotating();
-    MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
+    MelodySkyPlus.rotationLib.setCallBack(
+        () -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateDone());
   }
 
   public void rotateDone() {
@@ -255,13 +270,18 @@ public class AutoGold extends ModulePlus {
       }
     }
 
-    return new Rotation(sidesAroundPlayer.getMaxSideYaw(), (new Random().nextBoolean() ? -1 : 1) * new Random().nextInt(45));
+    return new Rotation(
+        sidesAroundPlayer.getMaxSideYaw(),
+        (new Random().nextBoolean() ? -1 : 1) * new Random().nextInt(45));
   }
 
   @EventHandler
   public void onRender(EventRender3D event) {
     if (this.targetBlock != null) {
-      RenderUtil.drawFullBlockESP(this.targetBlock, ColorUtils.transparency(new Color(44, 125, 173).getRGB(), 0.8), event.getPartialTicks());
+      RenderUtil.drawFullBlockESP(
+          this.targetBlock,
+          ColorUtils.transparency(new Color(44, 125, 173).getRGB(), 0.8),
+          event.getPartialTicks());
     }
   }
 
@@ -274,7 +294,9 @@ public class AutoGold extends ModulePlus {
           // 如果已经旋转完毕了
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
         }
-        if (findingGoldTick >= rotateDoneTick && findingGoldTick <= rotateDoneTick + 60 && rotateDoneTick != -2147483647) {
+        if (findingGoldTick >= rotateDoneTick
+            && findingGoldTick <= rotateDoneTick + 60
+            && rotateDoneTick != -2147483647) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), false);
           if (mc.thePlayer.onGround) {
@@ -295,11 +317,18 @@ public class AutoGold extends ModulePlus {
             @SuppressWarnings("unchecked")
             Numbers<Double> range = (Numbers<Double>) field.get(goldNuker);
 
-            for (BlockPos blockPos : BlockPos.getAllInBox(
-                mc.thePlayer.getPosition().up().add(-1 * range.getValue(), -1 * range.getValue(), -1 * range.getValue()),
-                mc.thePlayer.getPosition().up().add(range.getValue(), range.getValue(), range.getValue())
-            )) {
-              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block && rayTrace(blockPos)) {
+            for (BlockPos blockPos :
+                BlockPos.getAllInBox(
+                    mc.thePlayer
+                        .getPosition()
+                        .up()
+                        .add(-1 * range.getValue(), -1 * range.getValue(), -1 * range.getValue()),
+                    mc.thePlayer
+                        .getPosition()
+                        .up()
+                        .add(range.getValue(), range.getValue(), range.getValue()))) {
+              if (mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.gold_block
+                  && rayTrace(blockPos)) {
                 this.mc.thePlayer.inventory.currentItem = prevItem;
                 resume();
                 return;
@@ -308,14 +337,21 @@ public class AutoGold extends ModulePlus {
           } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
           }
-          new Thread(() -> rotateToGold(GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue()))).start();
+          new Thread(
+                  () ->
+                      rotateToGold(
+                          GoldUtils.findGoldToRotate(findGoldRadius.getValue().intValue())))
+              .start();
         }
         if (findingGoldTick == rotateToGoldDoneTick) {
           // 达到这个阶段可以选择直接跳阶段 直接一开始找到gold然后跑过来就结束了
           Client.rightClick();
         }
         if (findingGoldTick > rotateToGoldDoneTick && rotateToGoldDoneTick < findingGoldTick + 40) {
-          if (Math.hypot(mc.thePlayer.posX - mc.thePlayer.lastTickPosX, mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) >= 0.99) {
+          if (Math.hypot(
+                  mc.thePlayer.posX - mc.thePlayer.lastTickPosX,
+                  mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ)
+              >= 0.99) {
             if (this.mc.thePlayer.inventory.currentItem != prevItem) {
               this.mc.thePlayer.inventory.currentItem = prevItem;
             }
@@ -347,7 +383,7 @@ public class AutoGold extends ModulePlus {
       } else {
         KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindSneak.getKeyCode(), true);
 
-        if (walkTimer.hasReached(1000 - (walkTime.getValue() * 1000)/* 走路的时间 */)) {
+        if (walkTimer.hasReached(1000 - (walkTime.getValue() * 1000) /* 走路的时间 */)) {
           KeyBinding.setKeyBindState(this.mc.gameSettings.keyBindForward.getKeyCode(), true);
         }
         if (walkTimer.hasReached(1000)) {
@@ -373,9 +409,15 @@ public class AutoGold extends ModulePlus {
     Set<BlockPos> golds = new HashSet<>();
     Map<BlockPos, Integer> goldMap = new HashMap<>();
 
-    for (int x = -findGoldRadius.getValue().intValue(); x < findGoldRadius.getValue().intValue(); x++) {
-      for (int z = -findGoldRadius.getValue().intValue(); z < findGoldRadius.getValue().intValue(); z++) {
-        for (int y = findGoldRadius.getValue().intValue() / -5; y < findGoldRadius.getValue().intValue() / 5; y++) {
+    for (int x = -findGoldRadius.getValue().intValue();
+        x < findGoldRadius.getValue().intValue();
+        x++) {
+      for (int z = -findGoldRadius.getValue().intValue();
+          z < findGoldRadius.getValue().intValue();
+          z++) {
+        for (int y = findGoldRadius.getValue().intValue() / -5;
+            y < findGoldRadius.getValue().intValue() / 5;
+            y++) {
           BlockPos bp = PlayerUtils.getPlayerLocation().add(x, y, z);
           if (mc.theWorld.getBlockState(bp).getBlock() == Blocks.gold_block) {
             // 这是金块
@@ -390,7 +432,10 @@ public class AutoGold extends ModulePlus {
       BlockPos nearestGold = null;
       int nearestGoldDistanceSquare = Integer.MAX_VALUE;
       for (BlockPos gold : golds) {
-        int distanceSquare = (int) (Math.pow(PlayerUtils.getPlayerLocation().getX() - gold.getX(), 2) + Math.pow(PlayerUtils.getPlayerLocation().getZ() - gold.getZ(), 2));
+        int distanceSquare =
+            (int)
+                (Math.pow(PlayerUtils.getPlayerLocation().getX() - gold.getX(), 2)
+                    + Math.pow(PlayerUtils.getPlayerLocation().getZ() - gold.getZ(), 2));
 
         if (distanceSquare < nearestGoldDistanceSquare) {
           nearestGold = gold;
@@ -404,7 +449,8 @@ public class AutoGold extends ModulePlus {
 
     Set<BlockPos> keySet = goldMap.keySet();
     if (keySet.isEmpty())
-      Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
+      Helper.sendMessage(
+          "Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
 
     BlockPos largestGold = null;
     int largestGoldNumber = 0;
@@ -418,7 +464,8 @@ public class AutoGold extends ModulePlus {
     return largestGold;
   }
 
-  private void processGold(BlockPos nearestGold, BlockPos start, Set<BlockPos> golds, Map<BlockPos, Integer> goldMap) {
+  private void processGold(
+      BlockPos nearestGold, BlockPos start, Set<BlockPos> golds, Map<BlockPos, Integer> goldMap) {
     // gold的数量加1
     goldMap.put(nearestGold, goldMap.get(nearestGold) + 1);
 
@@ -426,9 +473,9 @@ public class AutoGold extends ModulePlus {
     golds.remove(start);
 
     final BlockPos[] offsets = {
-        new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
-        new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
-        new BlockPos(0, -1, 0), new BlockPos(0, 1, 0)
+      new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
+      new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
+      new BlockPos(0, -1, 0), new BlockPos(0, 1, 0)
     };
 
     for (BlockPos offset : offsets) {
@@ -449,9 +496,9 @@ public class AutoGold extends ModulePlus {
     MelodySkyPlus.rotationLib.setSpeedCoefficient(2F);
     MelodySkyPlus.rotationLib.setTargetRotation(RotationUtil.posToRotation(gold));
     MelodySkyPlus.rotationLib.startRotating();
-    MelodySkyPlus.rotationLib.setCallBack(() -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
+    MelodySkyPlus.rotationLib.setCallBack(
+        () -> Objects.requireNonNull(AutoGold.getINSTANCE()).rotateToGoldDone());
   }
-
 
   @Override
   public void onDisable() {
@@ -468,14 +515,20 @@ public class AutoGold extends ModulePlus {
 
   @SubscribeEvent
   public void clear(WorldEvent.Load event) {
-    Helper.sendMessage("[MacroProtection] Auto Disabled " + EnumChatFormatting.GREEN + this.getName() + EnumChatFormatting.GRAY + " due to World Change.");
+    Helper.sendMessage(
+        "[MacroProtection] Auto Disabled "
+            + EnumChatFormatting.GREEN
+            + this.getName()
+            + EnumChatFormatting.GRAY
+            + " due to World Change.");
     this.setEnabled(false);
   }
 
   @Override
   public void onEnable() {
     if (usePathFinder.getValue()) {
-      Helper.sendMessage("[WARN] You're using AutoGold with SmartyPathFinder, it's unstable, it may cause some problems.");
+      Helper.sendMessage(
+          "[WARN] You're using AutoGold with SmartyPathFinder, it's unstable, it may cause some problems.");
     }
     findingGoldTick = -1;
     rotateDoneTick = -2147483647;
@@ -493,8 +546,6 @@ public class AutoGold extends ModulePlus {
     }
     walkTimer.reset();
   }
-
-
 }
 
 class SidesAroundPlayer {
@@ -545,6 +596,4 @@ class SidesAroundPlayer {
 
     return yaw;
   }
-
-
 }

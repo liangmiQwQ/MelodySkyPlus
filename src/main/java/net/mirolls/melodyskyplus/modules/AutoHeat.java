@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.settings.KeyBinding;
@@ -24,16 +26,12 @@ import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Fishing.AutoFish;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AutoHeat extends ModulePlus {
   private final List<Module> mods;
   private final Numbers<Double> heatLimit = new Numbers<>("HeatLimit", 95.0, 1.0, 100.0, 1.0);
   private int reactingTick;
   private AutoHeatStage stage;
   private int prevItem;
-
 
   public AutoHeat() {
     super("AutoHeat", ModuleType.Mining);
@@ -54,7 +52,8 @@ public class AutoHeat extends ModulePlus {
       }
     }
 
-    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started) || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
+    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started)
+        || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
   }
 
   @EventHandler
@@ -94,21 +93,24 @@ public class AutoHeat extends ModulePlus {
           // 切换物品
           for (int i = 0; i < 9; ++i) {
             ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-            if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
+            if (item.getDisplayName().contains("Water")
+                && item.getDisplayName().contains("Bottle")) {
               prevItem = mc.thePlayer.inventory.currentItem;
               mc.thePlayer.inventory.currentItem = i;
             }
           }
         } else if (reactingTick == 15) {
           // 喝水
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+          ItemStack item =
+              mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
 
           if (item.getDisplayName().contains("Water") && item.getDisplayName().contains("Bottle")) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-            MelodySkyPlus.drinkingLib.register(() -> {
-              reactingTick = 0;
-              stage = AutoHeatStage.CALLING;
-            });
+            MelodySkyPlus.drinkingLib.register(
+                () -> {
+                  reactingTick = 0;
+                  stage = AutoHeatStage.CALLING;
+                });
           } else {
             Helper.sendMessage("Missing Water Bottle in hotbar.");
             reactingTick = -1;
@@ -117,7 +119,6 @@ public class AutoHeat extends ModulePlus {
           }
         }
       }
-
 
       // 打电话
       if (stage == AutoHeatStage.CALLING) {
@@ -131,9 +132,13 @@ public class AutoHeat extends ModulePlus {
           }
         } else if (reactingTick == 15) {
           // 打电话
-          ItemStack item = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+          ItemStack item =
+              mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
           if (ItemUtils.getSkyBlockID(item).startsWith("ABIPHONE")) {
-            mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
+            mc.playerController.sendUseItem(
+                mc.thePlayer,
+                mc.theWorld,
+                mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem));
           } else {
             Helper.sendMessage("Missing AbiPhone in hotbar.");
             reactingTick = -1;
@@ -176,10 +181,8 @@ public class AutoHeat extends ModulePlus {
               }
             }
           }
-
         }
       }
-
 
       // 交易
       if (stage == AutoHeatStage.TRADING) {
@@ -193,7 +196,8 @@ public class AutoHeat extends ModulePlus {
               if (chestName.startsWith("Alchemist")) {
                 for (int i = 0; i < 9; ++i) {
                   ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-                  if (item.getDisplayName().contains("Glass") && item.getDisplayName().contains("Bottle")) {
+                  if (item.getDisplayName().contains("Glass")
+                      && item.getDisplayName().contains("Bottle")) {
                     GuiUtil.clickSlot(i + 81, 0, 0);
                   }
                 }
@@ -214,7 +218,8 @@ public class AutoHeat extends ModulePlus {
                 for (Slot slot : container.inventorySlots) {
                   // 买水
                   ItemStack item = slot.getStack(); // 获取item
-                  if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water") && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
+                  if (StringUtils.stripControlCodes(item.getDisplayName()).contains("Water")
+                      && StringUtils.stripControlCodes(item.getDisplayName()).contains("Bottle")) {
                     GuiUtil.clickSlot(slot.getSlotIndex(), 0, 0);
                     // 买水
                     break;
@@ -239,7 +244,6 @@ public class AutoHeat extends ModulePlus {
         }
       }
     }
-
   }
 
   public void onEnable() {
@@ -277,4 +281,3 @@ public class AutoHeat extends ModulePlus {
     }
   }
 }
-

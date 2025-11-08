@@ -1,11 +1,10 @@
 package net.mirolls.melodyskyplus.utils;
 
-import net.minecraft.util.BlockPos;
-import xyz.Melody.Utils.Vec3d;
-
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import net.minecraft.util.BlockPos;
+import xyz.Melody.Utils.Vec3d;
 
 public class BlockUtils {
   // 使用LRU缓存限制内存增长 (最大512条路径)
@@ -64,8 +63,9 @@ public class BlockUtils {
     // 添加下层块（如果相邻块不存在）
     for (BlockPos pos : betweens) {
       BlockPos downPos = pos.down();
-      if (!resultSet.contains(downPos) && !resultSet.contains(downPos.down()) &&
-          !resultSet.contains(downPos.up())) {
+      if (!resultSet.contains(downPos)
+          && !resultSet.contains(downPos.down())
+          && !resultSet.contains(downPos.up())) {
         resultSet.add(downPos);
       }
     }
@@ -73,9 +73,9 @@ public class BlockUtils {
     // 按距离排序
     List<BlockPos> sorted = new ArrayList<>(resultSet);
     final Vec3d finalStart = startVec;
-    sorted.sort(Comparator.comparingDouble(
-        pos -> pos.distanceSq(finalStart.x, finalStart.y, finalStart.z)
-    ));
+    sorted.sort(
+        Comparator.comparingDouble(
+            pos -> pos.distanceSq(finalStart.x, finalStart.y, finalStart.z)));
 
     return sorted;
   }
@@ -231,8 +231,7 @@ class StartEndInfo {
     if (this == o) return true;
     if (!(o instanceof StartEndInfo)) return false;
     StartEndInfo that = (StartEndInfo) o;
-    return Objects.equals(start, that.start) &&
-        Objects.equals(end, that.end);
+    return Objects.equals(start, that.start) && Objects.equals(end, that.end);
   }
 
   @Override

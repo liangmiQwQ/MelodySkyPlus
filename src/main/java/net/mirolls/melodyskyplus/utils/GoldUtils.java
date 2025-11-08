@@ -1,13 +1,12 @@
 package net.mirolls.melodyskyplus.utils;
 
+import java.util.HashSet;
+import java.util.PriorityQueue;
+import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import xyz.Melody.Utils.Helper;
-
-import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Set;
 
 public class GoldUtils {
   public static BlockPos findGoldToRotate(int findGoldRadius) {
@@ -20,17 +19,19 @@ public class GoldUtils {
 
     // 方向偏移数组（东、西、北、南、下）
     final BlockPos[] directionOffsets = {
-        new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
-        new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
-        new BlockPos(0, -1, 0)
+      new BlockPos(1, 0, 0), new BlockPos(-1, 0, 0),
+      new BlockPos(0, 0, 1), new BlockPos(0, 0, -1),
+      new BlockPos(0, -1, 0)
     };
 
     // 使用优先队列按缩放后距离排序（避免平方根计算）
-    PriorityQueue<BlockPos> searchQueue = new PriorityQueue<>((a, b) -> {
-      double distA = getScaledDistanceSq(a, playerX, playerY, playerZ);
-      double distB = getScaledDistanceSq(b, playerX, playerY, playerZ);
-      return Double.compare(distA, distB);
-    });
+    PriorityQueue<BlockPos> searchQueue =
+        new PriorityQueue<>(
+            (a, b) -> {
+              double distA = getScaledDistanceSq(a, playerX, playerY, playerZ);
+              double distB = getScaledDistanceSq(b, playerX, playerY, playerZ);
+              return Double.compare(distA, distB);
+            });
 
     // 生成搜索区域（球形范围）
     generateSphericalSearchArea(playerPos, findGoldRadius, searchQueue);
@@ -66,11 +67,13 @@ public class GoldUtils {
     }
 
     if (replaceBlock != null) {
-      Helper.sendMessage("Cannot Find Gold Blocks. Will teleport you to random block near a gold block.");
+      Helper.sendMessage(
+          "Cannot Find Gold Blocks. Will teleport you to random block near a gold block.");
       return replaceBlock;
     }
 
-    Helper.sendMessage("Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
+    Helper.sendMessage(
+        "Cannot Find any blocks near Gold at all. Maybe you've gotten out of Mines of Divan.");
     return null;
   }
 
@@ -82,13 +85,15 @@ public class GoldUtils {
     return dx * dx + dz * dz + dy * dy; // 使用平方距离比较
   }
 
-  private static void generateSphericalSearchArea(BlockPos center, int radius, PriorityQueue<BlockPos> queue) {
+  private static void generateSphericalSearchArea(
+      BlockPos center, int radius, PriorityQueue<BlockPos> queue) {
     // 使用球形区域生成算法（3D中点画圆算法变体）
     for (int x = -radius; x <= radius; x++) {
       for (int z = -radius; z <= radius; z++) {
         for (int y = -radius / 5; y <= radius / 5; y++) {
           BlockPos pos = center.add(x, y, z);
-          if (getScaledDistanceSq(pos, center.getX(), center.getY(), center.getZ()) <= radius * radius) {
+          if (getScaledDistanceSq(pos, center.getX(), center.getY(), center.getZ())
+              <= radius * radius) {
             queue.add(pos);
           }
         }

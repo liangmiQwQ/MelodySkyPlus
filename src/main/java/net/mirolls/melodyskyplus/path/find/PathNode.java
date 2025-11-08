@@ -31,14 +31,19 @@ public class PathNode {
 
   @Override
   public String toString() {
-    return "PathNode{" +
-        "pos=" + pos +
-        ", posParent=" + posParent +
-        ", gCost=" + gCost +
-        ", hCost=" + hCost +
-        ", nodeParent=" + nodeParent +
-        ", type=" + type +
-        '}';
+    return "PathNode{"
+        + "pos="
+        + pos
+        + ", posParent="
+        + posParent
+        + ", gCost="
+        + gCost
+        + ", hCost="
+        + hCost
+        + ", nodeParent="
+        + nodeParent
+        + ", type="
+        + type
+        + '}';
   }
 }
-

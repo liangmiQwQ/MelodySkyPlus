@@ -9,11 +9,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.Melody.System.Melody.Authentication.AuthManager;
 
-
 @SideOnly(Side.CLIENT)
 @Mixin(value = AuthManager.class, remap = false)
 public class AuthManagerMixin {
-  @Inject(method = "authMe", at = @At(value = "RETURN", remap = false), remap = false, cancellable = true)
+  @Inject(
+      method = "authMe",
+      at = @At(value = "RETURN", remap = false),
+      remap = false,
+      cancellable = true)
   private void authMe(CallbackInfoReturnable<Boolean> cir) {
     cir.setReturnValue(AntiBug.removeBug(cir));
   }

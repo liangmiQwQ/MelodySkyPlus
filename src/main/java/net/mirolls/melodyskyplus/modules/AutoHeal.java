@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Client;
 import xyz.Melody.Event.EventHandler;
@@ -10,9 +12,6 @@ import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class AutoHeal extends ModulePlus {
   private final Numbers<Double> limit = new Numbers<>("Limit(%)", 30.0, 1.0, 99.0, 1.0);
@@ -36,7 +35,6 @@ public class AutoHeal extends ModulePlus {
       performHealAction();
       return;
     }
-
 
     float health = mc.thePlayer.getHealth();
     float maxHealth = mc.thePlayer.getMaxHealth();
@@ -100,7 +98,6 @@ public class AutoHeal extends ModulePlus {
     cooldownTimer.reset();
     super.onEnable();
   }
-
 }
 
 class HealStatus {

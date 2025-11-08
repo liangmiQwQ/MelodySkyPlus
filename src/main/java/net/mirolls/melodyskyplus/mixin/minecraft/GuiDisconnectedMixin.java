@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin.minecraft;
 
+import java.util.Objects;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
@@ -14,30 +15,30 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Objects;
-
 @Mixin(GuiDisconnected.class)
 public class GuiDisconnectedMixin extends GuiScreen {
   private static final int GAP = 22;
-  @Shadow
-  private int field_175353_i;
+  @Shadow private int field_175353_i;
   private boolean reconnecting = false;
 
   @Inject(method = "initGui", at = @At("RETURN"))
   public void initGui(CallbackInfo ci) {
     if (AntiBug.isBugRemoved()) {
-      buttonList.add(new GuiButton(8090,
+      buttonList.add(
+          new GuiButton(
+              8090,
               this.width / 2 - 100,
               this.height / 2 + this.field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + GAP,
-              "Reconnect"
-          )
-      );
-      buttonList.add(new GuiButton(8091,
+              "Reconnect"));
+      buttonList.add(
+          new GuiButton(
+              8091,
               this.width / 2 - 100,
-              this.height / 2 + this.field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + GAP * 2,
-              "Auto Reconnect"
-          )
-      );
+              this.height / 2
+                  + this.field_175353_i / 2
+                  + this.fontRendererObj.FONT_HEIGHT
+                  + GAP * 2,
+              "Auto Reconnect"));
       if (Objects.requireNonNull(AutoReconnect.getInstance()).isEnabled()) {
         reconnecting = true;
         // 自动重新链接
@@ -71,30 +72,40 @@ public class GuiDisconnectedMixin extends GuiScreen {
     if (AntiBug.isBugRemoved()) {
       if (reconnecting) {
         reconnecting = false;
-        mc.addScheduledTask(() -> {
-          FMLClientHandler.instance().connectToServer(new GuiMainMenu(), new ServerData("server", Objects.requireNonNull(AutoReconnect.getInstance()).host, false));
-        });
+        mc.addScheduledTask(
+            () -> {
+              FMLClientHandler.instance()
+                  .connectToServer(
+                      new GuiMainMenu(),
+                      new ServerData(
+                          "server",
+                          Objects.requireNonNull(AutoReconnect.getInstance()).host,
+                          false));
+            });
       }
     }
   }
 
   private void autoReconnect() {
     if (AntiBug.isBugRemoved()) {
-      Objects.requireNonNull(AutoReconnect.getInstance()).reconnect((second) -> {
-        GuiButton reconnectButton = null;
-        for (GuiButton button : buttonList) {
-          if (button.id == 8091) {
-            reconnectButton = button;
-          }
-        }
-        if (reconnectButton != null) {
-          reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
-        }
-      }, () -> {
-        if (AutoReconnect.getInstance().isEnabled()) {
-          reconnect();
-        }
-      });
+      Objects.requireNonNull(AutoReconnect.getInstance())
+          .reconnect(
+              (second) -> {
+                GuiButton reconnectButton = null;
+                for (GuiButton button : buttonList) {
+                  if (button.id == 8091) {
+                    reconnectButton = button;
+                  }
+                }
+                if (reconnectButton != null) {
+                  reconnectButton.displayString = "Auto Reconnect" + " (" + second + ")";
+                }
+              },
+              () -> {
+                if (AutoReconnect.getInstance().isEnabled()) {
+                  reconnect();
+                }
+              });
     }
   }
 }

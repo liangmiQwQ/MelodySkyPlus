@@ -1,5 +1,9 @@
 package net.mirolls.melodyskyplus.path.exec;
 
+import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
+
+import java.util.List;
+import java.util.Random;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
@@ -9,22 +13,17 @@ import xyz.Melody.Utils.Vec3d;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
-import java.util.List;
-import java.util.Random;
-
-import static net.mirolls.melodyskyplus.utils.PlayerUtils.smoothRotation;
-
 public class JumpExec {
   public static void exec(Node nextNode, List<Node> path, Minecraft mc, Node node) {
     // 提前先转化成Jump类型 为了事后做用方便
     Jump jumpNode = (Jump) nextNode;
     Node endNode = path.get(2);
 
-
     Vec3d center = Vec3d.ofCenter(endNode.getPos());
-    boolean isInBlockXZ = Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8;
+    boolean isInBlockXZ =
+        Math.abs(mc.thePlayer.posX - center.getX()) <= 0.8
+            && Math.abs(mc.thePlayer.posZ - center.getZ()) <= 0.8;
     boolean isInBlockY = Math.abs(mc.thePlayer.posY - endNode.getPos().getY()) <= 0.1;
-
 
     if (mc.thePlayer.onGround) {
       KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
@@ -36,7 +35,8 @@ public class JumpExec {
       } else {
         // 情况2就是还没有起跳 先准备起跳
         Vec3d jumpVec = Vec3d.ofCenter(jumpNode.getPos());
-        if (Math.hypot(mc.thePlayer.posX - jumpVec.getX(), mc.thePlayer.posZ - jumpVec.getZ()) < jumpNode.jumpDistance) {
+        if (Math.hypot(mc.thePlayer.posX - jumpVec.getX(), mc.thePlayer.posZ - jumpVec.getZ())
+            < jumpNode.jumpDistance) {
           // 到达跳跃范围
           // 先停止按下w然后再跳
           if (mc.gameSettings.keyBindForward.isKeyDown()) {
@@ -55,15 +55,24 @@ public class JumpExec {
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
 
         int tick = tickToGround(endNode.getPos().getY());
-        MelodySkyPlus.LOGGER.info(tick + " " + mc.thePlayer.motionX + " " + mc.thePlayer.motionZ); // 最保险的方法 除了略小误差 保证能精准计算到落地时间
-        boolean isInBlockNext = Math.abs(mc.thePlayer.posX + mc.thePlayer.motionX * tick - center.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ + mc.thePlayer.motionZ * tick - center.getZ()) <= 0.8;
+        MelodySkyPlus.LOGGER.info(
+            tick
+                + " "
+                + mc.thePlayer.motionX
+                + " "
+                + mc.thePlayer.motionZ); // 最保险的方法 除了略小误差 保证能精准计算到落地时间
+        boolean isInBlockNext =
+            Math.abs(mc.thePlayer.posX + mc.thePlayer.motionX * tick - center.getX()) <= 0.8
+                && Math.abs(mc.thePlayer.posZ + mc.thePlayer.motionZ * tick - center.getZ()) <= 0.8;
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), !isInBlockNext);
       } else {
         // 转换到角度
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.getPos()));
 
         // 移动玩家视角
-        mc.thePlayer.rotationPitch = smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
+        mc.thePlayer.rotationPitch =
+            smoothRotation(
+                mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
         mc.thePlayer.rotationYaw = smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 75F);
 
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);

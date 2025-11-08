@@ -5,6 +5,5 @@ public class Verify {
     return true;
   }
 
-  public static void verify() {
-  }
+  public static void verify() {}
 }

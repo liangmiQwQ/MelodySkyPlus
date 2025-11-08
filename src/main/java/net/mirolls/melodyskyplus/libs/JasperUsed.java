@@ -7,8 +7,7 @@ public class JasperUsed {
   public int minedBlock = 0;
   private boolean jasperUsed = false;
 
-  public JasperUsed() {
-  }
+  public JasperUsed() {}
 
   public boolean isJasperUsed() {
     return jasperUsed;
@@ -17,6 +16,4 @@ public class JasperUsed {
   public void setJasperUsed(boolean jasperUsed) {
     this.jasperUsed = jasperUsed;
   }
-
-
 }

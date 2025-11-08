@@ -1,21 +1,29 @@
 package net.mirolls.melodyskyplus.utils;
 
+import java.util.*;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.MelodySkyPlus;
 
-import java.util.*;
-
 public class EtherWarpUtils {
-  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, int maxRetryChance) {
+  public static List<BlockPos> findWayToEtherWarp(
+      BlockPos end, int maxLayer, int radius, int maxRetryChance) {
     return findWayToEtherWarp(end, maxLayer, radius, new BlockStateStoreUtils(), maxRetryChance);
   }
 
-  public static List<BlockPos> findWayToEtherWarp(BlockPos end, int maxLayer, int radius, BlockStateStoreUtils blockStateStoreUtils, int maxRetryChance) {
+  public static List<BlockPos> findWayToEtherWarp(
+      BlockPos end,
+      int maxLayer,
+      int radius,
+      BlockStateStoreUtils blockStateStoreUtils,
+      int maxRetryChance) {
     MelodySkyPlus.LOGGER.info("getBlocksInArea has been called");
     long startTime = System.currentTimeMillis();
     Set<BlockPos> blockInArea = getBlocksInArea(end, radius, blockStateStoreUtils);
-    MelodySkyPlus.LOGGER.info("getBlocksInArea's return value size: {} in {}ms", blockInArea.size(), System.currentTimeMillis() - startTime);
+    MelodySkyPlus.LOGGER.info(
+        "getBlocksInArea's return value size: {} in {}ms",
+        blockInArea.size(),
+        System.currentTimeMillis() - startTime);
 
     EtherWarpPos lastPos = getLastEtherWarpPos(null, end, blockInArea, 0, maxLayer, maxRetryChance);
 
@@ -38,7 +46,13 @@ public class EtherWarpUtils {
     }
   }
 
-  private static EtherWarpPos getLastEtherWarpPos(EtherWarpPos lastPos, BlockPos end, Set<BlockPos> blockInArea, int layer, int maxLayer, int maxRetryChance) {
+  private static EtherWarpPos getLastEtherWarpPos(
+      EtherWarpPos lastPos,
+      BlockPos end,
+      Set<BlockPos> blockInArea,
+      int layer,
+      int maxLayer,
+      int maxRetryChance) {
     if (layer > maxLayer) return null;
 
     if (lastPos == null ? PlayerUtils.rayTrace(end) : PlayerUtils.rayTrace(lastPos.pos, end)) {
@@ -49,9 +63,18 @@ public class EtherWarpUtils {
       int retryTime = 0;
       for (BlockPos pos : blockInArea) {
         if (retryTime > maxRetryChance) {
-          if (lastPos == null ? PlayerUtils.rayTrace(pos) : PlayerUtils.rayTrace(lastPos.pos, pos)) {
+          if (lastPos == null
+              ? PlayerUtils.rayTrace(pos)
+              : PlayerUtils.rayTrace(lastPos.pos, pos)) {
             // 如果可以etherWarp到
-            EtherWarpPos loopResult = getLastEtherWarpPos(new EtherWarpPos(pos, lastPos), end, blockInArea, layer + 1, maxLayer, maxRetryChance);
+            EtherWarpPos loopResult =
+                getLastEtherWarpPos(
+                    new EtherWarpPos(pos, lastPos),
+                    end,
+                    blockInArea,
+                    layer + 1,
+                    maxLayer,
+                    maxRetryChance);
             if (loopResult != null) {
               return loopResult;
             } else {
@@ -65,8 +88,8 @@ public class EtherWarpUtils {
     }
   }
 
-
-  private static Set<BlockPos> getBlocksInArea(BlockPos target, int radius, BlockStateStoreUtils store) {
+  private static Set<BlockPos> getBlocksInArea(
+      BlockPos target, int radius, BlockStateStoreUtils store) {
     BlockPos player = PlayerUtils.getPlayerLocation();
 
     if (target.equals(player)) {
@@ -97,7 +120,8 @@ public class EtherWarpUtils {
       }
       // 只有可到达的ether warp点
       if (store.getBlockState(pos).getBlock().getMaterial().isSolid()) {
-        if (store.getBlockState(pos.up()).getBlock() == Blocks.air && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
+        if (store.getBlockState(pos.up()).getBlock() == Blocks.air
+            && store.getBlockState(pos.up().up()).getBlock() == Blocks.air) {
           set.add(pos);
         }
       }
@@ -115,5 +139,3 @@ class EtherWarpPos {
     this.parent = parent;
   }
 }
-
-

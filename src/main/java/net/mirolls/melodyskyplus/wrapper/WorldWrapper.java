@@ -20,14 +20,20 @@ public class WorldWrapper {
   /**
    * Performs a ray trace in the world from start to end vector.
    *
-   * @param start                    The starting point of the ray.
-   * @param end                      The ending point of the ray.
-   * @param stopOnLiquid             Whether to stop the trace when hitting a liquid.
+   * @param start The starting point of the ray.
+   * @param end The ending point of the ray.
+   * @param stopOnLiquid Whether to stop the trace when hitting a liquid.
    * @param ignoreNonCollidableBlock If true, skip blocks with no collision bounding box.
-   * @param returnLastMissed         If true, return the last missed block position if no collision is found.
+   * @param returnLastMissed If true, return the last missed block position if no collision is
+   *     found.
    * @return The result of the ray trace, or null if no valid hit was found.
    */
-  public MovingObjectPosition rayTraceBlocks(Vec3 start, Vec3 end, boolean stopOnLiquid, boolean ignoreNonCollidableBlock, boolean returnLastMissed) {
+  public MovingObjectPosition rayTraceBlocks(
+      Vec3 start,
+      Vec3 end,
+      boolean stopOnLiquid,
+      boolean ignoreNonCollidableBlock,
+      boolean returnLastMissed) {
     if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord)) {
       if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord)) {
         int i = MathHelper.floor_double(end.xCoord);
@@ -41,11 +47,11 @@ public class WorldWrapper {
         Block block = iblockstate.getBlock();
 
         // 检查起点所在方块是否可以碰撞，且是否有碰撞箱
-        if (
-            (!ignoreNonCollidableBlock || block.getCollisionBoundingBox(world, blockpos, iblockstate) != null) // 条件1
-                && block.canCollideCheck(iblockstate, stopOnLiquid)
-        ) {
-          MovingObjectPosition movingobjectposition = block.collisionRayTrace(world, blockpos, start, end);
+        if ((!ignoreNonCollidableBlock
+                || block.getCollisionBoundingBox(world, blockpos, iblockstate) != null) // 条件1
+            && block.canCollideCheck(iblockstate, stopOnLiquid)) {
+          MovingObjectPosition movingobjectposition =
+              block.collisionRayTrace(world, blockpos, start, end);
           if (movingobjectposition != null) {
             return movingobjectposition;
           }
@@ -56,7 +62,9 @@ public class WorldWrapper {
 
         while (k1-- >= 0) {
           // 安全性检查
-          if (Double.isNaN(start.xCoord) || Double.isNaN(start.yCoord) || Double.isNaN(start.zCoord)) {
+          if (Double.isNaN(start.xCoord)
+              || Double.isNaN(start.yCoord)
+              || Double.isNaN(start.zCoord)) {
             return null;
           }
 
@@ -143,16 +151,20 @@ public class WorldWrapper {
           IBlockState iblockstate1 = world.getBlockState(blockpos);
           Block block1 = iblockstate1.getBlock();
           // 第二重检查
-          if (!ignoreNonCollidableBlock || block1.getCollisionBoundingBox(world, blockpos, iblockstate1) != null) {
+          if (!ignoreNonCollidableBlock
+              || block1.getCollisionBoundingBox(world, blockpos, iblockstate1) != null) {
             if (block1.canCollideCheck(iblockstate1, stopOnLiquid)) {
 
-              MovingObjectPosition movingobjectposition1 = getMovingObjectPosition(start, end, block1, blockpos, block);
+              MovingObjectPosition movingobjectposition1 =
+                  getMovingObjectPosition(start, end, block1, blockpos, block);
 
               if (movingobjectposition1 != null) {
                 return movingobjectposition1;
               }
             } else {
-              movingobjectposition2 = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, start, enumfacing, blockpos);
+              movingobjectposition2 =
+                  new MovingObjectPosition(
+                      MovingObjectPosition.MovingObjectType.MISS, start, enumfacing, blockpos);
             }
           }
         }
@@ -166,24 +178,29 @@ public class WorldWrapper {
     }
   }
 
-  private MovingObjectPosition getMovingObjectPosition(Vec3 start, Vec3 end, Block block1, BlockPos blockpos, Block block) {
+  private MovingObjectPosition getMovingObjectPosition(
+      Vec3 start, Vec3 end, Block block1, BlockPos blockpos, Block block) {
     // 修改为：
     MovingObjectPosition movingobjectposition1;
 
     // 检查是否是需要特殊处理的不完整方块
-    if (block1 instanceof BlockLadder ||
-        block1 instanceof BlockPane ||
-        block1 instanceof BlockFence ||
-        block1 instanceof BlockWall ||
-        block1 instanceof BlockHalfStoneSlab ||
-        block1 instanceof BlockHalfStoneSlabNew ||
-        block1 instanceof BlockHalfWoodSlab) {
+    if (block1 instanceof BlockLadder
+        || block1 instanceof BlockPane
+        || block1 instanceof BlockFence
+        || block1 instanceof BlockWall
+        || block1 instanceof BlockHalfStoneSlab
+        || block1 instanceof BlockHalfStoneSlabNew
+        || block1 instanceof BlockHalfWoodSlab) {
 
       // 创建完整方块（1x1x1）的碰撞箱
-      AxisAlignedBB fullBlockBB = new AxisAlignedBB(
-          blockpos.getX(), blockpos.getY(), blockpos.getZ(),
-          blockpos.getX() + 1, blockpos.getY() + 1, blockpos.getZ() + 1
-      );
+      AxisAlignedBB fullBlockBB =
+          new AxisAlignedBB(
+              blockpos.getX(),
+              blockpos.getY(),
+              blockpos.getZ(),
+              blockpos.getX() + 1,
+              blockpos.getY() + 1,
+              blockpos.getZ() + 1);
 
       // 使用完整碰撞箱进行射线检测
       movingobjectposition1 = fullBlockBB.calculateIntercept(start, end);
@@ -194,12 +211,12 @@ public class WorldWrapper {
         EnumFacing hitSide = calculateHitSide(movingobjectposition1.hitVec, blockpos);
 
         // 创建完整的碰撞结果对象
-        movingobjectposition1 = new MovingObjectPosition(
-            MovingObjectPosition.MovingObjectType.BLOCK,
-            movingobjectposition1.hitVec,
-            hitSide,
-            blockpos
-        );
+        movingobjectposition1 =
+            new MovingObjectPosition(
+                MovingObjectPosition.MovingObjectType.BLOCK,
+                movingobjectposition1.hitVec,
+                hitSide,
+                blockpos);
       }
     } else {
       // 其他方块使用原始检测方法
@@ -246,4 +263,3 @@ public class WorldWrapper {
     return hitFace;
   }
 }
-

@@ -7,16 +7,13 @@ public class Bug {
 
   private String bugID;
 
-
   public Bug(String bug, long reason, String bugID) {
     this.bug = bug;
     this.reason = reason;
     this.bugID = bugID;
   }
 
-
-  public Bug() {
-  }
+  public Bug() {}
 
   public String getBug() {
     return bug;
