@@ -116,6 +116,15 @@ spotless {
     trimTrailingWhitespace()
     endWithNewline()
   }
+
+  enforceCheck false
+}
+
+tasks.register('installGitHook', Copy) {
+  description = 'Install git pre-commit hook to run spotless'
+  from file('gradle/git-hooks/pre-commit')
+  into file('.git/hooks')
+  fileMode 0755
 }
 
 tasks.register('exportDependencies', Copy) {
@@ -125,3 +134,4 @@ tasks.register('exportDependencies', Copy) {
 }
 
 assemble.dependsOn jar
+tasks.build.dependsOn installGitHook

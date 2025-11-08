@@ -1,0 +1,10 @@
+#!/bin/sh
+# gradle/git-hooks/pre-commit
+
+echo "Running Spotless..."
+./gradlew spotlessApply -q
+
+# 添加修改的文件
+git diff --name-only --cached | grep '\.java$' | xargs git add
+
+exit 0
