@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import net.minecraft.client.Minecraft;
 import net.mirolls.melodyskyplus.client.AntiBug;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,20 +17,19 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.modules.macros.Mining.PinglessMining;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 @Mixin(value = PinglessMining.class, remap = false)
 public class PinglessMiningMixin {
-  private Numbers<Double> melodySkyPlus$bps = new Numbers<>("BlocksPerSecond", 20.0, 1.0, 100.0, 1.0);
+  private Numbers<Double> melodySkyPlus$bps =
+      new Numbers<>("BlocksPerSecond", 20.0, 1.0, 100.0, 1.0);
   private Option<Boolean> melodySkyPlus$disableInAir = new Option<>("Disable While Jumping", true);
 
   @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-  public void init(CallbackInfo ci) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  public void init(CallbackInfo ci)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     if (AntiBug.isBugRemoved()) {
       Method method = Module.class.getDeclaredMethod("addValues", Value[].class);
       method.setAccessible(true);
-      method.invoke(this, (Object) new Value[]{melodySkyPlus$bps, melodySkyPlus$disableInAir});
+      method.invoke(this, (Object) new Value[] {melodySkyPlus$bps, melodySkyPlus$disableInAir});
     }
   }
 
@@ -41,14 +42,20 @@ public class PinglessMiningMixin {
     }
   }
 
-  @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lxyz/Melody/Utils/timer/TimerUtil;hasReached(D)Z", remap = false), remap = false)
+  @ModifyArg(
+      method = "tick",
+      at =
+          @At(
+              value = "INVOKE",
+              target = "Lxyz/Melody/Utils/timer/TimerUtil;hasReached(D)Z",
+              remap = false),
+      remap = false)
   public double tick(double milliseconds) {
     if (AntiBug.isBugRemoved()) {
       return 1000 / melodySkyPlus$bps.getValue();
     }
     return 50.0F;
   }
-
 
   @Inject(method = "onRender", at = @At("HEAD"), cancellable = true, remap = false)
   public void onRender(EventRender3D event, CallbackInfo ci) {

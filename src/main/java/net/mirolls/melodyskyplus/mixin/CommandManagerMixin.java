@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.util.List;
 import net.mirolls.melodyskyplus.Verify;
 import net.mirolls.melodyskyplus.client.cmd.AutoHollowCommand;
 import net.mirolls.melodyskyplus.client.cmd.RayTraceCommand;
@@ -12,16 +13,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.System.Managers.Client.CommandManager;
 
-import java.util.List;
-
 @Mixin(value = CommandManager.class, remap = false)
 public class CommandManagerMixin {
-  @Shadow
-  private List<Command> commands;
+  @Shadow private List<Command> commands;
 
-  @Inject(remap = false, method = "init",
-      at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 1, remap = false)
-  )
+  @Inject(
+      remap = false,
+      method = "init",
+      at =
+          @At(
+              value = "INVOKE",
+              target = "Ljava/util/List;add(Ljava/lang/Object;)Z",
+              ordinal = 1,
+              remap = false))
   public void init(CallbackInfo ci) {
     if (Verify.isVerified()) {
       this.commands.add(new SmartyPathFinderCommand());

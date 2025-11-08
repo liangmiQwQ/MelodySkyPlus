@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.Random;
 import net.mirolls.melodyskyplus.client.ModulePlus;
 import xyz.Melody.Event.EventHandler;
 import xyz.Melody.Event.events.world.EventTick;
@@ -10,8 +11,6 @@ import xyz.Melody.System.Managers.Skyblock.Area.SkyblockArea;
 import xyz.Melody.Utils.Helper;
 import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.ModuleType;
-
-import java.util.Random;
 
 public class AutoLobby extends ModulePlus {
   public final Option<Boolean> useWarpCn = new Option<>("/warp cn", true);

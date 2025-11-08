@@ -1,5 +1,8 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.world.WorldEvent;
@@ -27,10 +30,6 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 public class SmartyPathFinder extends ModulePlus {
   public static SmartyPathFinder INSTANCE;
   public final Numbers<Double> pickaxeSlot = new Numbers<>("Pickaxe Slot", 3.0, 1.0, 9.0, 1.0);
@@ -49,7 +48,6 @@ public class SmartyPathFinder extends ModulePlus {
   private BlockPos end;
   private Vec3d lastVec = null;
   private boolean findingPath = false;
-
 
   public SmartyPathFinder() {
     super("SmartyPathFinder", ModuleType.Others);
@@ -88,17 +86,16 @@ public class SmartyPathFinder extends ModulePlus {
     PathExec.area = null;
     PathExec.abilityExec = new AbilityExec();
 
-
     if (segmentation.getValue()) {
-      aStarPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(start, end, length.getValue().intValue());
+      aStarPath =
+          new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue())
+              .findPath(start, end, length.getValue().intValue());
     } else {
-      aStarPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(start, end);
+      aStarPath =
+          new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(start, end);
     }
 
-    path = new JumpOptimization(true)
-        .optimize(new PathOptimizer()
-            .optimize(aStarPath));
-
+    path = new JumpOptimization(true).optimize(new PathOptimizer().optimize(aStarPath));
 
     if (aStarPath == null || path == null) {
       Helper.sendMessage("Cannot found path");
@@ -128,7 +125,6 @@ public class SmartyPathFinder extends ModulePlus {
     }
   }
 
-
   @EventHandler
   public void onTick(EventTick event) {
     if (tick >= 0) {
@@ -144,17 +140,24 @@ public class SmartyPathFinder extends ModulePlus {
     if (!path.isEmpty() && !aStarPath.isEmpty() && timer.hasReached(500) && !findingPath) {
       // 如果卡住了
 
-      if ((PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 300) && (PathExec.mineExec.tick == -1 || PathExec.mineExec.tick > 200)) {
+      if ((PathExec.abilityExec.tick == -1 || PathExec.abilityExec.tick > 300)
+          && (PathExec.mineExec.tick == -1 || PathExec.mineExec.tick > 200)) {
         // 如果没有在abilityExec或者说 ability卡死了
 
-        if (mc.thePlayer.onGround && lastVec != null && lastVec.distanceTo(new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)) < 0.6) {
+        if (mc.thePlayer.onGround
+            && lastVec != null
+            && lastVec.distanceTo(
+                    new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ))
+                < 0.6) {
           if (retryTimes < 5) {
             findingPath = true;
-            new Thread(() -> {
-              go(end);
-              findingPath = false;
-              timer.reset();
-            }).start();
+            new Thread(
+                    () -> {
+                      go(end);
+                      findingPath = false;
+                      timer.reset();
+                    })
+                .start();
             retryTimes++;
             return;
           } else {
@@ -168,32 +171,44 @@ public class SmartyPathFinder extends ModulePlus {
       }
 
       // 分段寻路
-      if (!path.get(path.size() - 1).getPos().equals(end) && segmentation.getValue() && !findingPath) {
+      if (!path.get(path.size() - 1).getPos().equals(end)
+          && segmentation.getValue()
+          && !findingPath) {
         // 分段查询 添加多段
-        if (path.size() < length.getValue() / 12 || MathUtil.distanceToPos(PlayerUtils.getPlayerLocation(), aStarPath.get(aStarPath.size() - 1).getPos()) < length.getValue() / 2) {
+        if (path.size() < length.getValue() / 12
+            || MathUtil.distanceToPos(
+                    PlayerUtils.getPlayerLocation(), aStarPath.get(aStarPath.size() - 1).getPos())
+                < length.getValue() / 2) {
           findingPath = true;
-          new Thread(() -> {
-            // 异步操作
-            List<PathPos> newPath = new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue()).findPath(path.get(path.size() - 1).getPos(), end, length.getValue().intValue());
+          new Thread(
+                  () -> {
+                    // 异步操作
+                    List<PathPos> newPath =
+                        new AStarPathFinder(miningAllowed.getValue(), jumpBoost.getValue())
+                            .findPath(
+                                path.get(path.size() - 1).getPos(),
+                                end,
+                                length.getValue().intValue());
 
-            if (newPath == null) {
-              Helper.sendMessage("Cannot found path");
-              failed();
-              strongClear(false);
-              return;
-            }
+                    if (newPath == null) {
+                      Helper.sendMessage("Cannot found path");
+                      failed();
+                      strongClear(false);
+                      return;
+                    }
 
-            if (path.get(path.size() - 1).getPos().equals(newPath.get(0).getPos())) {
-              newPath.remove(0);
+                    if (path.get(path.size() - 1).getPos().equals(newPath.get(0).getPos())) {
+                      newPath.remove(0);
 
-              aStarPath.addAll(newPath);
-              path.addAll(new JumpOptimization(true)
-                  .optimize(new PathOptimizer()
-                      .optimize(newPath)));
-            }
+                      aStarPath.addAll(newPath);
+                      path.addAll(
+                          new JumpOptimization(true)
+                              .optimize(new PathOptimizer().optimize(newPath)));
+                    }
 
-            findingPath = false;
-          }).start();
+                    findingPath = false;
+                  })
+              .start();
         }
       }
 
@@ -205,7 +220,15 @@ public class SmartyPathFinder extends ModulePlus {
   @SubscribeEvent
   public void onWorldLoad(WorldEvent.Load event) {
     if (!this.path.isEmpty() && !this.aStarPath.isEmpty()) {
-      Helper.sendMessage(EnumChatFormatting.YELLOW + "[MacroProtection]" + EnumChatFormatting.GRAY + " Stopped " + EnumChatFormatting.LIGHT_PURPLE + this.getName() + EnumChatFormatting.GRAY + " due to World Change.");
+      Helper.sendMessage(
+          EnumChatFormatting.YELLOW
+              + "[MacroProtection]"
+              + EnumChatFormatting.GRAY
+              + " Stopped "
+              + EnumChatFormatting.LIGHT_PURPLE
+              + this.getName()
+              + EnumChatFormatting.GRAY
+              + " due to World Change.");
       failed();
       strongClear(false);
     }
@@ -213,7 +236,8 @@ public class SmartyPathFinder extends ModulePlus {
 
   @Override
   public void onDisable() {
-    Helper.sendMessage("[Warning] You're closing SmartyPathFinder. You cannot use modules with spf any longer.");
+    Helper.sendMessage(
+        "[Warning] You're closing SmartyPathFinder. You cannot use modules with spf any longer.");
   }
 
   public void clear() {

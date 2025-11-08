@@ -29,8 +29,15 @@ public class NetWorkManagerMixin {
     }
   }
 
-  @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;[Lio/netty/util/concurrent/GenericFutureListener;)V", at = @At("HEAD"))
-  private void sendPacket(Packet<?> p_sendPacket_1_, GenericFutureListener<? extends Future<? super Void>> p_sendPacket_2_, GenericFutureListener<? extends Future<? super Void>>[] p_sendPacket_3_, CallbackInfo ci) {
+  @Inject(
+      method =
+          "sendPacket(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;[Lio/netty/util/concurrent/GenericFutureListener;)V",
+      at = @At("HEAD"))
+  private void sendPacket(
+      Packet<?> p_sendPacket_1_,
+      GenericFutureListener<? extends Future<? super Void>> p_sendPacket_2_,
+      GenericFutureListener<? extends Future<? super Void>>[] p_sendPacket_3_,
+      CallbackInfo ci) {
     if (p_sendPacket_1_.getClass().getSimpleName().startsWith("C")) {
       MinecraftForge.EVENT_BUS.post(new ClientPacketEvent(p_sendPacket_1_));
     }

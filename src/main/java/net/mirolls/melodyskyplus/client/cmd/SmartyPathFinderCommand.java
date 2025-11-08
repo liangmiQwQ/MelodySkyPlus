@@ -1,15 +1,14 @@
 package net.mirolls.melodyskyplus.client.cmd;
 
+import java.util.Objects;
 import net.minecraft.util.BlockPos;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
 import xyz.Melody.System.Commands.Command;
 import xyz.Melody.Utils.Helper;
 
-import java.util.Objects;
-
 public class SmartyPathFinderCommand extends Command {
   public SmartyPathFinderCommand() {
-    super(".smartypathfinder", new String[]{"spf", "sgoto", "pf", "sgo"}, "", "sketit");
+    super(".smartypathfinder", new String[] {"spf", "sgoto", "pf", "sgo"}, "", "sketit");
   }
 
   @Override
@@ -23,7 +22,9 @@ public class SmartyPathFinderCommand extends Command {
       long startTime = System.currentTimeMillis();
 
       try {
-        BlockPos targetBP = new BlockPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        BlockPos targetBP =
+            new BlockPos(
+                Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
         smartyPathFinder.strongClear(true);
         smartyPathFinder.go(targetBP);
       } catch (IllegalStateException e) {
@@ -46,11 +47,11 @@ public class SmartyPathFinderCommand extends Command {
     return null;
   }
 
-
   private void printUsage() {
     Helper.sendMessageWithoutPrefix("==================== SmartyPathFinder ====================");
     Helper.sendMessageWithoutPrefix("Edit config in module SmartyPathFinder.");
-    Helper.sendMessageWithoutPrefix("Currently unstable and under developing. Might cause some errors.");
+    Helper.sendMessageWithoutPrefix(
+        "Currently unstable and under developing. Might cause some errors.");
     Helper.sendMessageWithoutPrefix("");
     Helper.sendMessageWithoutPrefix(".spf [x] [y] [z] - Go to a block pos.");
     Helper.sendMessageWithoutPrefix(".spf clear - Stop finding path and clear renderer.");

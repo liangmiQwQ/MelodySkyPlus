@@ -1,6 +1,5 @@
 package net.mirolls.melodyskyplus;
 
-
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -31,10 +30,12 @@ public class MelodySkyPlus {
   public static MiningSkillExecutor miningSkillExecutor;
   public static DrinkingLib drinkingLib;
 
-
   public static String verify(String text) {
     if (text.startsWith("UUID: ")) {
-      return "Melody+ Verified: " + (Verify.isVerified() ? EnumChatFormatting.GREEN + "true" : EnumChatFormatting.GRAY + "false");
+      return "Melody+ Verified: "
+          + (Verify.isVerified()
+              ? EnumChatFormatting.GREEN + "true"
+              : EnumChatFormatting.GRAY + "false");
     } else {
       return text;
     }

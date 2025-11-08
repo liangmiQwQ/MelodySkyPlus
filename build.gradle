@@ -1,14 +1,19 @@
 buildscript {
-    repositories {
-        mavenCentral()
-        maven { url = 'http://files.minecraftforge.net/maven' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
-    }
-    dependencies {
-        classpath files('forgegradle/ForgeGradle-2.1.2.jar')
-        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
-    }
+  repositories {
+    mavenCentral()
+    maven { url = 'http://files.minecraftforge.net/maven' }
+    maven { url = 'https://repo.spongepowered.org/maven' }
+  }
+  dependencies {
+    classpath files('forgegradle/ForgeGradle-2.1.2.jar')
+    classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+  }
 }
+
+plugins {
+  id("com.diffplug.gradle.spotless") version "3.30.0"
+}
+
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
@@ -19,93 +24,104 @@ archivesBaseName = mod_id
 
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+  sourceCompatibility = targetCompatibility = '1.8'
 }
 
 minecraft {
-    version = "${minecraft_version}-${forge_version}"
-    runDir = "run"
-    mappings = mappings_version
-    String resolved_core_config = mod_mixin_configs.replace('${mod_id}', mod_id)
-    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
-    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
+  version = "${minecraft_version}-${forge_version}"
+  runDir = "run"
+  mappings = mappings_version
+  String resolved_core_config = mod_mixin_configs.replace('${mod_id}', mod_id)
+  clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
+  serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', resolved_core_config)
 }
 
 repositories {
-    mavenLocal()
-    mavenCentral()
-    maven { url = 'https://repo.spongepowered.org/maven' }
+  mavenLocal()
+  mavenCentral()
+  maven { url = 'https://repo.spongepowered.org/maven' }
 }
 
 configurations {
-    embed
-    compile.extendsFrom(embed)
+  embed
+  compile.extendsFrom(embed)
 }
 
 dependencies {
-    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
-        exclude module: 'guava'
-        exclude module: 'commons-io'
-        exclude module: 'gson'
-    }
-    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+  embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+    exclude module: 'guava'
+    exclude module: 'commons-io'
+    exclude module: 'gson'
+  }
+  annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 
-    implementation('xyz.melody:melodySky:' + melody_version) {
-        exclude module: 'mixin'
-        exclude group: 'org.spongepowered'
-    }
+  implementation('xyz.melody:melodySky:' + melody_version) {
+    exclude module: 'mixin'
+    exclude group: 'org.spongepowered'
+  }
 }
 
 processResources {
-    inputs.property 'version', project.version
-    inputs.property 'mcversion', project.minecraft.version
+  inputs.property 'version', project.version
+  inputs.property 'mcversion', project.minecraft.version
 
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
+  from(sourceSets.main.resources.srcDirs) {
+    include 'mcmod.info'
 
-        expand 'mod_id': mod_id, 'mod_name': mod_name, 'version': project.version,
-                'mcversion': project.minecraft.version, 'mod_description': mod_description,
-                'mod_author': mod_author
-    }
+    expand 'mod_id': mod_id, 'mod_name': mod_name, 'version': project.version,
+      'mcversion': project.minecraft.version, 'mod_description': mod_description,
+      'mod_author': mod_author
+  }
 
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-
-
+  from(sourceSets.main.resources.srcDirs) {
+    exclude 'mcmod.info'
+  }
 }
 
 sourceSets {
-    main {
-        ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
-    }
+  main {
+    ext.refMap = mod_mixin_refmap.replace('${mod_id}', mod_id)
+  }
 }
 
 jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from(configurations.embed.collect {
-        it.isDirectory() ? it : zipTree(it)
-    }) {
-        exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
+  from(configurations.embed.collect {
+    it.isDirectory() ? it : zipTree(it)
+  }) {
+    exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
 
-    }
+  }
 
-    archiveName = "${mod_id}-${mod_version}-${melody_version}.jar"
+  archiveName = "${mod_id}-${mod_version}-${melody_version}.jar"
 
-    manifest.attributes(
-            'ForceLoadAsMod': 'true',
-            'FMLCorePluginContainsFMLMod': 'true',
-            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-            'TweakOrder': '0',
-            'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
-    )
+  manifest.attributes(
+    'ForceLoadAsMod': 'true',
+    'FMLCorePluginContainsFMLMod': 'true',
+    'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+    'TweakOrder': '0',
+    'MixinConfigs': mod_mixin_configs.replace('${mod_id}', mod_id)
+  )
+}
+
+spotless {
+  java {
+    target 'src/**/*.java'
+
+    googleJavaFormat('1.7')
+
+    removeUnusedImports()
+
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }
 
 tasks.register('exportDependencies', Copy) {
-    configurations.compileClasspath.setCanBeResolved(true)
-    into "$buildDir/libs/dependencies"
-    from configurations.runtimeClasspath
+  configurations.compileClasspath.setCanBeResolved(true)
+  into "$buildDir/libs/dependencies"
+  from configurations.runtimeClasspath
 }
 
 assemble.dependsOn jar

@@ -1,5 +1,9 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
@@ -38,51 +42,36 @@ import xyz.Melody.Utils.timer.TimerUtil;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 import xyz.Melody.module.modules.macros.Mining.GemstoneNuker;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-
-
 @SuppressWarnings("rawtypes")
 @Mixin(value = AutoRuby.class, remap = false)
 public class AutoRubyMixin {
 
   private final Option<Boolean> melodySkyPlus$autoCloseGui = new Option<>("Auto Close GUI", true);
-  @Shadow
-  public boolean started;
-  @Shadow
-  private TimerUtil ewTimer;
-  @Shadow
-  private boolean etherWarped;
-  @Shadow
-  private BlockPos nextBP;
-  @Shadow
-  private TimerUtil timer;
-  @Shadow
-  private ArrayList<Entity> yogs;
-  @Shadow
-  private Numbers<Double> yogRange;
-  @Shadow
-  private Option<Boolean> rcKill;
-  @Shadow
-  private boolean killingYogs;
-  @Shadow
-  private TimerUtil attackTimer;
-  @Shadow
-  private Numbers<Double> weaponSlot;
-  @Shadow
-  private Option<Boolean> faceDown;
-  @Shadow
-  private Option<Boolean> aim;
+  @Shadow public boolean started;
+  @Shadow private TimerUtil ewTimer;
+  @Shadow private boolean etherWarped;
+  @Shadow private BlockPos nextBP;
+  @Shadow private TimerUtil timer;
+  @Shadow private ArrayList<Entity> yogs;
+  @Shadow private Numbers<Double> yogRange;
+  @Shadow private Option<Boolean> rcKill;
+  @Shadow private boolean killingYogs;
+  @Shadow private TimerUtil attackTimer;
+  @Shadow private Numbers<Double> weaponSlot;
+  @Shadow private Option<Boolean> faceDown;
+  @Shadow private Option<Boolean> aim;
 
   private void melodySkyPlus$switchToJasper() {
     Minecraft mc = Minecraft.getMinecraft();
     if (Verify.isVerified() && started) {
-      if (mc.thePlayer.getHeldItem() != null && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL") || mc.thePlayer.getHeldItem() == null) {
+      if (mc.thePlayer.getHeldItem() != null
+              && !ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem()).contains("GEMSTONE_DRILL")
+          || mc.thePlayer.getHeldItem() == null) {
         for (int i = 0; i < 9; ++i) {
           ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
-          if (itemStack != null && itemStack.getItem() != null && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
+          if (itemStack != null
+              && itemStack.getItem() != null
+              && ItemUtils.getSkyBlockID(itemStack).contains("GEMSTONE_DRILL")) {
             mc.thePlayer.inventory.currentItem = i;
             break;
           }
@@ -91,7 +80,14 @@ public class AutoRubyMixin {
     }
   }
 
-  @ModifyArg(method = "<init>", remap = false, at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
+  @ModifyArg(
+      method = "<init>",
+      remap = false,
+      at =
+          @At(
+              value = "INVOKE",
+              target =
+                  "Lxyz/Melody/module/modules/macros/Mining/AutoRuby;addValues([Lxyz/Melody/Event/value/Value;)V"))
   private Value[] init(Value[] originalValues) {
     if (Verify.isVerified()) {
       Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
@@ -109,7 +105,8 @@ public class AutoRubyMixin {
   @Inject(method = "idk", remap = false, at = @At("TAIL"))
   private void idkTail(EventTick event, CallbackInfo ci) {
     if (AntiBug.isBugRemoved() && started) {
-      if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+      if (!MelodySkyPlus.jasperUsed.isJasperUsed()
+          && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
         if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
           // 如果新的currentItem被设置为0了 但是之前不是0
           // 则手动替换到jasper钻头
@@ -122,7 +119,8 @@ public class AutoRubyMixin {
   @Inject(method = "etherWarp", remap = false, at = @At("TAIL"))
   private void etherWarpTail(BlockPos pos, CallbackInfo ci) {
     if (AntiBug.isBugRemoved() && started) {
-      if (!MelodySkyPlus.jasperUsed.isJasperUsed() && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
+      if (!MelodySkyPlus.jasperUsed.isJasperUsed()
+          && MelodySkyPlus.jasperUsed.autoUseJasper.getValue()) {
         MelodySkyPlus.LOGGER.info("etherWarp executed");
         if (Minecraft.getMinecraft().thePlayer.inventory.currentItem == 0) {
           // 如果新的currentItem被设置为0了 但是之前不是0
@@ -134,7 +132,14 @@ public class AutoRubyMixin {
   }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
+  @Redirect(
+      method = "<init>",
+      remap = false,
+      at =
+          @At(
+              value = "NEW",
+              target =
+                  "(Ljava/lang/String;Ljava/lang/Object;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Option;"))
   private Option initYogToMobOption(String name, Object enabled, IValAction[] actions) {
     if (AntiBug.isBugRemoved()) {
       String newName = name.replace("Yog", "Mob");
@@ -145,8 +150,16 @@ public class AutoRubyMixin {
   }
 
   @SuppressWarnings("unchecked")
-  @Redirect(method = "<init>", remap = false, at = @At(value = "NEW", target = "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
-  private Numbers initYogToMobNumber(String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
+  @Redirect(
+      method = "<init>",
+      remap = false,
+      at =
+          @At(
+              value = "NEW",
+              target =
+                  "(Ljava/lang/String;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;[Lxyz/Melody/Event/value/IValAction;)Lxyz/Melody/Event/value/Numbers;"))
+  private Numbers initYogToMobNumber(
+      String name, Number value, Number min, Number max, Number inc, IValAction[] action) {
     if (AntiBug.isBugRemoved()) {
       String newName = name.replace("Yog", "Mob");
 
@@ -171,7 +184,10 @@ public class AutoRubyMixin {
     if (AntiBug.isBugRemoved()) {
       yogs.clear();
       for (Entity entity : mc.theWorld.loadedEntityList) {
-        if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityLivingBase && (double) mc.thePlayer.getDistanceToEntity(entity) < yogRange.getValue()) {
+        if (!entity.isDead
+            && entity.isEntityAlive()
+            && entity instanceof EntityLivingBase
+            && (double) mc.thePlayer.getDistanceToEntity(entity) < yogRange.getValue()) {
           if (entity instanceof EntityMagmaCube || entity instanceof EntityIronGolem) {
             this.yogs.add(entity);
           }
@@ -179,7 +195,11 @@ public class AutoRubyMixin {
           if (entity instanceof EntityPlayer) {
             String name = entity.getName().toLowerCase();
 
-            if (!name.contains("kalhuki tribe member") && !name.contains("weakling") && !name.contains("goblin") && !PlayerListUtils.isInTablist((EntityPlayer) entity) && !entity.equals(mc.thePlayer)) {
+            if (!name.contains("kalhuki tribe member")
+                && !name.contains("weakling")
+                && !name.contains("goblin")
+                && !PlayerListUtils.isInTablist((EntityPlayer) entity)
+                && !entity.equals(mc.thePlayer)) {
               // TODO 研究此处mithril的名称
               if (name.contains("team treasurite")) {
                 this.yogs.add(entity);
@@ -194,12 +214,16 @@ public class AutoRubyMixin {
       this.yogs.clear();
 
       for (Entity entity : mc.theWorld.loadedEntityList) {
-        if (!entity.isDead && entity.isEntityAlive() && entity instanceof EntityMagmaCube && (double) mc.thePlayer.getDistanceToEntity(entity) < this.yogRange.getValue()) {
+        if (!entity.isDead
+            && entity.isEntityAlive()
+            && entity instanceof EntityMagmaCube
+            && (double) mc.thePlayer.getDistanceToEntity(entity) < this.yogRange.getValue()) {
           this.yogs.add(entity);
         }
       }
 
-      this.yogs.sort(Comparator.comparingDouble((sb) -> (double) mc.thePlayer.getDistanceToEntity(sb)));
+      this.yogs.sort(
+          Comparator.comparingDouble((sb) -> (double) mc.thePlayer.getDistanceToEntity(sb)));
     }
   }
 
@@ -221,7 +245,8 @@ public class AutoRubyMixin {
       if (!this.yogs.isEmpty()) {
         Entity entity = this.yogs.get(0);
         if (this.started) {
-          NotificationPublisher.queue("AutoRuby", "Mob Detected, Trying to ATTACK it.", NotificationType.WARN, 3000);
+          NotificationPublisher.queue(
+              "AutoRuby", "Mob Detected, Trying to ATTACK it.", NotificationType.WARN, 3000);
           this.started = false;
           this.killingYogs = true;
           this.attackTimer.reset();
@@ -251,7 +276,8 @@ public class AutoRubyMixin {
           }
         }
       } else if (this.killingYogs) {
-        NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
+        NotificationPublisher.queue(
+            "AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
         this.started = true;
         this.killingYogs = false;
         this.attackTimer.reset();
@@ -266,7 +292,8 @@ public class AutoRubyMixin {
       if (!this.yogs.isEmpty()) {
         EntityMagmaCube mcube = (EntityMagmaCube) this.yogs.get(0);
         if (this.started) {
-          NotificationPublisher.queue("AutoRuby", "Yog Detected, Trying to FUCK it.", NotificationType.WARN, 3000);
+          NotificationPublisher.queue(
+              "AutoRuby", "Yog Detected, Trying to FUCK it.", NotificationType.WARN, 3000);
           this.started = false;
           this.killingYogs = true;
           this.attackTimer.reset();
@@ -296,13 +323,13 @@ public class AutoRubyMixin {
           }
         }
       } else if (this.killingYogs) {
-        NotificationPublisher.queue("AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
+        NotificationPublisher.queue(
+            "AutoRuby", "OKAY, Continued Mining..", NotificationType.SUCCESS, 3000);
         this.started = true;
         this.killingYogs = false;
         this.attackTimer.reset();
       }
     }
-
   }
 
   @Inject(method = "idk", at = @At("HEAD"), remap = false)
@@ -317,10 +344,13 @@ public class AutoRubyMixin {
         }
       }
 
-      if (this.ewTimer.hasReached(0) && !this.etherWarped && GemstoneNuker.getINSTANCE().gemstones.isEmpty() && this.nextBP != null && timer.hasReached(150)) {
+      if (this.ewTimer.hasReached(0)
+          && !this.etherWarped
+          && GemstoneNuker.getINSTANCE().gemstones.isEmpty()
+          && this.nextBP != null
+          && timer.hasReached(150)) {
         Objects.requireNonNull(Failsafe.getINSTANCE()).lastTeleport = System.currentTimeMillis();
       }
     }
-
   }
 }

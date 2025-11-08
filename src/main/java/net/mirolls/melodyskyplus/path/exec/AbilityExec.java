@@ -1,5 +1,8 @@
 package net.mirolls.melodyskyplus.path.exec;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.mirolls.melodyskyplus.modules.SmartyPathFinder;
@@ -12,15 +15,10 @@ import xyz.Melody.Utils.math.MathUtil;
 import xyz.Melody.Utils.math.Rotation;
 import xyz.Melody.Utils.math.RotationUtil;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-
 public class AbilityExec {
   public boolean rubbish = false;
   public int tick = -1;
   private int lastRightClick = 10;
-
 
   public void exec(List<Node> path, Minecraft mc, Node node) {
     Ability nextAbility = (Ability) path.get(1);
@@ -29,10 +27,14 @@ public class AbilityExec {
     Vec3d centerEnd = Vec3d.ofCenter(endNode.pos);
 
     // 切物品到aotv
-    mc.thePlayer.inventory.currentItem = Objects.requireNonNull(SmartyPathFinder.getINSTANCE()).aotvSlot.getValue().intValue() - 1;
+    mc.thePlayer.inventory.currentItem =
+        Objects.requireNonNull(SmartyPathFinder.getINSTANCE()).aotvSlot.getValue().intValue() - 1;
 
     // 终止 结束条件
-    boolean isInBlock = Math.abs(mc.thePlayer.posX - centerEnd.getX()) <= 0.8 && Math.abs(mc.thePlayer.posZ - centerEnd.getZ()) <= 0.8 && Math.abs(mc.thePlayer.posY - centerEnd.getY()) <= 1;
+    boolean isInBlock =
+        Math.abs(mc.thePlayer.posX - centerEnd.getX()) <= 0.8
+            && Math.abs(mc.thePlayer.posZ - centerEnd.getZ()) <= 0.8
+            && Math.abs(mc.thePlayer.posY - centerEnd.getY()) <= 1;
     if (isInBlock) {
       // 如果已经到达了终点 则代表执行到现在一切都很好
       path.remove(0);
@@ -60,10 +62,15 @@ public class AbilityExec {
       targetZ = nextVec.getZ() + var1 * 0.8;
     }
 
-    boolean warping = Math.abs(mc.thePlayer.posX - targetX) < 0.05 || Math.abs(mc.thePlayer.posZ - targetZ) < 0.05 || tick > 180;
+    boolean warping =
+        Math.abs(mc.thePlayer.posX - targetX) < 0.05
+            || Math.abs(mc.thePlayer.posZ - targetZ) < 0.05
+            || tick > 180;
 
     if (warping) {
-      if (PlayerUtils.rayTrace(endNode.getPos().down()) && MathUtil.distanceToPos(endNode.getPos().down(), PlayerUtils.getPlayerLocation()) < 55) {
+      if (PlayerUtils.rayTrace(endNode.getPos().down())
+          && MathUtil.distanceToPos(endNode.getPos().down(), PlayerUtils.getPlayerLocation())
+              < 55) {
         // 可以进行etherWarp
         // 保持下蹲
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
@@ -72,10 +79,13 @@ public class AbilityExec {
         // 转头到目标方块
         Rotation rotation = RotationUtil.vec3ToRotation(Vec3d.ofCenter(endNode.pos.down()));
 
-        mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 60F);
-        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 60F);
+        mc.thePlayer.rotationPitch =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), 60F);
+        mc.thePlayer.rotationYaw =
+            PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, rotation.getYaw(), 60F);
 
-        if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.4 && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.4) {
+        if (Math.abs(mc.thePlayer.rotationPitch - rotation.getPitch()) < 0.4
+            && Math.abs(mc.thePlayer.rotationYaw - rotation.getYaw()) < 0.4) {
           // 正在看着这个点
           if (lastRightClick > 30) {
             Client.rightClick();
@@ -96,8 +106,12 @@ public class AbilityExec {
         // 依然需要移动玩家视角来避免错误位置
         Rotation rotation = RotationUtil.vec3ToRotation(centerEnd);
 
-        mc.thePlayer.rotationPitch = PlayerUtils.smoothRotation(mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
-        mc.thePlayer.rotationYaw = PlayerUtils.smoothRotation(mc.thePlayer.rotationYaw, nextAbility.nextRotation.getYaw(), 75F);
+        mc.thePlayer.rotationPitch =
+            PlayerUtils.smoothRotation(
+                mc.thePlayer.rotationPitch, rotation.getPitch(), new Random().nextFloat() / 5);
+        mc.thePlayer.rotationYaw =
+            PlayerUtils.smoothRotation(
+                mc.thePlayer.rotationYaw, nextAbility.nextRotation.getYaw(), 75F);
       } else {
         // 没走到 先走到
         addTick = false;

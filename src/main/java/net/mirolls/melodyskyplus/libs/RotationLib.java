@@ -7,7 +7,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import xyz.Melody.Utils.math.Rotation;
 
-
 public class RotationLib {
 
   Minecraft mc = Minecraft.getMinecraft();
@@ -15,7 +14,6 @@ public class RotationLib {
   private boolean rotating = false;
   private float speedCoefficient = 5f;
   private CallBack callBack;
-
 
   public RotationLib() {
     MinecraftForge.EVENT_BUS.register(this);
@@ -27,11 +25,14 @@ public class RotationLib {
       if (mc.thePlayer != null) {
         float oldYaw = this.mc.thePlayer.rotationYaw;
         float oldPitch = this.mc.thePlayer.rotationPitch;
-        this.mc.thePlayer.rotationYaw = this.smoothRotation(this.mc.thePlayer.rotationYaw, targetRotation.getYaw(), 90.0F);
-        this.mc.thePlayer.rotationPitch = this.smoothRotation(this.mc.thePlayer.rotationPitch, targetRotation.getPitch(), 80.0F);
+        this.mc.thePlayer.rotationYaw =
+            this.smoothRotation(this.mc.thePlayer.rotationYaw, targetRotation.getYaw(), 90.0F);
+        this.mc.thePlayer.rotationPitch =
+            this.smoothRotation(this.mc.thePlayer.rotationPitch, targetRotation.getPitch(), 80.0F);
 
         // 到位了就停止了
-        if (Math.abs(oldYaw - this.mc.thePlayer.rotationYaw) < 0.01f && Math.abs(oldPitch - this.mc.thePlayer.rotationPitch) < 0.01f) {
+        if (Math.abs(oldYaw - this.mc.thePlayer.rotationYaw) < 0.01f
+            && Math.abs(oldPitch - this.mc.thePlayer.rotationPitch) < 0.01f) {
           rotating = false;
           targetRotation = null;
           if (callBack != null) {

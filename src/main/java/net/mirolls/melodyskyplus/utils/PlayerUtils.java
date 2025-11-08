@@ -14,7 +14,6 @@ interface RayTraceRunnable {
 
 public class PlayerUtils {
 
-
   public static float smoothRotation(float current, float target, float maxIncrement) {
     float deltaAngle = MathHelper.wrapAngleTo180_float(target - current);
     if (deltaAngle > maxIncrement) {
@@ -29,20 +28,26 @@ public class PlayerUtils {
   }
 
   public static boolean rayTrace(BlockPos end) {
-    return rayTrace(end, target -> {
-      Minecraft mc = Minecraft.getMinecraft();
-      Vec3 eyesVec = mc.thePlayer.getPositionEyes(1.0F);
-      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
-    });
+    return rayTrace(
+        end,
+        target -> {
+          Minecraft mc = Minecraft.getMinecraft();
+          Vec3 eyesVec = mc.thePlayer.getPositionEyes(1.0F);
+          return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+        });
   }
 
   public static boolean rayTrace(BlockPos start, BlockPos end) {
-    return rayTrace(end, (target) -> {
-      Minecraft mc = Minecraft.getMinecraft();
-      Vec3d center = Vec3d.ofCenter(start);
-      Vec3 eyesVec = new Vec3(center.getX(), center.getY() + 0.5 + mc.thePlayer.getEyeHeight(), center.getZ());
-      return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
-    });
+    return rayTrace(
+        end,
+        (target) -> {
+          Minecraft mc = Minecraft.getMinecraft();
+          Vec3d center = Vec3d.ofCenter(start);
+          Vec3 eyesVec =
+              new Vec3(
+                  center.getX(), center.getY() + 0.5 + mc.thePlayer.getEyeHeight(), center.getZ());
+          return new WorldWrapper().rayTraceBlocks(eyesVec, target.toVec3(), false, true, true);
+        });
   }
 
   private static boolean rayTrace(BlockPos blockPos, RayTraceRunnable rayTrace) {
@@ -61,7 +66,8 @@ public class PlayerUtils {
 
       label69:
       {
-        if (trajectory.entityHit == null || trajectory.entityHit == Minecraft.getMinecraft().thePlayer) {
+        if (trajectory.entityHit == null
+            || trajectory.entityHit == Minecraft.getMinecraft().thePlayer) {
           if (trajectory.getBlockPos() == null) {
             break label69;
           }
@@ -84,7 +90,6 @@ public class PlayerUtils {
 
     return target != null;
   }
-
 
   public static BlockPos getPlayerLocation() {
     Minecraft mc = Minecraft.getMinecraft();
@@ -114,7 +119,11 @@ public class PlayerUtils {
 
   public static double distanceToPos(BlockPos pos) {
     Vec3d center = Vec3d.ofCenter(pos);
-    Vec3d player = new Vec3d(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ);
+    Vec3d player =
+        new Vec3d(
+            Minecraft.getMinecraft().thePlayer.posX,
+            Minecraft.getMinecraft().thePlayer.posY,
+            Minecraft.getMinecraft().thePlayer.posZ);
 
     return center.distanceTo(player);
   }

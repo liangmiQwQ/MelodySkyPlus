@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.mixin;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemPickaxe;
@@ -17,40 +19,44 @@ import xyz.Melody.Event.value.Value;
 import xyz.Melody.Utils.game.item.ItemUtils;
 import xyz.Melody.module.modules.macros.Mining.MiningSkill;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
 @Mixin(value = MiningSkill.class, remap = false)
 public class MiningSkillMixin {
-  @Shadow
-  public TextValue<String> ready;
-  @Shadow
-  public TextValue<String> used;
-  @Shadow
-  public TextValue<String> expire;
+  @Shadow public TextValue<String> ready;
+  @Shadow public TextValue<String> used;
+  @Shadow public TextValue<String> expire;
   public Option<Boolean> melodySkyPlus$useRod = new Option<>("Use Rod", false);
   public Option<Boolean> melodySkyPlus$autoMode;
 
-
   @SuppressWarnings("rawtypes")
-  @ModifyArg(method = "<init>",
-      at = @At(value = "INVOKE", target = "Lxyz/Melody/module/modules/macros/Mining/MiningSkill;addValues([Lxyz/Melody/Event/value/Value;)V", remap = false),
+  @ModifyArg(
+      method = "<init>",
+      at =
+          @At(
+              value = "INVOKE",
+              target =
+                  "Lxyz/Melody/module/modules/macros/Mining/MiningSkill;addValues([Lxyz/Melody/Event/value/Value;)V",
+              remap = false),
       index = 0)
   public Value[] addValueArgs(Value[] originalValues) {
     if (AntiBug.isBugRemoved()) {
 
-      melodySkyPlus$autoMode = new Option<>("Auto Mode", true, (val) -> {
-        if (MiningSkill.getINSTANCE() != null) {
-          MelodySkyPlus.pickaxeAbility.check = val;
+      melodySkyPlus$autoMode =
+          new Option<>(
+              "Auto Mode",
+              true,
+              (val) -> {
+                if (MiningSkill.getINSTANCE() != null) {
+                  MelodySkyPlus.pickaxeAbility.check = val;
 
-          ready.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Mining Speed Boost is now available!");
-          ready.setEnabled(!val);
-          used.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "You used your Mining Speed Boost Pickaxe Ability!");
-          used.setEnabled(!val);
-          expire.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Your Mining Speed Boost has expired!");
-          expire.setEnabled(!val);
-        }
-      });
+                  ready.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Mining Speed Boost is now available!");
+                  ready.setEnabled(!val);
+                  used.setValue(
+                      val ? "🪷𬺈〾🝼⇌🝼⻯" : "You used your Mining Speed Boost Pickaxe Ability!");
+                  used.setEnabled(!val);
+                  expire.setValue(val ? "🪷𬺈〾🝼⇌🝼⻯" : "Your Mining Speed Boost has expired!");
+                  expire.setEnabled(!val);
+                }
+              });
 
       Value[] returnValues = Arrays.copyOf(originalValues, originalValues.length + 2);
       returnValues[returnValues.length - 2] = melodySkyPlus$autoMode;
@@ -66,19 +72,18 @@ public class MiningSkillMixin {
   public void tryPerformSkill(CallbackInfoReturnable<Boolean> cir) {
     MelodySkyPlus.pickaxeAbility.check = melodySkyPlus$autoMode.getValue();
 
-
     Minecraft mc = Minecraft.getMinecraft();
     if (System.currentTimeMillis() % 140 * 1000 == 0 && false) {
       // 140秒尝试重新处理一次
 
       if (mc.thePlayer.getHeldItem() != null) {
         String id = ItemUtils.getSkyBlockID(mc.thePlayer.getHeldItem());
-        if (mc.thePlayer.getHeldItem().getItem() == Items.prismarine_shard || id.contains("GEMSTONE_GAUNTLET") || mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe) {
+        if (mc.thePlayer.getHeldItem().getItem() == Items.prismarine_shard
+            || id.contains("GEMSTONE_GAUNTLET")
+            || mc.thePlayer.getHeldItem().getItem() instanceof ItemPickaxe) {
           mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
         }
       }
-
-
     }
     if (AntiBug.isBugRemoved() && melodySkyPlus$useRod.getValue()) {
       try {
@@ -103,7 +108,6 @@ public class MiningSkillMixin {
         MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
         throw new RuntimeException(e);
       }
-
     }
   }
 }

@@ -1,12 +1,11 @@
 package net.mirolls.melodyskyplus.libs;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CheckPlayerFlying {
   private final List<Boolean> checkingData = new ArrayList<>();
@@ -54,14 +53,12 @@ public class CheckPlayerFlying {
     }
   }
 
-
   public void resetCheck() {
     checking = false;
     callBack = null;
     player = null;
     checkingData.clear();
   }
-
 
   public EntityPlayer getPlayer() {
     return player;

@@ -1,8 +1,7 @@
 package net.mirolls.melodyskyplus.react.failsafe;
 
-import net.minecraft.client.Minecraft;
-
 import java.util.Random;
+import net.minecraft.client.Minecraft;
 
 public class GeneralReact extends React {
 

@@ -1,5 +1,9 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -16,11 +20,6 @@ import xyz.Melody.injection.mixins.gui.GuiPlayerTabAccessor;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 
 public class AutoFilet extends ModulePlus {
   private static AutoFilet INSTANCE;
@@ -71,10 +70,14 @@ public class AutoFilet extends ModulePlus {
           // 在skyblock里面
 
           if (isDoingMacro() && this.coolDownTimer.hasReached(60_000)) {
-            String footer = ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList()).getFooter().getFormattedText();
+            String footer =
+                ((GuiPlayerTabAccessor) this.mc.ingameGUI.getTabList())
+                    .getFooter()
+                    .getFormattedText();
 
             if (!footer.toLowerCase().contains("effects")) {
-              Helper.sendMessage("You need to add the information of effects to tab to enable AutoFilet.");
+              Helper.sendMessage(
+                  "You need to add the information of effects to tab to enable AutoFilet.");
               Objects.requireNonNull(AutoFilet.getINSTANCE()).setEnabled(false);
             }
 
@@ -109,9 +112,9 @@ public class AutoFilet extends ModulePlus {
       }
       if (fishTick == 20) {
         this.mc.playerController.sendUseItem(
-            this.mc.thePlayer, this.mc.theWorld,
-            this.mc.thePlayer.inventory.getStackInSlot(this.mc.thePlayer.inventory.currentItem)
-        );
+            this.mc.thePlayer,
+            this.mc.theWorld,
+            this.mc.thePlayer.inventory.getStackInSlot(this.mc.thePlayer.inventory.currentItem));
       }
       if (fishTick == 30) {
         this.mc.thePlayer.inventory.currentItem = prevItem;
@@ -121,11 +124,9 @@ public class AutoFilet extends ModulePlus {
         prevItem = -1;
       }
 
-
       if (fishTick != -1) {
         fishTick++;
       }
-
     }
     tick++;
   }
@@ -146,7 +147,10 @@ public class AutoFilet extends ModulePlus {
 
   private boolean isDoingMacro() {
     for (Module mod : ModuleManager.getModulesInType(ModuleType.Mining)) {
-      if (mod != this && mod.isEnabled() && !mod.excepted && !Objects.equals(mod.getName(), "PinglessMining")) {
+      if (mod != this
+          && mod.isEnabled()
+          && !mod.excepted
+          && !Objects.equals(mod.getName(), "PinglessMining")) {
         if (Objects.equals(mod.getName(), "AutoGemstone")) {
           return AutoRuby.getINSTANCE().started;
         }

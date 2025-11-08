@@ -1,5 +1,6 @@
 package net.mirolls.melodyskyplus.libs;
 
+import java.util.ArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -11,8 +12,6 @@ import xyz.Melody.Event.events.Player.EventPreUpdate;
 import xyz.Melody.System.Managers.Client.ModuleManager;
 import xyz.Melody.module.Module;
 import xyz.Melody.module.ModuleType;
-
-import java.util.ArrayList;
 
 public class MiningSkillExecutor {
   private final ArrayList<Module> mods = new ArrayList<>();
@@ -66,7 +65,6 @@ public class MiningSkillExecutor {
         this.mods.add(mod);
       }
     }
-
   }
 
   private void reEnableMacros() {
@@ -76,5 +74,4 @@ public class MiningSkillExecutor {
 
     this.mods.clear();
   }
-
 }

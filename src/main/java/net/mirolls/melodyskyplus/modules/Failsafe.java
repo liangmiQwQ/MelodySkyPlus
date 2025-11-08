@@ -1,5 +1,9 @@
 package net.mirolls.melodyskyplus.modules;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -40,11 +44,6 @@ import xyz.Melody.module.ModuleType;
 import xyz.Melody.module.modules.macros.Fishing.AutoFish;
 import xyz.Melody.module.modules.macros.Mining.AutoRuby;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Random;
-
 public class Failsafe extends ModulePlus {
   private static Failsafe INSTANCE;
   private final ArrayList<Module> mods = new ArrayList<>();
@@ -52,36 +51,59 @@ public class Failsafe extends ModulePlus {
   public Option<Boolean> sysNotification = new Option<>("System Notification", true);
   public Numbers<Double> resumeTime = new Numbers<>("Time Resume(s)", 300.0, 60.0, 600.0, 10.0);
   public Option<Boolean> antiFakePlayerCheck;
-  public TextValue<String> fakePlayerCheckMessage = new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public TextValue<String> fakePlayerCheckMessage =
+      new TextValue<>("FakePlayerMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiBedrockBoatCheck;
-  public TextValue<String> bedrockCheckMessage = new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public TextValue<String> bedrockCheckMessage =
+      new TextValue<>("BedrockBoatMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public Option<Boolean> antiTPCheck;
   public Numbers<Double> TPCheckDistance = new Numbers<>("TPCheckDistance", 4.0, 0.1, 20.0, 0.1);
 
-  public TextValue<String> TPCheckMessage = new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
+  public TextValue<String> TPCheckMessage =
+      new TextValue<>("TPCheckMessage", "wtf?,???,????,wtf???,?,t??,w?");
   public long lastTeleport = System.currentTimeMillis();
   private boolean reacting = false;
 
-
   public Failsafe() {
     super("Failsafe", ModuleType.Mining);
-    antiFakePlayerCheck = new Option<>("AntiFakePlayerCheck", true, (val) -> {
-      if (getINSTANCE() != null) {
-        INSTANCE.fakePlayerCheckMessage.setEnabled(val);
-      }
-    });
-    antiBedrockBoatCheck = new Option<>("AntiBedrockBoatCheck", true, (val) -> {
-      if (getINSTANCE() != null) {
-        INSTANCE.bedrockCheckMessage.setEnabled(val);
-      }
-    });
-    antiTPCheck = new Option<>("AntiTPCheck", true, (val) -> {
-      if (getINSTANCE() != null) {
-        INSTANCE.TPCheckDistance.setEnabled(val);
-        INSTANCE.TPCheckMessage.setEnabled(val);
-      }
-    });
-    this.addValues(sysNotification, resumeTime, antiFakePlayerCheck, fakePlayerCheckMessage, antiBedrockBoatCheck, bedrockCheckMessage, antiTPCheck, TPCheckDistance, TPCheckMessage);
+    antiFakePlayerCheck =
+        new Option<>(
+            "AntiFakePlayerCheck",
+            true,
+            (val) -> {
+              if (getINSTANCE() != null) {
+                INSTANCE.fakePlayerCheckMessage.setEnabled(val);
+              }
+            });
+    antiBedrockBoatCheck =
+        new Option<>(
+            "AntiBedrockBoatCheck",
+            true,
+            (val) -> {
+              if (getINSTANCE() != null) {
+                INSTANCE.bedrockCheckMessage.setEnabled(val);
+              }
+            });
+    antiTPCheck =
+        new Option<>(
+            "AntiTPCheck",
+            true,
+            (val) -> {
+              if (getINSTANCE() != null) {
+                INSTANCE.TPCheckDistance.setEnabled(val);
+                INSTANCE.TPCheckMessage.setEnabled(val);
+              }
+            });
+    this.addValues(
+        sysNotification,
+        resumeTime,
+        antiFakePlayerCheck,
+        fakePlayerCheckMessage,
+        antiBedrockBoatCheck,
+        bedrockCheckMessage,
+        antiTPCheck,
+        TPCheckDistance,
+        TPCheckMessage);
     this.setModInfo("Anti-staff while doing macros.");
     this.except();
   }
@@ -112,7 +134,8 @@ public class Failsafe extends ModulePlus {
       }
     }
 
-    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started) || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
+    return (AutoRuby.getINSTANCE().isEnabled() && AutoRuby.getINSTANCE().started)
+        || (AutoFishINSTANCE != null && AutoFishINSTANCE.isEnabled());
   }
 
   private void reactBedrock() {
@@ -125,7 +148,8 @@ public class Failsafe extends ModulePlus {
     for (int i = 0; i < 5; i++) {
       blockPosTesting = blockPosTesting.up();
 
-      if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+      if (Objects.equals(
+          mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
           Blocks.bedrock.getRegistryName())) {
         bedrockHouse = true;
         break;
@@ -144,7 +168,10 @@ public class Failsafe extends ModulePlus {
   }
 
   private void tickFailsafe() {
-    Object[] info = antiFakePlayerCheck.getValue() ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true) : null;
+    Object[] info =
+        antiFakePlayerCheck.getValue()
+            ? CustomPlayerInRange.redirectPlayerInRange(true, 20, true)
+            : null;
 
     if (!reacting) {
       if (isDoingMarco()) {
@@ -152,8 +179,14 @@ public class Failsafe extends ModulePlus {
           if ((Boolean) info[0]) {
             if (info[1] == mc.thePlayer.getName()) {
               react(true);
-              FakePlayerCheckReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50
-                  , fakePlayerCheckMessage.getValue());
+              FakePlayerCheckReact.react(
+                  () ->
+                      MathUtil.distanceToEntity(
+                              mc.thePlayer,
+                              Objects.requireNonNull(
+                                  CustomPlayerInRange.findPlayer((String) info[1])))
+                          < 50,
+                  fakePlayerCheckMessage.getValue());
               return;
             }
           } else if (info[2] != "NOT_THIS") {
@@ -164,13 +197,22 @@ public class Failsafe extends ModulePlus {
             MelodySkyPlus.checkPlayerFlying.resetCheck();
             MelodySkyPlus.checkPlayerFlying.setPlayer(targetPlayer);
             MelodySkyPlus.checkPlayerFlying.setChecking(true);
-            MelodySkyPlus.checkPlayerFlying.setCallBack(result -> {
-              if (targetPlayer != null && result && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
-                react(false);
-                FakePlayerCheckReact.react(() -> MathUtil.distanceToEntity(mc.thePlayer, Objects.requireNonNull(CustomPlayerInRange.findPlayer((String) info[1]))) < 50,
-                    fakePlayerCheckMessage.getValue());
-              } // else: 正常假人 直接忽略
-            });
+            MelodySkyPlus.checkPlayerFlying.setCallBack(
+                result -> {
+                  if (targetPlayer != null
+                      && result
+                      && MathUtil.distanceToEntity(targetPlayer, mc.thePlayer) < 4) {
+                    react(false);
+                    FakePlayerCheckReact.react(
+                        () ->
+                            MathUtil.distanceToEntity(
+                                    mc.thePlayer,
+                                    Objects.requireNonNull(
+                                        CustomPlayerInRange.findPlayer((String) info[1])))
+                                < 50,
+                        fakePlayerCheckMessage.getValue());
+                  } // else: 正常假人 直接忽略
+                });
           }
         }
 
@@ -185,7 +227,8 @@ public class Failsafe extends ModulePlus {
             BlockPos blockPosTesting = mc.thePlayer.getPosition();
             boolean bedrockTest = false;
             for (int i = 0; i < 9; i++) {
-              if (Objects.equals(mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
+              if (Objects.equals(
+                  mc.theWorld.getBlockState(blockPosTesting).getBlock().getRegistryName(),
                   Blocks.bedrock.getRegistryName())) {
                 bedrockTest = true;
                 break;
@@ -202,12 +245,12 @@ public class Failsafe extends ModulePlus {
             reactBedrock();
           }
         }
-
       }
     } else if (this.resumeTimer.hasReached(this.resumeTime.getValue() * 1000.0)) {
       // 检查完毕了 恢复运转
       this.reEnableMacros();
-      NotificationPublisher.queue("Melody+ Failsafe", "Macros resumed.", NotificationType.INFO, 5000);
+      NotificationPublisher.queue(
+          "Melody+ Failsafe", "Macros resumed.", NotificationType.INFO, 5000);
       if (this.sysNotification.getValue()) {
         WindowsNotification.show("Melody+ Failsafe", "Macros resumed.");
       }
@@ -216,7 +259,6 @@ public class Failsafe extends ModulePlus {
       this.resumeTimer.reset();
     }
   }
-
 
   private void react(boolean delay) {
     if (!reacting) { // 这个前提是为了防止部分react同时触发(考虑到假人飞行的问题)
@@ -228,31 +270,39 @@ public class Failsafe extends ModulePlus {
         PlayerSoundHandler.addSound("mob.ghast.death", 5.0F, 1.5F, 5);
         PlayerSoundHandler.addSound("mob.ghast.scream", 5.0F, 1.5F, 5);
 
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.charge")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.death")));
-        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.scream")));
+        mc.getSoundHandler()
+            .playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.charge")));
+        mc.getSoundHandler()
+            .playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.death")));
+        mc.getSoundHandler()
+            .playSound(PositionedSoundRecord.create(new ResourceLocation("mob.ghast.scream")));
       } catch (RuntimeException e) {
         MelodySkyPlus.LOGGER.error("Cannot play sounds while macro check!");
       }
 
-
       this.reacting = true;
-      new Thread(() -> {
-        try {
-          Thread.sleep(100L);
-          KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+      new Thread(
+              () -> {
+                try {
+                  Thread.sleep(100L);
+                  KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
 
-          if (delay) {
-            Thread.sleep(400 + new Random().nextInt(1000));
-          }
-          this.disableMacros();
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-      }).start();
+                  if (delay) {
+                    Thread.sleep(400 + new Random().nextInt(1000));
+                  }
+                  this.disableMacros();
+                } catch (InterruptedException e) {
+                  throw new RuntimeException(e);
+                }
+              })
+          .start();
       Client.warn();
       Helper.sendMessage("[Melody+ Failsafe] Alert! Macro Check! ");
-      NotificationPublisher.queue("Melody+ Failsafe", "Alert! Macro Check!", NotificationType.ERROR, (int) (resumeTime.getValue() - 1) * 1000);
+      NotificationPublisher.queue(
+          "Melody+ Failsafe",
+          "Alert! Macro Check!",
+          NotificationType.ERROR,
+          (int) (resumeTime.getValue() - 1) * 1000);
       if (this.sysNotification.getValue()) {
         WindowsNotification.show("Melody+ Failsafe", "Alert! Macro Check!");
       }
@@ -319,30 +369,46 @@ public class Failsafe extends ModulePlus {
 
   @SubscribeEvent
   public void onPacket(ServerPacketEvent event) {
-    if (antiTPCheck.getValue() && System.currentTimeMillis() - lastTeleport > 1000 && isDoingMarco()) {
+    if (antiTPCheck.getValue()
+        && System.currentTimeMillis() - lastTeleport > 1000
+        && isDoingMarco()) {
       if (!(event.packet instanceof S08PacketPlayerPosLook)) return;
 
       S08PacketPlayerPosLook packet = (S08PacketPlayerPosLook) event.packet;
 
       Vec3 currentPlayerPos = mc.thePlayer.getPositionVector();
-      Vec3 packetPlayerPos = new Vec3(
-          packet.getX() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.X) ? currentPlayerPos.xCoord : 0),
-          packet.getY() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Y) ? currentPlayerPos.yCoord : 0),
-          packet.getZ() + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Z) ? currentPlayerPos.zCoord : 0)
-      );
+      Vec3 packetPlayerPos =
+          new Vec3(
+              packet.getX()
+                  + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.X)
+                      ? currentPlayerPos.xCoord
+                      : 0),
+              packet.getY()
+                  + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Y)
+                      ? currentPlayerPos.yCoord
+                      : 0),
+              packet.getZ()
+                  + (packet.func_179834_f().contains(S08PacketPlayerPosLook.EnumFlags.Z)
+                      ? currentPlayerPos.zCoord
+                      : 0));
       double distance = currentPlayerPos.distanceTo(packetPlayerPos);
 
       if (distance >= TPCheckDistance.getValue()) {
-        final double lastReceivedPacketDistance = currentPlayerPos.distanceTo(MelodySkyPlus.packRecord.getLastPacketPosition());
-        final double playerMovementSpeed = mc.thePlayer.getAttributeMap().getAttributeInstanceByName("generic.movementSpeed").getAttributeValue();
-        final int ticksSinceLastPacket = (int) Math.ceil(MelodySkyPlus.packRecord.getLastPacketTime() / 50D);
+        final double lastReceivedPacketDistance =
+            currentPlayerPos.distanceTo(MelodySkyPlus.packRecord.getLastPacketPosition());
+        final double playerMovementSpeed =
+            mc.thePlayer
+                .getAttributeMap()
+                .getAttributeInstanceByName("generic.movementSpeed")
+                .getAttributeValue();
+        final int ticksSinceLastPacket =
+            (int) Math.ceil(MelodySkyPlus.packRecord.getLastPacketTime() / 50D);
         final double estimatedMovement = playerMovementSpeed * ticksSinceLastPacket;
-        if (lastReceivedPacketDistance > 7.5D && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5f)
-          return;
+        if (lastReceivedPacketDistance > 7.5D
+            && Math.abs(lastReceivedPacketDistance - estimatedMovement) < 0.5f) return;
         react(true);
         TPCheckReact.react(TPCheckMessage.getValue());
       }
     }
   }
-
 }

@@ -1,5 +1,7 @@
 package net.mirolls.melodyskyplus.path.optimization;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -9,13 +11,9 @@ import net.mirolls.melodyskyplus.path.find.PathPos;
 import net.mirolls.melodyskyplus.path.type.Node;
 import xyz.Melody.Utils.Vec3d;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 public class PathOptimizer {
   private final Map<BlockPos, IBlockState> blockStateMap = new HashMap<>();
   public ArrayList<Vec3d> routeVec = new ArrayList<>();
-
 
   private IBlockState getBlockState(BlockPos pos) {
     Minecraft mc = Minecraft.getMinecraft();
@@ -96,7 +94,10 @@ public class PathOptimizer {
 
     int yPos = startPos.getY();
     List<BlockPos> posList = calculate(startPos, target);
-    posList.sort(Comparator.comparing(blockPos -> Math.hypot(blockPos.getX() - startPos.getX(), blockPos.getZ() - startPos.getZ())));
+    posList.sort(
+        Comparator.comparing(
+            blockPos ->
+                Math.hypot(blockPos.getX() - startPos.getX(), blockPos.getZ() - startPos.getZ())));
 
     // 记录所有的半砖位置
     Set<BlockPos> bottomHalfSlabs = new HashSet<>();
@@ -114,7 +115,9 @@ public class PathOptimizer {
 
       // 是否有路径阻拦
       if (blockStateFoot.getBlock() != Blocks.air && blockStateFoot.getBlock() != Blocks.carpet) {
-        if (blockStateFoot.getBlock().getRegistryName().contains("slab") && !blockStateFoot.getBlock().getRegistryName().contains("double") && BlockSlab.EnumBlockHalf.BOTTOM == blockStateFoot.getValue(BlockSlab.HALF)) {
+        if (blockStateFoot.getBlock().getRegistryName().contains("slab")
+            && !blockStateFoot.getBlock().getRegistryName().contains("double")
+            && BlockSlab.EnumBlockHalf.BOTTOM == blockStateFoot.getValue(BlockSlab.HALF)) {
           // 如果是下半砖的 检查一下更高头上的能不能跑
           if (getBlockState(bp.add(0, 2, 0)).getBlock() == Blocks.air) {
             // 额外检查一下距离
@@ -129,7 +132,8 @@ public class PathOptimizer {
           // 研究 该方块是不是贴着半砖的
           for (BlockPos slab : bottomHalfSlabs) {
             if (slab.getY() == bp.getY()) {
-              if (Math.abs(slab.getX() - bp.getX()) <= 1 && Math.abs(slab.getX() - bp.getX()) <= 1) {
+              if (Math.abs(slab.getX() - bp.getX()) <= 1
+                  && Math.abs(slab.getX() - bp.getX()) <= 1) {
                 // 如果是贴着半砖的 则对yPos进行+1处理 并且重新构建
                 yPos += 1;
                 bp = new BlockPos(pos.getX(), yPos, pos.getZ());
