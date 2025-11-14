@@ -29,6 +29,7 @@ public class MelodySkyPlus {
   public static PackRecord packRecord;
   public static MiningSkillExecutor miningSkillExecutor;
   public static DrinkingLib drinkingLib;
+  public static NewBlueEgg newBlueEgg;
 
   public static String verify(String text) {
     if (text.startsWith("UUID: ")) {
@@ -57,6 +58,7 @@ public class MelodySkyPlus {
     pathRenderer = new PathRenderer();
     packRecord = new PackRecord();
     miningSkillExecutor = new MiningSkillExecutor();
+    newBlueEgg = new NewBlueEgg();
     drinkingLib = new DrinkingLib();
     // events
   }
