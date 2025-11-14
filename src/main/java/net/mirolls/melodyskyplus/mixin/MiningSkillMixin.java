@@ -136,5 +136,30 @@ public class MiningSkillMixin {
         }
 
     }
+    if (AntiBug.isBugRemoved() && melodySkyPlus$newBlueEgg.getValue()) {
+        try {
+            // 读 看是否应该执行
+            Class<?> client = Class.forName("xyz.Melody.Client");
+            Field pickaxeField = client.getDeclaredField("pickaxeAbilityReady");
+            pickaxeField.setAccessible(true);
+
+            // 若应该执行
+            if ((boolean) pickaxeField.get(null)) {
+                MelodySkyPlus.newBlueEgg.start(melodySkyPlus$blueSlot.getValue().intValue() - 1);
+
+                pickaxeField.set(null, false);
+
+                cir.cancel();
+                cir.setReturnValue(true);
+            } else {
+                // 否则
+                cir.setReturnValue(false);
+            }
+        } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
+              MelodySkyPlus.LOGGER.fatal("Cannot find whole melodysky.");
+              throw new RuntimeException(e);
+        }
+
+    }
   }
 }
